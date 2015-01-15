@@ -25,12 +25,13 @@ Live game content is not stored in the database.
 **beehive**: Name of the home beehive  
 
 ### beehive
+**id**: Machine name of a beehive
 **name**: Name of the beehive  
 **secret**: Code word to gain access to a beehive (plain text)  
 
 ### game
-**name**: Name of the game  
 **id**: machine readable name of the game / Reference to github   
+**name**: Name of the game  
 **git**: Git hash of game resources   
 
 ### variations
@@ -47,9 +48,25 @@ Live game content is not stored in the database.
 **player**: players hash  
 **game**: game id  
 **variation**: variation id  
-**description**: JSON data describing the achievment  
+**play**: play id
+**achievment**: JSON data describing the achievment  
 
 ### contributions
 **id**: if of contribution  
 **player**: contributing player  
 **description**: JSON data describing the contribution  
+
+## Requests
+### signup
+Params:  
+* beehive [40]char
+* id
+Result:  
+* session id
+### login
+Params:  
+* beehive [40]char
+* id
+Result:  
+* session id
+
