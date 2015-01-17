@@ -37,12 +37,28 @@ func main() {
     fmt.Printf("main %v %v\n", requestChan, doneChan)
 
     a1 := make(chan []Db_data)
-    requestChan <- Db_request{ request: "getBeehives", dataChan: a1 }
-    d1 := <-a1
+    a2 := make(chan []Db_data)
+    requestChan <- Db_request{
+        request: "getBeehives",
+        dataChan: a1,
+    }
+    requestChan <- Db_request{
+        request: "loginBeehive",
+        dataChan: a2,
+        parameter: map[string]string{
+            "beehive": "yaylaswiese",
+            "secret" : "tat",
+        },
+    }
 
-    fmt.Printf("received data: %v\n", d1)
-
-    //requestChan <- Db_request{ request: "Signup", beehive: "aziz nezir" }
+    for {
+        select {
+        case d1 := <-a1:
+            fmt.Printf("A1: received data: %v\n", d1)
+        case d2 := <-a2:
+            fmt.Printf("A2: received data: %v\n", d2)
+        }
+    }
 
     ticker := time.NewTicker(2 * time.Second)
     <-ticker.C

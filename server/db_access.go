@@ -17,9 +17,9 @@ import (
 )
 
 type Db_request struct {
-	request string
-    dataChan chan []Db_data
-    parameter Db_data
+	request   string
+	dataChan  chan []Db_data
+	parameter Db_data
 }
 
 type Db_data map[string]string
@@ -39,17 +39,17 @@ func StartDatabase(config map[string]string) (chan Db_request, chan bool) {
 	return requestChan, doneChan
 }
 
-func serveDatabase(database mysql.Conn, requestChan chan Db_request , doneChan chan bool) {
+func serveDatabase(database mysql.Conn, requestChan chan Db_request, doneChan chan bool) {
 
 	fmt.Printf("serveDatabase: %v\n", database)
 
 	for {
-        fmt.Printf("Waiting for select statement ...\n")
+		fmt.Printf("Waiting for select statement ...\n")
 		select {
-        case req := <-requestChan:
-            fmt.Printf("I got a request: %v\n", req)
-            go distributeRequest(database, req)
-        case <-doneChan:
+		case req := <-requestChan:
+			fmt.Printf("I got a request: %v\n", req)
+			go distributeRequest(database, req)
+		case <-doneChan:
 			fmt.Printf("serveDatabase: Got closing signal. Stop serving.\n")
 			return
 		}
@@ -58,37 +58,64 @@ func serveDatabase(database mysql.Conn, requestChan chan Db_request , doneChan c
 
 func distributeRequest(database mysql.Conn, req Db_request) {
 
-    switch(req.request) {
-        case "getBeehives":         req.dataChan <- getBeehives(database)
-        default:                    req.dataChan <- []Db_data{}
-    }
+	switch req.request {
+	case "getBeehives":
+		req.dataChan <- getBeehives(database)
+	case "loginBeehive":
+		req.dataChan <- loginBeehive(database, req.parameter)
+	default:
+		req.dataChan <- []Db_data{}
+	}
 }
 
 func getBeehives(database mysql.Conn) []Db_data {
 
-    s := "select name from beehives";
+	s := "select name from beehives"
 
-    rows, res, err := database.Query(s)
+	rows, res, err := database.Query(s)
 
-    if err == nil {
-        return collectRows(rows, map[string]int{
-            "name":res.Map("name"),
-        })
-    }
+	if err == nil {
+		return collectRows(rows, map[string]int{
+			"name": res.Map("name"),
+		})
+	}
 
-    return []Db_data{}
+	return []Db_data{}
+}
+
+func loginBeehive(database mysql.Conn, p Db_data) []Db_data {
+
+	s := fmt.Sprintf("select id, secret, shortname from beehives where shortname = '%s'", p["beehive"])
+
+	rows, res, err := database.Query(s)
+	fmt.Printf("%d rows fetched: %v.", len(rows), rows)
+
+    row := rows[0]
+
+	if err == nil {
+        secret := row.Str(res.Map("secret"))
+		fmt.Printf("Comparing '%s' with '%s'.\n", p["secret"], secret)
+		if p["secret"] == secret {
+			return []Db_data{{
+				"id":        row.Str(res.Map("id")),
+				"shortname": row.Str(res.Map("shortname")),
+			}}
+		}
+	}
+
+	return []Db_data{}
 }
 
 func collectRows(rows []mysql.Row, cols map[string]int) []Db_data {
-    data := []Db_data{}
+	data := []Db_data{}
 
-    for _, row := range rows {
-        m := Db_data{}
-        for name, col := range cols {
-            m[name] = row.Str(col)
-        }
-        data = append(data, m)
-    }
+	for _, row := range rows {
+		m := Db_data{}
+		for name, col := range cols {
+			m[name] = row.Str(col)
+		}
+		data = append(data, m)
+	}
 
-    return data
+	return data
 }
