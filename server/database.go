@@ -77,25 +77,36 @@ func getBeehives(database mysql.Conn) []Cmd_data {
     return []Cmd_data{{"error":err.Error()}}
 }
 
-func loginBeehive(database mysql.Conn, p Cmd_data) []Cmd_data {
+func loginBeehive(db mysql.Conn, p Cmd_data) []Cmd_data {
 
-	s := fmt.Sprintf("select id, secret, shortname from beehives where shortname = '%s'", p["beehive"])
+    beehive, ok1 := p["beehive"];
+    secret1, ok2  := p["secret"];
+    var err error
 
-	rows, res, err := database.Query(s)
+    if ok1 && ok2 {
 
-    row := rows[0]
+        s := fmt.Sprintf("select id, secret, shortname from beehives where shortname = '%s'", beehive)
 
-	if err == nil {
-        secret := row.Str(res.Map("secret"))
-		if p["secret"] == secret {
-			return []Cmd_data{{
-				"id":        row.Str(res.Map("id")),
-				"shortname": row.Str(res.Map("shortname")),
-			}}
-		}
+        row, res, err := db.QueryFirst(s)
+        if err == nil {
 
-        err = errors.New("Wrong secret!")
-	}
+            fmt.Printf("1 (%v) (%v)\n", row, res)
+            secret2 := row.Str(res.Map("secret"))
+
+            fmt.Printf("2\n")
+            if secret1 == secret2 {
+                return []Cmd_data{{
+                    "id":        row.Str(res.Map("id")),
+                    "shortname": row.Str(res.Map("shortname")),
+                }}
+
+            } else {
+                err = errors.New("Wrong secret.")
+            }
+        }
+    } else {
+        err = errors.New("Parameter missing: beehive or secret.")
+    }
 
     return []Cmd_data{{"error":err.Error()}}
 }
