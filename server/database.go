@@ -7,13 +7,14 @@ package main
 // that takes request from the websocket connections to the players
 
 import (
-	_ "encoding/json"
 	"fmt"
-	"github.com/ziutek/mymysql/mysql"
-	_ "github.com/ziutek/mymysql/thrsafe"
-	_ "io"
-	_ "log"
-	_ "os"
+    "database/sql"
+    _ "github.com/go-sql-driver/mysql"
+	// "github.com/ziutek/mymysql/mysql"
+	// "github.com/ziutek/mymysql/thrsafe"
+	// "io"
+	// "log"
+	// "os"
     "errors"
 )
 
@@ -24,60 +25,70 @@ type Db_request struct {
 }
 
 func StartDatabase(config map[string]string) (chan Db_request, chan bool) {
-	database := mysql.New("tcp", "", "127.0.0.1:3306", config["user"], config["pass"], config["database"])
-	if err := database.Connect(); err != nil {
+    str := config["user"]+":"+config["pass"]+"@tcp(127.0.0.1:3306)/"+config["database"];
+    fmt.Printf(str)
+    db, err := sql.Open("mysql", str)
+    err = db.Ping()
+	if err != nil {
 		panic(err)
 	}
 
 	requestChan := make(chan Db_request)
 	doneChan := make(chan bool)
 
-	go serveDatabase(database, requestChan, doneChan)
+	go serveDatabase(db, requestChan, doneChan)
 
 	return requestChan, doneChan
 }
 
-func serveDatabase(database mysql.Conn, requestChan chan Db_request, doneChan chan bool) {
+func serveDatabase(db *sql.DB, requestChan chan Db_request, doneChan chan bool) {
 
 	for {
 		select {
 		case req := <-requestChan:
 			fmt.Printf("I got a request: %v\n", req)
-			go distributeRequest(database, req)
+			go distributeRequest(db, req)
 		case <-doneChan:
 			return
 		}
 	}
 }
 
-func distributeRequest(database mysql.Conn, req Db_request) {
+func distributeRequest(db *sql.DB, req Db_request) {
 
 	switch req.request {
 	case "getBeehives":
-		req.dataChan <- getBeehives(database)
+		req.dataChan <- getBeehives(db)
 	case "loginBeehive":
-		req.dataChan <- loginBeehive(database, req.parameter)
+		req.dataChan <- loginBeehive(db, req.parameter)
 	default:
 		req.dataChan <- []Cmd_data{}
 	}
 }
 
-func getBeehives(database mysql.Conn) []Cmd_data {
+func getBeehives(db *sql.DB) []Cmd_data {
 
-	s := "select name from beehives"
+	rows, err := db.Query("select name from beehives")
+	if err != nil {
+        panic(err)
+    }
+    defer rows.Close()
 
-	rows, res, err := database.Query(s)
-
-	if err == nil {
-		return collectRows(rows, map[string]int{
-			"name": res.Map("name"),
-		})
+    data := []Cmd_data{}
+    for i := 0 ; rows.Next() ; i++ {
+        var name string
+        err := rows.Scan(&name)
+        if err != nil {
+            panic(err)
+        }
+        data = append(data, Cmd_data{
+            "name": name,
+        })
 	}
-
-    return []Cmd_data{{"error":err.Error()}}
+    return data;
 }
 
-func loginBeehive(db mysql.Conn, p Cmd_data) []Cmd_data {
+func loginBeehive(db *sql.DB, p Cmd_data) []Cmd_data {
 
     beehive, ok1 := p["beehive"];
     secret1, ok2  := p["secret"];
@@ -85,19 +96,21 @@ func loginBeehive(db mysql.Conn, p Cmd_data) []Cmd_data {
 
     if ok1 && ok2 {
 
-        s := fmt.Sprintf("select id, secret, shortname from beehives where shortname = '%s'", beehive)
-
-        row, res, err := db.QueryFirst(s)
-        if err == nil {
-
-            fmt.Printf("1 (%v) (%v)\n", row, res)
-            secret2 := row.Str(res.Map("secret"))
-
-            fmt.Printf("2\n")
+        var id, secret2, shortname string
+        err = db.QueryRow("select id, secret, shortname from beehives where shortname = ?", beehive).Scan(&id, &secret2, &shortname)
+        switch {
+        case err == sql.ErrNoRows:
+            fmt.Printf("Beehive not found!\n", err)
+            err = errors.New("Beehive '"+beehive+"' not found.")
+        case err != nil:
+            fmt.Printf("Beehive absolutely not found!\n", err)
+            panic(err)
+        default:
+            fmt.Printf("Beehive found!\n", err)
             if secret1 == secret2 {
                 return []Cmd_data{{
-                    "id":        row.Str(res.Map("id")),
-                    "shortname": row.Str(res.Map("shortname")),
+                    "id":        id,
+                    "shortname": shortname,
                 }}
 
             } else {
@@ -108,19 +121,9 @@ func loginBeehive(db mysql.Conn, p Cmd_data) []Cmd_data {
         err = errors.New("Parameter missing: beehive or secret.")
     }
 
-    return []Cmd_data{{"error":err.Error()}}
+    fmt.Printf("1 1 1\n", err)
+    return []Cmd_data{{
+        "error": err.Error(),
+    }}
 }
 
-func collectRows(rows []mysql.Row, cols map[string]int) []Cmd_data {
-	data := []Cmd_data{}
-
-	for _, row := range rows {
-		m := Cmd_data{}
-		for name, col := range cols {
-			m[name] = row.Str(col)
-		}
-		data = append(data, m)
-	}
-
-	return data
-}
