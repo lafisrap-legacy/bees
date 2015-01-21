@@ -55,8 +55,6 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
             dataChan: dataChan,
             parameter: cmd.parameter,
         }
-        //data := <-dataChan
-        //cmd.dataChan <- data
         cmd.dataChan <- <-dataChan
     default:
         cmd.dataChan <- []Cmd_data{}

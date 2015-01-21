@@ -7,7 +7,7 @@ package main
 // that takes request from the websocket connections to the players
 
 import (
-	"fmt"
+	_ "fmt"
     "database/sql"
     _ "github.com/go-sql-driver/mysql"
 	// "github.com/ziutek/mymysql/mysql"
@@ -26,7 +26,6 @@ type Db_request struct {
 
 func StartDatabase(config map[string]string) (chan Db_request, chan bool) {
     str := config["user"]+":"+config["pass"]+"@tcp(127.0.0.1:3306)/"+config["database"];
-    fmt.Printf(str)
     db, err := sql.Open("mysql", str)
     err = db.Ping()
 	if err != nil {
@@ -46,7 +45,6 @@ func serveDatabase(db *sql.DB, requestChan chan Db_request, doneChan chan bool) 
 	for {
 		select {
 		case req := <-requestChan:
-			fmt.Printf("I got a request: %v\n", req)
 			go distributeRequest(db, req)
 		case <-doneChan:
 			return
@@ -60,7 +58,7 @@ func distributeRequest(db *sql.DB, req Db_request) {
 	case "getBeehives":
 		req.dataChan <- getBeehives(db)
 	case "loginBeehive":
-		req.dataChan <- loginBeehive(db, req.parameter)
+        req.dataChan <- loginBeehive(db, req.parameter)
 	default:
 		req.dataChan <- []Cmd_data{}
 	}
@@ -100,13 +98,10 @@ func loginBeehive(db *sql.DB, p Cmd_data) []Cmd_data {
         err = db.QueryRow("select id, secret, shortname from beehives where shortname = ?", beehive).Scan(&id, &secret2, &shortname)
         switch {
         case err == sql.ErrNoRows:
-            fmt.Printf("Beehive not found!\n", err)
             err = errors.New("Beehive '"+beehive+"' not found.")
         case err != nil:
-            fmt.Printf("Beehive absolutely not found!\n", err)
             panic(err)
         default:
-            fmt.Printf("Beehive found!\n", err)
             if secret1 == secret2 {
                 return []Cmd_data{{
                     "id":        id,
@@ -121,7 +116,6 @@ func loginBeehive(db *sql.DB, p Cmd_data) []Cmd_data {
         err = errors.New("Parameter missing: beehive or secret.")
     }
 
-    fmt.Printf("1 1 1\n", err)
     return []Cmd_data{{
         "error": err.Error(),
     }}
