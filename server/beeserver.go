@@ -5,7 +5,7 @@ package main
 
 import (
 	_ "encoding/json"
-	"fmt"
+	_ "fmt"
 	_ "io"
     "log"
 	_ "os"
@@ -35,6 +35,5 @@ func main() {
     commandChan := StartController(config, requestChan)
     StartConnector(config, commandChan)
 
-    fmt.Printf("Initialization is done. Waiting for end.")
     doneChan <- true
 }

@@ -57,6 +57,12 @@ func testLoginBeehive(t *testing.T, requestChan chan Db_request) {
             "beehive" : "yaylaswiese",
             "secret"  : "ta",
         },
+    },{
+        request: "loginBeehive",
+        parameter: Cmd_data{
+            "beehives" : "yaylaswiese",
+            "secret"  : "tat",
+        },
     },}
 
     results := []map[string]string{{
@@ -66,6 +72,8 @@ func testLoginBeehive(t *testing.T, requestChan chan Db_request) {
             "error" : "Beehive 'yaylaswies' not found.",
         },{
             "error" : "Wrong secret.",
+        },{
+            "error" : "Parameter missing: beehive or secret.",
         },
     }
 

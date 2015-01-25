@@ -20,15 +20,12 @@ func (s socket) Close() error {
 	return nil
 }
 
-const listenAddr = "192.168.178.41:4000"
-
-var partner = make(chan io.ReadWriteCloser)
-
 var dbChan = make(chan string)
 
 func StartConnector(config map[string]string, commandChan chan Command) {
 
-    http.Handle("/socket", websocket.Handler(func(ws *websocket.Conn) {
+    http.Handle(config["wsdir"], websocket.Handler(func(ws *websocket.Conn) {
+        fmt.Printf("Started new Socket handler ...")
         s := socket{ws, make(chan bool)}
         go translateMessages(s, commandChan)
         <-s.done
@@ -36,7 +33,7 @@ func StartConnector(config map[string]string, commandChan chan Command) {
 
     fmt.Printf("Started Socket handler ...")
 
-    err := http.ListenAndServe(listenAddr, nil)
+    err := http.ListenAndServe(config["wsaddress"]+":"+config["wsport"], nil)
     if err != nil {
         log.Fatal(err)
         fmt.Println(err)
@@ -48,7 +45,6 @@ func translateMessages(s socket, commandChan chan Command) {
     decoder := json.NewDecoder(s)
     encoder := json.NewEncoder(s)
     for {
-        fmt.Printf("Waiting for a message ... \n")
         var message Cmd_data
         err := decoder.Decode(&message)
         if err != nil {
@@ -56,7 +52,6 @@ func translateMessages(s socket, commandChan chan Command) {
             s.done <- true
             return
         }
-        fmt.Printf("Message received and decoded: %v. \n",message)
         dataChan := make(chan []Cmd_data)
         if command, ok := message["command"]; ok {
             sid := message["sid"]
@@ -67,7 +62,6 @@ func translateMessages(s socket, commandChan chan Command) {
                 dataChan: dataChan,
                 parameter: message,
             }
-            fmt.Printf("Sending command %s. \n",command)
 
             go catchReturn(dataChan, encoder, sid)
         }

@@ -27,6 +27,7 @@ type Db_request struct {
 func StartDatabase(config map[string]string) (chan Db_request, chan bool) {
     str := config["user"]+":"+config["pass"]+"@tcp(127.0.0.1:3306)/"+config["database"];
     db, err := sql.Open("mysql", str)
+    db.SetMaxOpenConns(50)
     err = db.Ping()
 	if err != nil {
 		panic(err)
@@ -68,7 +69,7 @@ func getBeehives(db *sql.DB) []Cmd_data {
 
 	rows, err := db.Query("select name from beehives")
 	if err != nil {
-        panic(err)
+        panic("getBeehives: "+ err.Error())
     }
     defer rows.Close()
 
@@ -100,7 +101,7 @@ func loginBeehive(db *sql.DB, p Cmd_data) []Cmd_data {
         case err == sql.ErrNoRows:
             err = errors.New("Beehive '"+beehive+"' not found.")
         case err != nil:
-            panic(err)
+            panic("loginBeehive: "+ err.Error())
         default:
             if secret1 == secret2 {
                 return []Cmd_data{{
