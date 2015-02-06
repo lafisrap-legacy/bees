@@ -1,4 +1,4 @@
-# Database / Commands Design for bees Server
+# Database / Server Commands Design
 * Version 0.1
 * * 12.1.2015
 
@@ -21,10 +21,10 @@ Live game content is not stored in the database.
 
 ## Table definitions
 
-### player
+### players
 **id**: Original SHA1 hash of name and password of player  
-**password**: Current SH1 hash of name and password (after name or password change)  
-**beehive**: Name of the home beehive  
+**beehive**: beehiveId  
+**magicSpell**: Magic Spell to take over a player id
 
 ### beehive
 **id**: Machine name of a beehive
@@ -60,13 +60,18 @@ Live game content is not stored in the database.
 
 ## Commands
 ### signup
-Handed through to signup request
+-> Handed through to signup request
 ### login
 #### Params
 * playerId
 
 #### Result  
 * sessionId
+
+##### Tasks
+* Check for double login, and in case logout the other 
+* Check for playerId in Database
+* Create a session id, bind it to the playerId in memory ???
 
 ## Requests
 ### signup
@@ -87,8 +92,5 @@ Handed through to signup request
 #### Result  
 * sessionId
 
-#### Tasks
-* Check for double login, and in case logout the other 
-* Create a session id, bind it to the playerId in memory ???
 * 
 
