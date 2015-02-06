@@ -7,15 +7,15 @@ package main
 // that takes request from the websocket connections to the players
 
 import (
-	_ "fmt"
-    "database/sql"
-    _ "github.com/go-sql-driver/mysql"
-	// "github.com/ziutek/mymysql/mysql"
-	// "github.com/ziutek/mymysql/thrsafe"
+	"database/sql"
+	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	// "io"
 	// "log"
 	// "os"
-    "errors"
+	"errors"
+	"crypto/rand"
+	"crypto/sha1"
 )
 
 type Db_request struct {
@@ -25,10 +25,10 @@ type Db_request struct {
 }
 
 func StartDatabase(config map[string]string) (chan Db_request, chan bool) {
-    str := config["user"]+":"+config["pass"]+"@tcp(127.0.0.1:3306)/"+config["database"];
-    db, err := sql.Open("mysql", str)
-    db.SetMaxOpenConns(50)
-    err = db.Ping()
+	str := config["user"] + ":" + config["pass"] + "@tcp(127.0.0.1:3306)/" + config["database"]
+	db, err := sql.Open("mysql", str)
+	db.SetMaxOpenConns(50)
+	err = db.Ping()
 	if err != nil {
 		panic(err)
 	}
@@ -56,69 +56,110 @@ func serveDatabase(db *sql.DB, requestChan chan Db_request, doneChan chan bool) 
 func distributeRequest(db *sql.DB, req Db_request) {
 
 	switch req.request {
+	case "signup":
+		req.dataChan <- signup(db, req.parameter)
+	case "login":
+		req.dataChan <- login(db, req.parameter)
 	case "getBeehives":
 		req.dataChan <- getBeehives(db)
 	case "loginBeehive":
-        req.dataChan <- loginBeehive(db, req.parameter)
+		req.dataChan <- loginBeehive(db, req.parameter)
 	default:
 		req.dataChan <- []Cmd_data{}
 	}
+}
+
+func signup(db *sql.DB, p Cmd_data) []Cmd_data {
+	var playerId string
+
+	magicSpell, ok := p["magicSpell"]
+
+	if !ok {
+		b := make([]byte, 20)
+		_, err := rand.Read(b)
+		if err != nil {
+			panic("signup: " + err.Error())
+		}
+		fmt.Printf("Random bytes: %v\n",b)
+		sum := sha1.Sum(b)
+		playerId = string(sum[:20])
+		fmt.Printf("SHA1 bytes: %s\n",playerId)
+
+		// create player id
+		// hash
+		// create entry in database with default beehive and no magicSpell
+	} else {
+		// search for magicSpell in players table, get player id
+		fmt.Printf("Magic spell: %s\n",magicSpell)
+	}
+
+	data := []Cmd_data{{
+		"playerId" : playerId,
+	}}
+
+	return data
+}
+
+// function for retrieving SHA1 random string in hex values:
+
+func login(db *sql.DB, p Cmd_data) []Cmd_data {
+
+	return nil
 }
 
 func getBeehives(db *sql.DB) []Cmd_data {
 
 	rows, err := db.Query("select name from beehives")
 	if err != nil {
-        panic("getBeehives: "+ err.Error())
-    }
-    defer rows.Close()
-
-    data := []Cmd_data{}
-    for i := 0 ; rows.Next() ; i++ {
-        var name string
-        err := rows.Scan(&name)
-        if err != nil {
-            panic(err)
-        }
-        data = append(data, Cmd_data{
-            "name": name,
-        })
+		panic("getBeehives: " + err.Error())
 	}
-    return data;
+	defer rows.Close()
+
+	data := []Cmd_data{}
+	for i := 0; rows.Next(); i++ {
+		var name string
+		err := rows.Scan(&name)
+		if err != nil {
+			panic(err)
+		}
+		data = append(data, Cmd_data{
+			"name": name,
+		})
+	}
+	return data
 }
 
 func loginBeehive(db *sql.DB, p Cmd_data) []Cmd_data {
 
-    beehive, ok1 := p["beehive"];
-    secret1, ok2  := p["secret"];
-    var err error
+	beehive, ok1 := p["beehive"]
+	secret1, ok2 := p["secret"]
+	var err error
 
-    if ok1 && ok2 {
+	if ok1 && ok2 {
 
-        var id, secret2, shortname string
-        err = db.QueryRow("select id, secret, shortname from beehives where shortname = ?", beehive).Scan(&id, &secret2, &shortname)
-        switch {
-        case err == sql.ErrNoRows:
-            err = errors.New("Beehive '"+beehive+"' not found.")
-        case err != nil:
-            panic("loginBeehive: "+ err.Error())
-        default:
-            if secret1 == secret2 {
-                return []Cmd_data{{
-                    "id":        id,
-                    "shortname": shortname,
-                }}
+		var id, secret2, shortname string
+		err = db.QueryRow("select id, secret, shortname from beehives where shortname = ?", beehive).Scan(&id, &secret2, &shortname)
+		switch {
+		case err == sql.ErrNoRows:
+			err = errors.New("Beehive '" + beehive + "' not found.")
+		case err != nil:
+			panic("loginBeehive: " + err.Error())
+		default:
+			if secret1 == secret2 {
+				return []Cmd_data{{
+					"id":        id,
+					"shortname": shortname,
+				}}
 
-            } else {
-                err = errors.New("Wrong secret.")
-            }
-        }
-    } else {
-        err = errors.New("Parameter missing: beehive or secret.")
-    }
+			} else {
+				err = errors.New("Wrong secret.")
+			}
+		}
+	} else {
+		err = errors.New("Parameter missing: beehive or secret.")
+	}
 
-    return []Cmd_data{{
-        "error": err.Error(),
-    }}
+	return []Cmd_data{{
+		"error": err.Error(),
+	}}
 }
-
