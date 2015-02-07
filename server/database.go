@@ -15,12 +15,13 @@ import (
 	// "os"
 	"errors"
 	"crypto/rand"
-	"crypto/sha1"
+	// "crypto/sha1"
 	"encoding/hex"
 )
 
 type Db_request struct {
 	request   string
+	session	  *Session
 	dataChan  chan []Cmd_data
 	parameter Cmd_data
 }
@@ -40,6 +41,20 @@ func StartDatabase(config map[string]string) (chan Db_request, chan bool) {
 	go serveDatabase(db, requestChan, doneChan)
 
 	return requestChan, doneChan
+}
+
+func GetHash(bytes []byte) string {
+	if bytes == nil {
+
+		bytes = make([]byte, 20)
+		_, err := rand.Read(bytes)
+		if err != nil {
+			panic("getHash: " + err.Error())
+		}
+	}
+
+	//sum := sha1.Sum(bytes)
+	return hex.EncodeToString(bytes[:20])
 }
 
 func serveDatabase(db *sql.DB, requestChan chan Db_request, doneChan chan bool) {
@@ -79,7 +94,7 @@ func signup(db *sql.DB, p Cmd_data) []Cmd_data {
 		var id string
 		for playerId == "" {
 			// create player id
-			playerId = getSHA1(nil)
+			playerId = GetHash(nil)
 
 			// look if playerId is already in use (very unlikly)
 			err := db.QueryRow("select id from players where id = ?", playerId).Scan(&id)
@@ -94,7 +109,7 @@ func signup(db *sql.DB, p Cmd_data) []Cmd_data {
 		}
 
 		// insert new player id
-		_, err := db.Exec("insert into players (id, beehive, logins) values (?,?,?)", playerId, "yaylaswiese", 0)
+		_, err := db.Exec("insert into players (id, beehive, magicspell, logins) values (?,?,?,?)", playerId, "yaylaswiese", "", 0)
 		if err != nil {
 			panic("signup: " + err.Error())
 		}
@@ -110,23 +125,39 @@ func signup(db *sql.DB, p Cmd_data) []Cmd_data {
 	return data
 }
 
-func getSHA1(bytes []byte) string {
-	if bytes == nil {
-
-		bytes = make([]byte, 20)
-		_, err := rand.Read(bytes)
-		if err != nil {
-			panic("getSHA1: " + err.Error())
-		}
-	}
-
-	sum := sha1.Sum(bytes)
-	return hex.EncodeToString(sum[:20])
-}
-
 func login(db *sql.DB, p Cmd_data) []Cmd_data {
 
-	return nil
+	playerId, ok := p["playerId"]
+	var err error
+	if ok {
+
+		// look if playerId is available 
+		var id, beehive, magicspell string
+		var logins int;
+		err := db.QueryRow("SELECT id, beehive, magicspell, logins FROM players WHERE id = ?", playerId).Scan(&id,&beehive,&magicspell,&logins)
+		switch {
+		case err == sql.ErrNoRows:
+			err = errors.New("Player id not found.")
+		case err == nil:
+			// increment login counter
+			_, err := db.Exec("UPDATE players SET logins = ? WHERE id = ?", logins+1 , playerId)
+			if err != nil {
+				panic("login: UPDATE" + err.Error())
+			}
+			return []Cmd_data{{
+				"beehive": beehive,
+				"magicspell": magicspell,
+			}}
+		default:
+			panic("login SELECT: " + err.Error())
+		}
+	} else {
+		err = errors.New("PlayerId paramenter missing.")
+	}
+
+	return []Cmd_data{{
+		"error": err.Error(),
+	}}
 }
 
 func getBeehives(db *sql.DB) []Cmd_data {

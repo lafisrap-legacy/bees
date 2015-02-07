@@ -52,13 +52,23 @@ func translateMessages(s socket, commandChan chan Command) {
 		}
 		dataChan := make(chan []Cmd_data)
 		if command, ok := message["command"]; ok {
-			sid := message["sid"]
-			delete(message, "sid")
+			var sid string
+			if sid, ok = message["sid"]; !ok {
+				sid = ""
+			} else {
+				delete(message, "sid")
+			}
 			delete(message, "command")
+fmt.Printf("Connector: Sid: %s, Message: %s\n",sid, command)
 			commandChan <- Command{
 				command:   command,
+				sid:	   sid,
 				dataChan:  dataChan,
 				parameter: message,
+			}
+
+			if sid == "" {
+				sid = command
 			}
 
 			go catchReturn(dataChan, encoder, sid)
