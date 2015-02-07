@@ -16,6 +16,7 @@ import (
 	"errors"
 	"crypto/rand"
 	"crypto/sha1"
+	"encoding/hex"
 )
 
 type Db_request struct {
@@ -75,19 +76,28 @@ func signup(db *sql.DB, p Cmd_data) []Cmd_data {
 	magicSpell, ok := p["magicSpell"]
 
 	if !ok {
-		b := make([]byte, 20)
-		_, err := rand.Read(b)
+		var id string
+		for playerId == "" {
+			// create player id
+			playerId = getSHA1(nil)
+
+			// look if playerId is already in use (very unlikly)
+			err := db.QueryRow("select id from players where id = ?", playerId).Scan(&id)
+			fmt.Printf("err value is: %s\n", err.Error())
+			switch {
+			case err == sql.ErrNoRows:
+			case err == nil:
+				playerId = ""
+			default:
+				panic("signup: " + err.Error())
+			}
+		}
+
+		// insert new player id
+		_, err := db.Exec("insert into players (id, beehive, logins) values (?,?,?)", playerId, "yaylaswiese", 0)
 		if err != nil {
 			panic("signup: " + err.Error())
 		}
-		fmt.Printf("Random bytes: %v\n",b)
-		sum := sha1.Sum(b)
-		playerId = string(sum[:20])
-		fmt.Printf("SHA1 bytes: %s\n",playerId)
-
-		// create player id
-		// hash
-		// create entry in database with default beehive and no magicSpell
 	} else {
 		// search for magicSpell in players table, get player id
 		fmt.Printf("Magic spell: %s\n",magicSpell)
@@ -100,7 +110,19 @@ func signup(db *sql.DB, p Cmd_data) []Cmd_data {
 	return data
 }
 
-// function for retrieving SHA1 random string in hex values:
+func getSHA1(bytes []byte) string {
+	if bytes == nil {
+
+		bytes = make([]byte, 20)
+		_, err := rand.Read(bytes)
+		if err != nil {
+			panic("getSHA1: " + err.Error())
+		}
+	}
+
+	sum := sha1.Sum(bytes)
+	return hex.EncodeToString(sum[:20])
+}
 
 func login(db *sql.DB, p Cmd_data) []Cmd_data {
 
