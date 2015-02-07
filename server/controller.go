@@ -4,14 +4,18 @@ package main
 //
 
 import (
+	"time"
 	_ "encoding/json"
-	_ "fmt"
+	"fmt"
 	_ "io"
 	_ "log"
 	_ "os"
 )
 
-const ()
+const (
+	// time till inactiv sessions are cleared
+	sessionRefresh time.Duration = 300 * time.Second
+)
 
 type Command struct {
 	command   string
@@ -25,6 +29,7 @@ type Cmd_data map[string]string
 type Session struct {
 	playerId string
 	beehive string
+	timestamp time.Time
 }
 
 func StartController(_ map[string]string, requestChan chan Db_request) chan Command {
@@ -38,10 +43,13 @@ func StartController(_ map[string]string, requestChan chan Db_request) chan Comm
 
 func handleCommands(commandChan chan Command, requestChan chan Db_request) {
 	sessions := make(map[string]Session)
+	sessionTicker := time.NewTicker(sessionRefresh)
 	for {
 		select {
 		case cmd := <-commandChan:
 			go commandInterpreter(cmd, requestChan, sessions)
+		case <- sessionTicker.C:
+			go refreshSession(sessions)
 		}
 	}
 }
@@ -54,7 +62,9 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 	var ok bool
 	if cmd.sid != "" {
 		// look for session 
-		if session, ok = sessions[cmd.sid] ; !ok {
+		if session, ok = sessions[cmd.sid] ; ok {
+			session.timestamp = time.Now()
+		} else {
 
 			cmd.dataChan <- []Cmd_data{{
 				"error" : "Session ID not valid.",
@@ -90,9 +100,11 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 
 		// make new sid, put it into the session table
 		sid := GetHash(nil)
+		fmt.Printf("Inserting %s into session.\n",sid)
 		sessions[sid] = Session{
 			playerId : data[0]["playerid"],
 			beehive  : data[0]["beehive"],
+			timestamp : time.Now(),
 		}
 		data[0]["sid"] = sid
 		cmd.dataChan <- data
@@ -100,5 +112,16 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 		cmd.dataChan <- []Cmd_data{{
 			"error" : "Command not available.",
 		}}
+	}
+}
+
+func refreshSession(sessions map[string]Session) {
+	fmt.Printf("Entering refresh... ")
+	now := time.Now()
+	for sid := range sessions {
+		if now.After(sessions[sid].timestamp.Add(sessionRefresh)) {
+			delete( sessions, sid )
+			fmt.Printf("Deleting %s from session.\n",sid)
+		}
 	}
 }
