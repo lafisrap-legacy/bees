@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	// time till inactiv sessions are cleared
+	// time till inactive sessions are cleared
 	sessionRefresh time.Duration = 300 * time.Second
 )
 
@@ -58,11 +58,13 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 
 	dataChan := make(chan []Cmd_data)
 
+	fmt.Printf("Session manager: Received command: %s.\n",cmd.command)
 	var session Session
 	var ok bool
 	if cmd.sid != "" {
 		// look for session 
 		if session, ok = sessions[cmd.sid] ; ok {
+			fmt.Printf("Session manager: Found session %s.\n",cmd.sid)
 			session.timestamp = time.Now()
 		} else {
 
@@ -80,6 +82,8 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 	case "loginBeehive":
 		fallthrough
 	case "getBeehives":
+		fallthrough
+	case "saveState":
 		fallthrough
 	case "signup":
 		requestChan <- Db_request{
@@ -100,9 +104,9 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 
 		// make new sid, put it into the session table
 		sid := GetHash(nil)
-		fmt.Printf("Inserting %s into session.\n",sid)
+		fmt.Printf("Login: Inserting %s into session.\nPlayerId: %s\n",sid,cmd.parameter["playerId"])
 		sessions[sid] = Session{
-			playerId : data[0]["playerid"],
+			playerId : cmd.parameter["playerId"],
 			beehive  : data[0]["beehive"],
 			timestamp : time.Now(),
 		}

@@ -10,12 +10,8 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	// "io"
-	// "log"
-	// "os"
 	"errors"
 	"crypto/rand"
-	// "crypto/sha1"
 	"encoding/hex"
 )
 
@@ -43,6 +39,9 @@ func StartDatabase(config map[string]string) (chan Db_request, chan bool) {
 	return requestChan, doneChan
 }
 
+/*
+ * Helper functions
+*/
 func GetHash(bytes []byte) string {
 	if bytes == nil {
 
@@ -76,6 +75,8 @@ func distributeRequest(db *sql.DB, req Db_request) {
 		req.dataChan <- signup(db, req.parameter)
 	case "login":
 		req.dataChan <- login(db, req.parameter)
+	case "saveState":
+		req.dataChan <- saveState(db, req.session, req.parameter)
 	case "getBeehives":
 		req.dataChan <- getBeehives(db)
 	case "loginBeehive":
@@ -109,7 +110,7 @@ func signup(db *sql.DB, p Cmd_data) []Cmd_data {
 		}
 
 		// insert new player id
-		_, err := db.Exec("insert into players (id, beehive, magicspell, logins) values (?,?,?,?)", playerId, "yaylaswiese", "", 0)
+		_, err := db.Exec("insert into players (id, beehive, magicspell, logins, gamestate) values (?,?,?,?,?)", playerId, "yaylaswiese", "", 0,"")
 		if err != nil {
 			panic("signup: " + err.Error())
 		}
@@ -132,9 +133,9 @@ func login(db *sql.DB, p Cmd_data) []Cmd_data {
 	if ok {
 
 		// look if playerId is available 
-		var id, beehive, magicspell string
+		var id, beehive, magicspell, gamestate string
 		var logins int;
-		err := db.QueryRow("SELECT id, beehive, magicspell, logins FROM players WHERE id = ?", playerId).Scan(&id,&beehive,&magicspell,&logins)
+		err := db.QueryRow("SELECT id, beehive, magicspell, logins, gamestate FROM players WHERE id = ?", playerId).Scan(&id,&beehive,&magicspell,&logins,&gamestate)
 		switch {
 		case err == sql.ErrNoRows:
 			err = errors.New("Player id not found.")
@@ -144,21 +145,45 @@ func login(db *sql.DB, p Cmd_data) []Cmd_data {
 			if err != nil {
 				panic("login: UPDATE" + err.Error())
 			}
+
 			return []Cmd_data{{
 				"beehive": beehive,
 				"magicspell": magicspell,
+				"gamestate": gamestate,
 			}}
 		default:
 			panic("login SELECT: " + err.Error())
 		}
 	} else {
-		err = errors.New("PlayerId paramenter missing.")
+		err = errors.New("PlayerId parameter missing.")
 	}
 
 	return []Cmd_data{{
 		"error": err.Error(),
 	}}
 }
+
+func saveState(db *sql.DB, session *Session, p Cmd_data) []Cmd_data {
+
+	var err error
+	playerId := session.playerId;
+	gameState, ok := p["gameState"] // here I get a map,stringify it?
+	if ok {
+
+		_, err = db.Exec("UPDATE players SET gamestate = ? WHERE id = ?", gameState , playerId)
+		if err != nil {
+			panic("saveState: UPDATE" + err.Error())
+		}
+		return []Cmd_data{{	}}
+	} else {
+		err = errors.New("GameState parameter missing.")
+	}
+
+	return []Cmd_data{{
+		"error": err.Error(),
+	}}
+}
+
 
 func getBeehives(db *sql.DB) []Cmd_data {
 

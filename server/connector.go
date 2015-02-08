@@ -58,8 +58,8 @@ func translateMessages(s socket, commandChan chan Command) {
 			} else {
 				delete(message, "sid")
 			}
+			fmt.Printf("Connector: received command '%s'\n",command)
 			delete(message, "command")
-fmt.Printf("Connector: Sid: %s, Message: %s\n",sid, command)
 			commandChan <- Command{
 				command:   command,
 				sid:	   sid,
