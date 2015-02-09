@@ -1,3 +1,4 @@
+var BeesPlayerId = "7b8b5b7bd88afb88d9bbf90dffd456fd3570ce36";
 
 var TitleLayer = cc.Layer.extend({
     sprite:null,
@@ -40,11 +41,15 @@ var TitleLayer = cc.Layer.extend({
 
 var BeesScene = cc.Scene.extend({
 	weblayer: null,
+	gameState: {},
     onEnter:function () {
         this._super();
-        this.weblayer = new WebLayer();
+        this.weblayer = new WebLayer(this);
         var layer = new TitleLayer();
         this.addChild(layer);
-    }
+        this.GameState().currentGame = "Geschichten";
+        this.weblayer.saveState();
+    },
+    GameState: function() { return this.gameState; }
 });
 

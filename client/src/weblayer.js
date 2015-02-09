@@ -1,11 +1,20 @@
-var BEES_SERVER_ADDRESS = "ws://192.168.1.4:4000/socket",
+var BEES_SERVER_ADDRESS = "ws://192.168.1.111:4000/socket",
 	BEES_RECONNECT_TIME = 10;
+	
+JSON.stringifyWithEscapes = function(obj) {
+	return JSON.stringify(obj).replace(/\"/g,"\\\"");
+} 
 
 var WebLayer = cc.Layer.extend({
 	ws: null,
+	sid: null,
+	sidCbs: [],
+	scene: null,
 	
-    ctor:function () {
+    ctor:function (scene) {
         this._super();
+
+		this.scene = scene;
 
 		this.initWebsocket();             	
         return true;
@@ -16,24 +25,47 @@ var WebLayer = cc.Layer.extend({
 
 		this.ws = new WebSocket(BEES_SERVER_ADDRESS);
 
-		this.ws.onopen = function(evt) { self.onopen(evt) };
-		this.ws.onmessage = function(evt) { self.onmessage(evt); };
-		this.ws.onerror = function(evt) { self.onerror(evt); };
-		this.ws.onclose = function(evt) { self.onclose(evt); };        
+		this.ws.onopen = function(evt) { self.onOpen(evt) };
+		this.ws.onmessage = function(evt) { self.onMessage(evt); };
+		this.ws.onerror = function(evt) { self.onError(evt); };
+		this.ws.onclose = function(evt) { self.onClose(evt); };        
     },
     
-    onopen: function(evt) {
-	    //ws.send('{"command":"signup"}');
-		cc.log("Open!");
-	    this.ws.send('{"command":"login", "playerId":"7b8b5b7bd88afb88d9bbf90dffd456fd3570ce36"}');
+    whenReady: function(cb) {
+    	if( this.sid != null ) {
+    		cb();
+    	} else {
+    		this.sidCbs.push(cb);
+    	}
     },
 
-	onmessage : function(evt) {
-		
-//		var data = evt.data.replace(/\\\"/g,"\"");
-//		data = data.replace(/\"\{/g,"{");
-//		data = data.replace(/\}\"/g,"}");
-//		cc.log("New string: "+data);
+    // call this function if you have no sid
+    login: function() {
+    	var playerId = localStorage.getItem('playerId');
+
+	    if( playerId ) {
+	    	this.sid = null;
+		    this.ws.send('{"command":"login", "playerId":"'+playerId+'"}');
+		} else {
+			// if it is a browser, ask for magic spell, signup with this
+				// if there is no bee server reachable, game cannot start
+		    this.ws.send('{"command":"signup"}');
+		}
+    },
+    
+    saveState: function() {
+    	self = this;
+    	self.whenReady(function() {
+	    	self.ws.send('{"command":"saveState", "sid":"'+self.sid+'", "gameState":"'+JSON.stringifyWithEscapes(self.scene.GameState())+'"}');		
+    	});
+	},
+			// this.ws.send('{"command":"saveState", "sid":"'+this.sid+'", "gameState":"{\\\"currentGame\\\":\\\"stories4\\\"}"}');
+    	    
+    onOpen: function(evt) {
+    	this.login();
+    },
+
+	onMessage : function(evt) {
 		
 		try {
 			var data = JSON.parse(evt.data);
@@ -42,35 +74,42 @@ var WebLayer = cc.Layer.extend({
 		}
 
 		cc.log("Received JSON: " + JSON.stringify(data));
-		
-		if( data.sid == "login" ) {
-			var gameState = {
-				currentGame: "stories"
+
+		switch( data.sid ) {
+		case "login":
+			this.sid = data.data[0].sid;
+			cc.assert(this.sid != null && typeof this.sid === "string","onmessage 'login': Received bad sid.");
+
+			// We are logged in, so we call the waiting callbacks
+			for( var i=0 ; i<this.sidCbs.length ; i++ ) {
+				cc.assert(typeof this.sidCbs[i] === "function", "onmessage 'login': Bad sid callback.");
+				this.sidCbs[i]();
 			}
+			this.sidCbs = [];
+			break;
+		case "signup":
+			BeesPlayerId = data.data[0].playerId;
+			cc.assert(BeesPlayerId != null && typeof BeesPlayerId === "string","onmessage 'signup': Received bad playerId.");
+			// todo: only store playerId it on a smartphone or an own computer
+			localStorage.setItem('playerId',BeesPlayerId);
 
-
-
-			cc.log("Sending Game state: " + JSON.stringify(gameState) + " and sid: "+data.data[0].sid);
-		
-			var json = '{"command":"saveState", "sid":"'+data.data[0].sid+'", "gameState":"{\\\"currentGame\\\":\\\"stories4\\\"}"}';
-			//this.ws.send('{"command":"saveState", "sid":"'+data.data[0].sid+'", "gameState":'+JSON.stringify(gameState)+'}');		
-			this.ws.send('{"command":"saveState", "sid":"'+data.data[0].sid+'", "gameState":"{\\\"currentGame\\\":\\\"stories4\\\"}"}');		
-		}
-		
-		if( data.data[0].gamestate ) {
-			var gamestate = JSON.parse(data.data[0].gamestate);
-			cc.log("GAMESSTATE === %s ===",gamestate.currentGame);
-		}
+			this.login();
+			break;
+		default:
+			if( data.data[0].error ) {
+				cc.log("onmessage, Error from Bees server: "+data.data[0].error);
+			}
+		}		
 	},
 
-	onerror : function(evt) {
+	onError : function(evt) {
 			cc.log("Error accessing WebSocket to "+evt.currentTarget.url);
 	},
 
-	onclose : function(evt) {
+	onClose : function(evt) {
 			var self = this;
 			cc.log("Closing WebSocket connection to "+evt.currentTarget.url);
-			self.ws = null;
+			self.sid = null;
 			
 			// and try to open it again
 			setTimeout(function() {
