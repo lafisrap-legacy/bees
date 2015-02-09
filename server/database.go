@@ -148,8 +148,8 @@ func login(db *sql.DB, p Cmd_data) []Cmd_data {
 
 			return []Cmd_data{{
 				"beehive": beehive,
-				"magicspell": magicspell,
-				"gamestate": gamestate,
+				"magicSpell": magicspell,
+				"gameState": gamestate,
 			}}
 		default:
 			panic("login SELECT: " + err.Error())

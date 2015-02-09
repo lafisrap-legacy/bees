@@ -6,14 +6,13 @@ package main
 import (
 	_ "encoding/json"
 	_ "fmt"
-	_ "io"
-    "log"
-	_ "os"
 	"github.com/jimlawless/cfg"
+	_ "io"
+	"log"
+	_ "os"
 )
 
-const (
-)
+const ()
 
 func LoadConfig() map[string]string {
 	m := make(map[string]string)
@@ -28,12 +27,12 @@ func LoadConfig() map[string]string {
 func main() {
 	config := LoadConfig()
 	if config == nil {
-        panic(config)
+		panic(config)
 	}
 
-    requestChan, doneChan := StartDatabase(config)
-    commandChan := StartController(config, requestChan)
-    StartConnector(config, commandChan)
+	requestChan, doneChan := StartDatabase(config)
+	commandChan := StartController(config, requestChan)
+	StartConnector(config, commandChan)
 
-    doneChan <- true
+	doneChan <- true
 }
