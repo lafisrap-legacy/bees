@@ -1,4 +1,4 @@
-var BeesPlayerId = "7b8b5b7bd88afb88d9bbf90dffd456fd3570ce36";
+var BeesPlayerId = "";
 
 var TitleLayer = cc.Layer.extend({
     sprite:null,
@@ -32,7 +32,7 @@ var TitleLayer = cc.Layer.extend({
         helloLabel.runAction(
             cc.spawn(
                 cc.moveBy(2.5, cc.p(0, size.height - 40)),
-                cc.tintTo(2.5,255,125,0)
+                cc.tintTo(2.5,255,0,0)
             )
         );
         return true;

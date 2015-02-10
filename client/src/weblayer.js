@@ -1,4 +1,4 @@
-var BEES_SERVER_ADDRESS = "ws://192.168.1.111:4000/socket",
+var BEES_SERVER_ADDRESS = "ws://192.168.1.4:4000/socket",
 	BEES_RECONNECT_TIME = 10;
 	
 JSON.stringifyWithEscapes = function(obj) {
@@ -59,7 +59,6 @@ var WebLayer = cc.Layer.extend({
 	    	self.ws.send('{"command":"saveState", "sid":"'+self.sid+'", "gameState":"'+JSON.stringifyWithEscapes(self.scene.GameState())+'"}');		
     	});
 	},
-			// this.ws.send('{"command":"saveState", "sid":"'+this.sid+'", "gameState":"{\\\"currentGame\\\":\\\"stories4\\\"}"}');
     	    
     onOpen: function(evt) {
     	this.login();
@@ -75,7 +74,7 @@ var WebLayer = cc.Layer.extend({
 
 		cc.log("Received JSON: " + JSON.stringify(data));
 
-		switch( data.sid ) {
+		switch( data.command ) {
 		case "login":
 			this.sid = data.data[0].sid;
 			cc.assert(this.sid != null && typeof this.sid === "string","onmessage 'login': Received bad sid.");
