@@ -12,6 +12,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"errors"
 	"crypto/rand"
+	"crypto/sha1"
 	"encoding/hex"
 )
 
@@ -43,17 +44,17 @@ func StartDatabase(config map[string]string) (chan Db_request, chan bool) {
  * Helper functions
 */
 func GetHash(bytes []byte) string {
+	var hash [20]byte
 	if bytes == nil {
 
-		bytes = make([]byte, 20)
-		_, err := rand.Read(bytes)
+		_, err := rand.Read(hash[:])
 		if err != nil {
 			panic("getHash: " + err.Error())
 		}
+	} else {
+		hash = sha1.Sum(bytes)
 	}
-
-	//sum := sha1.Sum(bytes)
-	return hex.EncodeToString(bytes[:20])
+	return hex.EncodeToString(hash[:])
 }
 
 func serveDatabase(db *sql.DB, requestChan chan Db_request, doneChan chan bool) {

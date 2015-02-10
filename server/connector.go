@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 )
 
@@ -34,8 +33,7 @@ func StartConnector(config map[string]string, commandChan chan Command) {
 
 	err := http.ListenAndServe(config["wsaddress"]+":"+config["wsport"], nil)
 	if err != nil {
-		log.Fatal(err)
-		fmt.Println(err)
+		panic(err.Error())
 	}
 }
 
@@ -71,16 +69,16 @@ func translateMessages(s socket, commandChan chan Command) {
 				sid = command
 			}
 
-			go catchReturn(dataChan, encoder, sid)
+			go catchReturn(dataChan, encoder, command)
 		}
 	}
 }
 
-func catchReturn(dataChan chan []Cmd_data, encoder *json.Encoder, sid string) {
+func catchReturn(dataChan chan []Cmd_data, encoder *json.Encoder, command string) {
 	select {
 	case data := <-dataChan:
 		cdata := map[string]interface{}{
-			"sid":  sid,
+			"command":  command,
 			"data": data,
 		}
 		encoder.Encode(&cdata)

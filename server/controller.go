@@ -14,7 +14,7 @@ import (
 
 const (
 	// time till inactive sessions are cleared
-	sessionRefresh time.Duration = 300 * time.Second
+	sessionExpire time.Duration = 300 * time.Second
 )
 
 type Command struct {
@@ -43,13 +43,13 @@ func StartController(_ map[string]string, requestChan chan Db_request) chan Comm
 
 func handleCommands(commandChan chan Command, requestChan chan Db_request) {
 	sessions := make(map[string]Session)
-	sessionTicker := time.NewTicker(sessionRefresh)
+	sessionTicker := time.NewTicker(sessionExpire)
 	for {
 		select {
 		case cmd := <-commandChan:
 			go commandInterpreter(cmd, requestChan, sessions)
 		case <- sessionTicker.C:
-			go refreshSession(sessions)
+			go expireSession(sessions)
 		}
 	}
 }
@@ -78,7 +78,7 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 	}
 
 	switch cmd.command {
-	// database command with no modifications (pass through)
+	// commands with no modifications by controller (pass through to database)
 	case "loginBeehive":
 		fallthrough
 	case "getBeehives":
@@ -93,6 +93,7 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 			parameter: cmd.parameter,
 		}
 		cmd.dataChan <- <-dataChan
+	// commands with modifications
 	case "login":
 		requestChan <- Db_request{
 			request:   cmd.command,
@@ -102,7 +103,6 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 		}
 		data := <-dataChan
 
-		// make new sid, put it into the session table
 		sid := GetHash(nil)
 		fmt.Printf("Login: Inserting %s into session.\nPlayerId: %s\n",sid,cmd.parameter["playerId"])
 		sessions[sid] = Session{
@@ -111,6 +111,7 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 			timestamp : time.Now(),
 		}
 		data[0]["sid"] = sid
+
 		cmd.dataChan <- data
 	default:
 		cmd.dataChan <- []Cmd_data{{
@@ -119,11 +120,11 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 	}
 }
 
-func refreshSession(sessions map[string]Session) {
-	fmt.Printf("Entering refresh... ")
+func expireSession(sessions map[string]Session) {
+	fmt.Printf("Entering expire session... ")
 	now := time.Now()
 	for sid := range sessions {
-		if now.After(sessions[sid].timestamp.Add(sessionRefresh)) {
+		if now.After(sessions[sid].timestamp.Add(sessionExpire)) {
 			delete( sessions, sid )
 			fmt.Printf("Deleting %s from session.\n",sid)
 		}
