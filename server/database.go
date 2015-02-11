@@ -76,6 +76,8 @@ func distributeRequest(db *sql.DB, req Db_request) {
 		req.dataChan <- signup(db, req.parameter)
 	case "login":
 		req.dataChan <- login(db, req.parameter)
+	case "signoff":
+		req.dataChan <- signup(db, req.parameter)
 	case "saveState":
 		req.dataChan <- saveState(db, req.session, req.parameter)
 	case "getBeehives":
@@ -120,29 +122,45 @@ func signup(db *sql.DB, p Cmd_data) []Cmd_data {
 		fmt.Printf("Magic spell: %s\n",magicSpell)
 	}
 
-	data := []Cmd_data{{
+	return []Cmd_data{{
 		"playerId" : playerId,
 	}}
+}
 
-	return data
+func signoff(db *sql.DB, session *Session, p Cmd_data) []Cmd_data {
+
+	var err error
+	playerId := session.playerId;
+
+	_, err = db.Exec("DELETE FROM players WHERE id = ?", playerId)
+	if err != nil {
+		panic("signoff: " + err.Error())
+	}
+
+	// delete all other player related data here ...
+
+	return []Cmd_data{}
 }
 
 func login(db *sql.DB, p Cmd_data) []Cmd_data {
 
+	fmt.Printf("Hello Login")
 	playerId, ok := p["playerId"]
 	var err error
-	if ok {
+	if ok && playerId != "" {
 
 		// look if playerId is available 
 		var id, beehive, magicspell, gamestate string
 		var logins int;
 		err := db.QueryRow("SELECT id, beehive, magicspell, logins, gamestate FROM players WHERE id = ?", playerId).Scan(&id,&beehive,&magicspell,&logins,&gamestate)
+		fmt.Printf("SELECT id, beehive, magicspell, logins, gamestate FROM players WHERE id = %s\n", playerId)
 		switch {
 		case err == sql.ErrNoRows:
 			err = errors.New("Player id not found.")
 		case err == nil:
 			// increment login counter
 			_, err := db.Exec("UPDATE players SET logins = ? WHERE id = ?", logins+1 , playerId)
+			fmt.Printf("UPDATE players SET logins = %d WHERE id = %s\n", logins+1 , playerId)
 			if err != nil {
 				panic("login: UPDATE" + err.Error())
 			}
@@ -175,7 +193,7 @@ func saveState(db *sql.DB, session *Session, p Cmd_data) []Cmd_data {
 		if err != nil {
 			panic("saveState: UPDATE" + err.Error())
 		}
-		return []Cmd_data{{	}}
+		return []Cmd_data{}
 	} else {
 		err = errors.New("GameState parameter missing.")
 	}

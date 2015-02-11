@@ -74,7 +74,23 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 			return
 		}
 	} else {
-		session = Session{};
+		if cmd.command != "login" && cmd.command != "signup" {
+
+			fmt.Printf("Session manager: Session id missing.\n")
+			cmd.dataChan <- []Cmd_data{{
+				"error" : "Session id is missing.",
+			}}
+			return
+		} else {
+			session = Session{}
+		}
+	}
+
+	request := Db_request{
+		request:   cmd.command,
+		session:   &session,
+		dataChan:  dataChan,
+		parameter: cmd.parameter,
 	}
 
 	switch cmd.command {
@@ -86,21 +102,14 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 	case "saveState":
 		fallthrough
 	case "signup":
-		requestChan <- Db_request{
-			request:   cmd.command,
-			session:   &session,
-			dataChan:  dataChan,
-			parameter: cmd.parameter,
-		}
+		fallthrough
+	case "signoff":
+		requestChan  <- request
 		cmd.dataChan <- <-dataChan
 	// commands with modifications
 	case "login":
-		requestChan <- Db_request{
-			request:   cmd.command,
-			session:   &session,
-			dataChan:  dataChan,
-			parameter: cmd.parameter,
-		}
+		fmt.Printf("Login: Sending request %v.\n",request.parameter)
+		requestChan  <- request
 		data := <-dataChan
 
 		sid := GetHash(nil)
@@ -113,6 +122,10 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 		data[0]["sid"] = sid
 
 		cmd.dataChan <- data
+	case "logout":
+		delete( sessions, cmd.sid )
+
+		cmd.dataChan <- []Cmd_data{}
 	default:
 		cmd.dataChan <- []Cmd_data{{
 			"error" : "Command not available.",
