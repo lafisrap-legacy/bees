@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"strings"
 )
 
 const (
 	testloops int = 500
-	gameState string = "{\\\"currentGame\\\":\\\"Stories6\\\"}"
 )
 
 type result struct {
@@ -29,7 +29,7 @@ func TestConnector(t *testing.T) {
 
 	doneChan := make(chan bool)
 	countChan := make(chan bool)
-	go count(countChan, doneChan);
+	go count(countChan, doneChan)
 
 	for i:=0 ; i<testloops ; i++ {
 		go func(i int) {
@@ -67,6 +67,7 @@ func TestConnector(t *testing.T) {
 			}
 			sid := data["data"].([]interface{})[0].(map[string]interface{})["sid"].(string)
 
+			var gameState string = "{\\\"currentGame\\\":\\\"Stories"+string(65+i%26)+"\\\"}"
 			requests := []string{
 				"{\"command\":\"getBeehives\",\"sid\":\""+sid+"\"}",
 				"{\"command\":\"loginBeehive\",\"beehive\":\"yaylaswiese\",\"secret\":\"tat\",\"sid\":\""+sid+"\"}",
@@ -96,9 +97,9 @@ func TestConnector(t *testing.T) {
 				}
 			}
 
-			receiveResults(t, ws, expectedResults)
+			receiveResults(t, ws, decoder, expectedResults)
 
-/*			// ... and login again
+			// ... and login again
 			if _, err := ws.Write([]byte(fmt.Sprintf("{\"command\":\"login\",\"playerId\":\"%s\"}",playerId))); err != nil {
 				t.Errorf("Couldn't send Login request in loop %d.",i)
 			}
@@ -108,11 +109,11 @@ func TestConnector(t *testing.T) {
 			if err != nil {
 				t.Errorf("Couldn't get Login result in loop %d.",i)
 			}
-			fmt.Printf("SECOND LOGIN: %v\n",data)
 			sid = data["data"].([]interface{})[0].(map[string]interface{})["sid"].(string)
 			gs := data["data"].([]interface{})[0].(map[string]interface{})["gameState"].(string)
+			gameState = strings.Replace(gameState,"\\","",-1)
 			if gs != gameState {
-				t.Errorf("Login: gameState is not correct in loop %d.",i)
+				t.Errorf("Login: gameState is not correct in loop %d. Expected %s, received %s.",i,gameState,gs)
 			}
 
 			// ... and sign off
@@ -125,7 +126,7 @@ func TestConnector(t *testing.T) {
 			if err != nil {
 				t.Errorf("Couldn't get Signoff result in loop %d.",i)
 			}
-*/			countChan <- true
+			countChan <- true
 		}(i)
 	}
 
@@ -139,34 +140,35 @@ func count(countChan chan bool, doneChan chan bool) {
 	doneChan <- true
 }
 
-func receiveResults(t *testing.T, ws *websocket.Conn, expectedResults map[string][]map[string]string) {
-
-	decoder := json.NewDecoder(ws)
+func receiveResults(t *testing.T, ws *websocket.Conn, decoder *json.Decoder, expectedResults map[string][]map[string]string) {
 
 	var data interface{}
-	err := decoder.Decode(&data)
-	if err != nil {
-		panic(err)
-	}
+	for i:=0 ; i<len(expectedResults) ; i++ {
 
-	receivedResult := data.(map[string]interface{})
-	command := receivedResult["command"].(string)
-	expectedResult := expectedResults[command]
-	//fmt.Printf("EXPECTED RESULT: %v\n",expectedResult)
-	if len(expectedResult) == 0 {
-		t.Errorf("Command is not correct. '%s' not found in expected results.", command)
-	}
+		err := decoder.Decode(&data)
+		if err != nil {
+			panic(err)
+		}
 
-	rec := receivedResult["data"].([]interface{})
-	//fmt.Printf("RECEIVED RESULT: %v\n",rec)
-	for j := 0; len(rec) > 0 && j < len(expectedResult); j++ {
-		e1 := expectedResult[j]
-		r1 := rec[j].(map[string]interface{})
-		for e2 := range e1 {
-			if r2, ok := r1[e2]; !ok {
-				t.Errorf("Expected result '%s / %s' is missing.", e2, e1[e2])
-			} else if e1[e2] != r2 {
-				t.Errorf("Result is wrong. Expected: '%s / %s' and got: '%s / %s'\n", e2, e1[e2], e2, r2)
+		receivedResult := data.(map[string]interface{})
+		command := receivedResult["command"].(string)
+		expectedResult := expectedResults[command]
+		//fmt.Printf("EXPECTED RESULT for command %s: %v\n", command, expectedResult)
+		if len(expectedResult) == 0 {
+			t.Errorf("Command is not correct. '%s' not found in expected results.", command)
+		}
+
+		rec := receivedResult["data"].([]interface{})
+		//fmt.Printf("RECEIVED RESULT: %v\n",rec)
+		for j := 0; j < len(rec) ; j++ {
+			e1 := expectedResult[j]
+			r1 := rec[j].(map[string]interface{})
+			for e2 := range e1 {
+				if r2, ok := r1[e2]; !ok {
+					t.Errorf("Expected result '%s / %s' is missing: %v.", e2, e1[e2], data)
+				} else if e1[e2] != r2 {
+					t.Errorf("Result is wrong. Expected: '%s / %s' and got: '%s / %s'\n", e2, e1[e2], e2, r2)
+				}
 			}
 		}
 	}

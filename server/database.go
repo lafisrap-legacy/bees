@@ -77,7 +77,7 @@ func distributeRequest(db *sql.DB, req Db_request) {
 	case "login":
 		req.dataChan <- login(db, req.parameter)
 	case "signoff":
-		req.dataChan <- signup(db, req.parameter)
+		req.dataChan <- signoff(db, req.session, req.parameter)
 	case "saveState":
 		req.dataChan <- saveState(db, req.session, req.parameter)
 	case "getBeehives":
@@ -102,7 +102,6 @@ func signup(db *sql.DB, p Cmd_data) []Cmd_data {
 
 			// look if playerId is already in use (very unlikly)
 			err := db.QueryRow("select id from players where id = ?", playerId).Scan(&id)
-			fmt.Printf("err value is: %s\n", err.Error())
 			switch {
 			case err == sql.ErrNoRows:
 			case err == nil:
@@ -131,7 +130,6 @@ func signoff(db *sql.DB, session *Session, p Cmd_data) []Cmd_data {
 
 	var err error
 	playerId := session.playerId;
-
 	_, err = db.Exec("DELETE FROM players WHERE id = ?", playerId)
 	if err != nil {
 		panic("signoff: " + err.Error())
@@ -144,7 +142,6 @@ func signoff(db *sql.DB, session *Session, p Cmd_data) []Cmd_data {
 
 func login(db *sql.DB, p Cmd_data) []Cmd_data {
 
-	fmt.Printf("Hello Login")
 	playerId, ok := p["playerId"]
 	var err error
 	if ok && playerId != "" {
@@ -153,14 +150,12 @@ func login(db *sql.DB, p Cmd_data) []Cmd_data {
 		var id, beehive, magicspell, gamestate string
 		var logins int;
 		err := db.QueryRow("SELECT id, beehive, magicspell, logins, gamestate FROM players WHERE id = ?", playerId).Scan(&id,&beehive,&magicspell,&logins,&gamestate)
-		fmt.Printf("SELECT id, beehive, magicspell, logins, gamestate FROM players WHERE id = %s\n", playerId)
 		switch {
 		case err == sql.ErrNoRows:
 			err = errors.New("Player id not found.")
 		case err == nil:
 			// increment login counter
 			_, err := db.Exec("UPDATE players SET logins = ? WHERE id = ?", logins+1 , playerId)
-			fmt.Printf("UPDATE players SET logins = %d WHERE id = %s\n", logins+1 , playerId)
 			if err != nil {
 				panic("login: UPDATE" + err.Error())
 			}

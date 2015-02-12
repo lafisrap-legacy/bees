@@ -7,6 +7,7 @@ import (
 	"time"
 	_ "encoding/json"
 	"fmt"
+	"strconv"
 	_ "io"
 	_ "log"
 	_ "os"
@@ -14,7 +15,7 @@ import (
 
 const (
 	// time till inactive sessions are cleared
-	sessionExpire time.Duration = 300 * time.Second
+	sessionExpire time.Duration = 3000 * time.Second
 )
 
 type Command struct {
@@ -58,25 +59,23 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 
 	dataChan := make(chan []Cmd_data)
 
-	fmt.Printf("Session manager: Received command: %s.\n",cmd.command)
+	//fmt.Printf("Session manager: Received command: %s.\n",cmd.command)
 	var session Session
 	var ok bool
 	if cmd.sid != "" {
 		// look for session 
 		if session, ok = sessions[cmd.sid] ; ok {
-			fmt.Printf("Session manager: Found session %s.\n",cmd.sid)
 			session.timestamp = time.Now()
 		} else {
 
 			cmd.dataChan <- []Cmd_data{{
-				"error" : "Session ID not valid.",
+				"error" : "Session ID ("+cmd.sid+") is not valid. "+strconv.Itoa(len(sessions))+" sessions in list.",
 			}}
 			return
 		}
 	} else {
 		if cmd.command != "login" && cmd.command != "signup" {
 
-			fmt.Printf("Session manager: Session id missing.\n")
 			cmd.dataChan <- []Cmd_data{{
 				"error" : "Session id is missing.",
 			}}
@@ -108,12 +107,10 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 		cmd.dataChan <- <-dataChan
 	// commands with modifications
 	case "login":
-		fmt.Printf("Login: Sending request %v.\n",request.parameter)
 		requestChan  <- request
 		data := <-dataChan
 
 		sid := GetHash(nil)
-		fmt.Printf("Login: Inserting %s into session.\nPlayerId: %s\n",sid,cmd.parameter["playerId"])
 		sessions[sid] = Session{
 			playerId : cmd.parameter["playerId"],
 			beehive  : data[0]["beehive"],
@@ -134,7 +131,6 @@ func commandInterpreter(cmd Command, requestChan chan Db_request, sessions map[s
 }
 
 func expireSession(sessions map[string]Session) {
-	fmt.Printf("Entering expire session... ")
 	now := time.Now()
 	for sid := range sessions {
 		if now.After(sessions[sid].timestamp.Add(sessionExpire)) {
