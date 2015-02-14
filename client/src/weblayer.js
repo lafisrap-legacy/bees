@@ -1,19 +1,17 @@
-var BEES_SERVER_ADDRESS = "ws://192.168.1.4:4000/socket",
+var BEES_SERVER_ADDRESS = "ws://192.168.1.22:4000/socket",
 	BEES_RECONNECT_TIME = 10;
 	
 JSON.stringifyWithEscapes = function(obj) {
 	return JSON.stringify(obj).replace(/\"/g,"\\\"");
 } 
 
-var WebLayer = cc.Layer.extend({
+var WebLayer = cc.Class.extend({
 	ws: null,
 	sid: null,
 	sidCbs: [],
 	scene: null,
 	
     ctor:function (scene) {
-        this._super();
-
 		this.scene = scene;
 
 		this.initWebsocket();             	
@@ -95,7 +93,7 @@ var WebLayer = cc.Layer.extend({
 			this.login();
 			break;
 		default:
-			if( data.data[0].error ) {
+			if( data.data[0] && data.data[0].error ) {
 				cc.log("onmessage, Error from Bees server: "+data.data[0].error);
 			}
 		}		

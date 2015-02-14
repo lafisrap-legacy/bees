@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>frames</key>
+	<dict>
+		<key>item3</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 0}, {380, 100}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 7}, {374, 81}}</string>
+			<key>sourceSize</key>
+			<string>{380, 100}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>item4</key>
+		<dict>
+			<key>frame</key>
+			<string>{{380, 0}, {380, 100}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {378, 87}}</string>
+			<key>sourceSize</key>
+			<string>{380, 100}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>item5</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 100}, {380, 100}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 2}, {378, 95}}</string>
+			<key>sourceSize</key>
+			<string>{380, 100}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>item6</key>
+		<dict>
+			<key>frame</key>
+			<string>{{380, 100}, {380, 100}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {374, 89}}</string>
+			<key>sourceSize</key>
+			<string>{380, 100}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>item1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 200}, {376, 78}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {376, 78}}</string>
+			<key>sourceSize</key>
+			<string>{376, 78}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>item2</key>
+		<dict>
+			<key>frame</key>
+			<string>{{376, 200}, {380, 95}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 15}, {373, 71}}</string>
+			<key>sourceSize</key>
+			<string>{380, 95}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		</dict>
+		<key>metadata</key>
+		<dict>
+		<key>format</key>
+		<integer>2</integer>
+		<key>textureFileName</key>
+		<string>menu.png</string>
+		<key>size</key>
+		<string>{1024, 1024}</string>
+	</dict></dict></plist>

@@ -45,8 +45,10 @@ var BeesScene = cc.Scene.extend({
     onEnter:function () {
         this._super();
         this.weblayer = new WebLayer(this);
-        var layer = new TitleLayer();
-        this.addChild(layer);
+        var title = new TitleLayer();
+        this.addChild(title);
+        var menu = new MenuLayer();
+        this.addChild(menu,5);
         this.GameState().currentGame = "Geschichten";
         this.weblayer.saveState();
     },

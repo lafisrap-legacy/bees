@@ -7,13 +7,14 @@
 This document contains the layer design for the bees client. It builds on the layer structure of cocos2d-js.
 
 ## Layers Overview
-* **communicationsLayer** (/cc.Layer) Layer for all websocket communication with server, database and other clients. Login, mail etc.
-* **gameLayer** (/cc.Layer/communicationsLayer) Basic layer for single games
-* **titleLayer** (/cc.Layer) Layer for title and game startup
-* **menuLayer** (/cc.Menu) Layer for moving menus
-* **scoreLayer** (/cc.Layer) Layer for game scores and beehive frames
-* **sphinxLayer** (/cc.Layer) Layer for Sphinx interaction game
-* **questionsLayer** (/cc.Layer) Layer for player questions
+* **WebLayer** (/cc.Layer) Layer for all websocket communication with server, database and other clients. Login, mail etc.
+* **GameLayer** (/cc.Layer) Basic layer for single games
+* **TitleLayer** (/cc.Layer) Layer for title and game startup
+* **MenuLayer** (/cc.Menu) Layer for moving menus
+* **ScoreLayer** (/cc.Layer) Layer for game scores and beehive frames
+* **OverviewLayer** (/cc.Layer) Layer for games overview
+* **SphinxLayer** (/cc.gameLayer) Layer for Sphinx interaction game
+* **QuestionsLayer** (/cc.gameLayer) Layer for player questions
 
 ## Layers methods
 ### communicationsLayer
