@@ -12,6 +12,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"errors"
 	"crypto/rand"
+	"crypto/sha1"
 	"encoding/hex"
 )
 
@@ -43,17 +44,17 @@ func StartDatabase(config map[string]string) (chan Db_request, chan bool) {
  * Helper functions
 */
 func GetHash(bytes []byte) string {
+	var hash [20]byte
 	if bytes == nil {
 
-		bytes = make([]byte, 20)
-		_, err := rand.Read(bytes)
+		_, err := rand.Read(hash[:])
 		if err != nil {
 			panic("getHash: " + err.Error())
 		}
+	} else {
+		hash = sha1.Sum(bytes)
 	}
-
-	//sum := sha1.Sum(bytes)
-	return hex.EncodeToString(bytes[:20])
+	return hex.EncodeToString(hash[:])
 }
 
 func serveDatabase(db *sql.DB, requestChan chan Db_request, doneChan chan bool) {
@@ -75,6 +76,8 @@ func distributeRequest(db *sql.DB, req Db_request) {
 		req.dataChan <- signup(db, req.parameter)
 	case "login":
 		req.dataChan <- login(db, req.parameter)
+	case "signoff":
+		req.dataChan <- signoff(db, req.session, req.parameter)
 	case "saveState":
 		req.dataChan <- saveState(db, req.session, req.parameter)
 	case "getBeehives":
@@ -99,7 +102,6 @@ func signup(db *sql.DB, p Cmd_data) []Cmd_data {
 
 			// look if playerId is already in use (very unlikly)
 			err := db.QueryRow("select id from players where id = ?", playerId).Scan(&id)
-			fmt.Printf("err value is: %s\n", err.Error())
 			switch {
 			case err == sql.ErrNoRows:
 			case err == nil:
@@ -119,18 +121,30 @@ func signup(db *sql.DB, p Cmd_data) []Cmd_data {
 		fmt.Printf("Magic spell: %s\n",magicSpell)
 	}
 
-	data := []Cmd_data{{
+	return []Cmd_data{{
 		"playerId" : playerId,
 	}}
+}
 
-	return data
+func signoff(db *sql.DB, session *Session, p Cmd_data) []Cmd_data {
+
+	var err error
+	playerId := session.playerId;
+	_, err = db.Exec("DELETE FROM players WHERE id = ?", playerId)
+	if err != nil {
+		panic("signoff: " + err.Error())
+	}
+
+	// delete all other player related data here ...
+
+	return []Cmd_data{}
 }
 
 func login(db *sql.DB, p Cmd_data) []Cmd_data {
 
 	playerId, ok := p["playerId"]
 	var err error
-	if ok {
+	if ok && playerId != "" {
 
 		// look if playerId is available 
 		var id, beehive, magicspell, gamestate string
@@ -174,7 +188,7 @@ func saveState(db *sql.DB, session *Session, p Cmd_data) []Cmd_data {
 		if err != nil {
 			panic("saveState: UPDATE" + err.Error())
 		}
-		return []Cmd_data{{	}}
+		return []Cmd_data{}
 	} else {
 		err = errors.New("GameState parameter missing.")
 	}

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 )
 
@@ -24,18 +23,15 @@ var dbChan = make(chan string)
 func StartConnector(config map[string]string, commandChan chan Command) {
 
 	http.Handle(config["wsdir"], websocket.Handler(func(ws *websocket.Conn) {
-		fmt.Printf("Started new Socket handler ...")
+		fmt.Printf("Started new socket handler on %s ...\n",config["wsaddress"]+":"+config["wsport"])
 		s := socket{ws, make(chan bool)}
 		go translateMessages(s, commandChan)
 		<-s.done
 	}))
 
-	fmt.Printf("Started Socket handler ...")
-
 	err := http.ListenAndServe(config["wsaddress"]+":"+config["wsport"], nil)
 	if err != nil {
-		log.Fatal(err)
-		fmt.Println(err)
+		panic(err.Error())
 	}
 }
 
@@ -58,7 +54,6 @@ func translateMessages(s socket, commandChan chan Command) {
 			} else {
 				delete(message, "sid")
 			}
-			fmt.Printf("Connector: received command '%s'\n",command)
 			delete(message, "command")
 			commandChan <- Command{
 				command:   command,
@@ -71,16 +66,16 @@ func translateMessages(s socket, commandChan chan Command) {
 				sid = command
 			}
 
-			go catchReturn(dataChan, encoder, sid)
+			go catchReturn(dataChan, encoder, command)
 		}
 	}
 }
 
-func catchReturn(dataChan chan []Cmd_data, encoder *json.Encoder, sid string) {
+func catchReturn(dataChan chan []Cmd_data, encoder *json.Encoder, command string) {
 	select {
 	case data := <-dataChan:
 		cdata := map[string]interface{}{
-			"sid":  sid,
+			"command":  command,
 			"data": data,
 		}
 		encoder.Encode(&cdata)
