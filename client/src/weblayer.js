@@ -21,7 +21,11 @@ var WebLayer = cc.Class.extend({
     initWebsocket: function() {
     	var self = this;
 
-		this.ws = new WebSocket(BEES_SERVER_ADDRESS);
+		try {
+			this.ws = new WebSocket(BEES_SERVER_ADDRESS);
+		} catch(e) {
+			cc.log("WebSocket connection to \""+BEES_SERVER_ADDRESS+"\" failed.");
+		}
 
 		this.ws.onopen = function(evt) { self.onOpen(evt) };
 		this.ws.onmessage = function(evt) { self.onMessage(evt); };
