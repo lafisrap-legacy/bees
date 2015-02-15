@@ -1,38 +1,41 @@
 var BEES_MAX_MENU_ENTRIES = 6,
+	BEES_MAX_MENU_PADDING = -25,
 	BEES_MENU_Y_OFFSETS = [-15, -8, 2, 4, 2, 2];
 	
 cc.assert(BEES_MENU_Y_OFFSETS.length === BEES_MAX_MENU_ENTRIES, "MenuLayer: Array size of BEES_MENU_Y_OFFSETS must match BEES_MAX_MENU_ENTRIES.") 
 
 var MenuLayer = cc.Layer.extend({
 
-	onMenuCallback: function(sender) {
-		cc.log("Menu call back: "+sender);
-	},
-    ctor:function () {
+    ctor: function () {
         this._super();
         
-        var size = cc.winSize;
-
 		// load sprites into cache
 	    cc.spriteFrameCache.addSpriteFrames(res.menu_plist);
-
+	},
+	
+	show: function(labelsAndCallbacks) {
+		
+        var size = cc.winSize;
 		var items = [];
-		for( var i=0 ; i<BEES_MAX_MENU_ENTRIES ; i++ ) {
+		
+		for( var i=0 ; i<labelsAndCallbacks.length ; i++ ) {
 			var frame = cc.spriteFrameCache.getSpriteFrame("item"+(i+1)),
-	    		sprite = cc.Sprite.create(frame,cc.rect(0,0,380,100)),
-	    		sprite_selected =cc.Sprite.create(frame,cc.rect(0,0,380,100)),
-	    		sprite_disabled =cc.Sprite.create(frame,cc.rect(0,0,380,100));
+	    		spritesNormal = cc.Sprite.create(frame,cc.rect(0,0,380,100)),
+	    		spritesSelected =cc.Sprite.create(frame,cc.rect(0,0,380,100)),
+	    		spritesDisabled =cc.Sprite.create(frame,cc.rect(0,0,380,100));
 
-			var label = cc.LabelBMFont.create( "Hello world!" , "res/fonts/amtype36.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
+			var label = cc.LabelBMFont.create( labelsAndCallbacks[i].label , "res/fonts/amtype36.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
 			label.setPosition(cc.p(190,50+BEES_MENU_Y_OFFSETS[i]));
 			label.setColor(cc.color(122,80,77,155));
-			sprite.addChild(label, 5);	
+			spritesNormal.addChild(label, 5);	
+			//spritesSelected.addChild(label, 5);	
+			//spritesDisabled.addChild(label, 5);	
 
-			items.push(new cc.MenuItemSprite(sprite, sprite_selected, sprite_disabled, this.onMenuCallback, this));			
+			items.push(new cc.MenuItemSprite(spritesNormal, spritesSelected, spritesDisabled, labelsAndCallbacks[i].cb, this));			
 		}
 		
 		var menu = new cc.Menu(items);		
-		menu.alignItemsVerticallyWithPadding(-25);
+		menu.alignItemsVerticallyWithPadding(BEES_MAX_MENU_PADDING);
 
         this.addChild(menu);
     	menu.setPosition(cc.p(size.width * 1.1,size.height/2));
