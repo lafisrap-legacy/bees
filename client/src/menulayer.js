@@ -6,6 +6,8 @@ cc.assert(BEES_MENU_Y_OFFSETS.length === BEES_MAX_MENU_ENTRIES, "MenuLayer: Arra
 
 var MenuLayer = cc.Layer.extend({
 
+	_finalCallback: null,
+	
     ctor: function () {
         this._super();
         
@@ -13,12 +15,39 @@ var MenuLayer = cc.Layer.extend({
 	    cc.spriteFrameCache.addSpriteFrames(res.menu_plist);
 	},
 	
-	show: function(labelsAndCallbacks) {
+	initListeners: function() {
+		var self = this;
+	
+		this._touchListener = cc.EventListener.create({
+			event: cc.EventListener.TOUCH_ALL_AT_ONCE,
+			onTouchesBegan: function(touches, event) {},
+			onTouchesMoved: function(touches, event) {},
+			onTouchesEnded: function(touches, event){
+
+				var touch = touches[0],
+					loc = touch.getLocation();	            		
+
+				// ignore location, hide anyway
+				self.hide.call(self);		
+			}
+		});
+			
+		cc.eventManager.addListener(this._touchListener, this);
+	},
+		
+	stopListeners: function() {
+        if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
+    },
+    
+	show: function(labelsAndCallbacks, finalCallback) {
 		
         var size = cc.winSize;
-		var items = [];
-		var gate;
+		var gate, menu;			    
+	    this.initListeners();
+	    this._finalCallback = finalCallback;
+	    cc.assert( this._finalCallback && typeof this._finalCallback == "function", "this._finalCallback should be a function.")
 		
+		var items = [];
 		for( var i=0 ; i<labelsAndCallbacks.length ; i++ ) {
 			var frame = cc.spriteFrameCache.getSpriteFrame("item"+(i+1)),
 	    		spritesNormal = cc.Sprite.create(frame,cc.rect(0,0,380,100)),
@@ -36,19 +65,20 @@ var MenuLayer = cc.Layer.extend({
 			items.push(menuSprite);
 		}
 		
-		var menu = new cc.Menu(items);		
-		menu.alignItemsVerticallyWithPadding(BEES_MAX_MENU_PADDING);
+		this.menu = new cc.Menu(items);		
+		cc.assert( this.menu, "Menu could not be created!");
+		this.menu.alignItemsVerticallyWithPadding(BEES_MAX_MENU_PADDING);
 
-		var ch = menu.children;
+		var ch = this.menu.children;
 		for( var i=0 ; i<ch.length ; i++ ) {
 			ch[i].y = ch[i].y + BEES_MENU_Y_OFFSETS[i];
 		}
 		
-        this.addChild(menu,1);
-    	menu.setPosition(cc.p(size.width * 1.1,size.height/2));
-	    menu.setScale(0.1);
+        this.addChild(this.menu,1);
+    	this.menu.setPosition(cc.p(1136 * 1.1,320));
+	    this.menu.setScale(0.1);
 
-		menu.runAction(cc.sequence(
+		this.menu.runAction(cc.sequence(
 			cc.delayTime(0.33),
 			cc.EaseElasticOut.create(
 				cc.spawn(
@@ -69,6 +99,31 @@ var MenuLayer = cc.Layer.extend({
         this.addChild(this.gate,0);
 
         return true;
+    },
+
+    hide: function() {
+    	var self = this;
+    	
+    	this.menu.runAction(cc.sequence(
+    		cc.EaseSineIn.create(
+    			cc.moveTo(1,1136*1.5, 320)
+    		),
+    		cc.callFunc(function() {
+    			self.removeChild(self.menu);
+    			self.removeChild(self.gate);
+    			self.getParent().removeChild(self);
+    			self._finalCallback();
+    		})
+    	));
+    	
+    	this.gate.runAction(cc.EaseSineIn.create(
+    		cc.spawn(
+	    		cc.moveTo(1,1136*1.5, 320),
+	    		cc.scaleTo(1,1,1)
+	    	)
+	    ));
+	    
+	    this.stopListeners();
     }
 });
 

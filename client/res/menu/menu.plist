@@ -41,7 +41,7 @@
 		<key>item3</key>
 		<dict>
 			<key>frame</key>
-			<string>{{376, 73}, {380, 84}}</string>
+			<string>{{756, 0}, {380, 84}}</string>
 			<key>offset</key>
 			<string>{0, 0}</string>
 			<key>rotated</key>
@@ -58,7 +58,7 @@
 		<key>item4</key>
 		<dict>
 			<key>frame</key>
-			<string>{{0, 157}, {380, 90}}</string>
+			<string>{{1136, 0}, {380, 90}}</string>
 			<key>offset</key>
 			<string>{0, 0}</string>
 			<key>rotated</key>
@@ -75,7 +75,7 @@
 		<key>item5</key>
 		<dict>
 			<key>frame</key>
-			<string>{{380, 157}, {380, 97}}</string>
+			<string>{{1516, 0}, {380, 97}}</string>
 			<key>offset</key>
 			<string>{0, 0}</string>
 			<key>rotated</key>
@@ -92,7 +92,7 @@
 		<key>item6</key>
 		<dict>
 			<key>frame</key>
-			<string>{{0, 247}, {374, 84}}</string>
+			<string>{{0, 97}, {374, 84}}</string>
 			<key>offset</key>
 			<string>{0, 0}</string>
 			<key>rotated</key>
@@ -106,6 +106,23 @@
 
 			</array>
 		</dict>
+		<key>gate</key>
+		<dict>
+			<key>frame</key>
+			<string>{{374, 97}, {1136, 640}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {1136, 640}}</string>
+			<key>sourceSize</key>
+			<string>{1136, 640}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
 		</dict>
 		<key>metadata</key>
 		<dict>
@@ -114,5 +131,5 @@
 		<key>textureFileName</key>
 		<string>menu.png</string>
 		<key>size</key>
-		<string>{1024, 1024}</string>
+		<string>{2048, 2048}</string>
 	</dict></dict></plist>
