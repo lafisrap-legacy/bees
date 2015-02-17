@@ -1,0 +1,3 @@
+[submodule "client/games/bees.stories"]
+	path = client/games/bees.stories
+	url = https://github.com/lavisrap/bees.stories

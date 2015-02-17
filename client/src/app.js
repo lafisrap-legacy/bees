@@ -26,7 +26,7 @@ var TitleLayer = cc.Layer.extend({
         this.sprite.runAction(
             cc.spawn(
                 cc.scaleTo(2.5, 1.12, 1.12),
-                cc.moveBy(2.5, 20, 20)
+                cc.moveBy(2.5, 50, 20)
             )
         );
         helloLabel.runAction(
@@ -97,13 +97,35 @@ var BeesScene = cc.Scene.extend({
         var title = new TitleLayer();
         this.addChild(title);
         this.menuLayer = new MenuLayer();
+        _b_retain(this.menuLayer,"BeesScene, menuLayer");
+
         this.GameState().currentGame = "Geschichten";
         this.weblayer.saveState();        
     },
+    
+    onExit: function() {
+    	_b_release(this.menuLayer);
+    },
+    
     showMenu: function(labelsAndCallbacks,fcb) {
 		this.addChild(this.menuLayer);
 		this.menuLayer.show(labelsAndCallbacks,fcb);
     },
+    
     GameState: function() { return this.gameState; }
 });
+
+var retained = []
+var _b_retain = function(obj,name) {
+	obj.retain();
+    retained[obj.__instanceId] = name;
+}
+
+var _b_release = function(obj) {
+
+	cc.assert(obj && retained[obj.__instanceId], "_b_release: Object not valid or not in retained array.");
+	obj.release();		
+	delete retained[obj.__instanceId];
+}
+
 

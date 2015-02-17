@@ -1,4 +1,4 @@
-var BEES_SERVER_ADDRESS = "ws://192.168.1.22:4000/socket",
+var BEES_SERVER_ADDRESS = "ws://192.168.1.18:4000/socket",
 	BEES_RECONNECT_TIME = 10;
 	
 JSON.stringifyWithEscapes = function(obj) {
@@ -43,7 +43,7 @@ var WebLayer = cc.Class.extend({
 
     // call this function if you have no sid
     login: function() {
-    	var playerId = localStorage.getItem('playerId');
+    	var playerId = cc.sys.localStorage.getItem('playerId');
 
 	    if( playerId ) {
 	    	this.sid = null;
@@ -92,7 +92,7 @@ var WebLayer = cc.Class.extend({
 			BeesPlayerId = data.data[0].playerId;
 			cc.assert(BeesPlayerId != null && typeof BeesPlayerId === "string","onmessage 'signup': Received bad playerId.");
 			// todo: only store playerId it on a smartphone or an own computer
-			localStorage.setItem('playerId',BeesPlayerId);
+			cc.sys.localStorage.setItem('playerId',BeesPlayerId);
 
 			this.login();
 			break;
@@ -104,12 +104,14 @@ var WebLayer = cc.Class.extend({
 	},
 
 	onError : function(evt) {
-			cc.log("Error accessing WebSocket to "+evt.currentTarget.url);
+		for( e in evt ) {
+			cc.log("onError: "+evt[e]);
+		}
 	},
 
 	onClose : function(evt) {
 			var self = this;
-			cc.log("Closing WebSocket connection to "+evt.currentTarget.url);
+			cc.log("Closing WebSocket connection");
 			self.sid = null;
 			
 			// and try to open it again
