@@ -1,3 +1,5 @@
+// The Bees Server ist the central server app for all bees games.
+// It utilizes a JSON-format websocket interface, session handling and a mySQL database.
 package main
 
 // Database interface for bees server
@@ -16,6 +18,8 @@ import (
 	"encoding/hex"
 )
 
+// Db_request contains all information that the controller sends as a request to the database module
+// The back channel is dataChan
 type Db_request struct {
 	request   string
 	session	  *Session
@@ -23,6 +27,7 @@ type Db_request struct {
 	parameter Cmd_data
 }
 
+// StartDatabase connects to the database and initiates channel communication
 func StartDatabase(config map[string]string) (chan Db_request, chan bool) {
 	str := config["user"] + ":" + config["pass"] + "@tcp(127.0.0.1:3306)/" + config["database"]
 	db, err := sql.Open("mysql", str)
@@ -40,9 +45,8 @@ func StartDatabase(config map[string]string) (chan Db_request, chan bool) {
 	return requestChan, doneChan
 }
 
-/*
- * Helper functions
-*/
+// GetHash returns a 40 byte hex codes string, that contains a sha1 hash if an array is provided. 
+// Otherwise just random data
 func GetHash(bytes []byte) string {
 	var hash [20]byte
 	if bytes == nil {
@@ -57,6 +61,7 @@ func GetHash(bytes []byte) string {
 	return hex.EncodeToString(hash[:])
 }
 
+// serveDatabase is the central database request loop
 func serveDatabase(db *sql.DB, requestChan chan Db_request, doneChan chan bool) {
 
 	for {
@@ -69,6 +74,7 @@ func serveDatabase(db *sql.DB, requestChan chan Db_request, doneChan chan bool) 
 	}
 }
 
+// distributeRequest distributes requests to specific functions
 func distributeRequest(db *sql.DB, req Db_request) {
 
 	switch req.request {
@@ -89,6 +95,11 @@ func distributeRequest(db *sql.DB, req Db_request) {
 	}
 }
 
+// signup creates and returns new playerIds
+//
+// Parameter
+//
+// magicSpell is used to return existing player ids for additional devices
 func signup(db *sql.DB, p Cmd_data) []Cmd_data {
 	var playerId string
 
