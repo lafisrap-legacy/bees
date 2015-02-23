@@ -1,8 +1,9 @@
-package main
+package beeserver
 
-import "testing"
-
-//import "fmt"
+import (
+	"testing"
+	//"fmt"
+)
 
 const (
 	beehives = 2
@@ -15,8 +16,11 @@ func TestDatabase(t *testing.T) {
 		panic(config)
 	}
 
-	requestChan, _ := StartDatabase(config)
+	doneChan := make(chan bool)
 
+	requestChan := StartDatabase(config, doneChan)
+
+	testSignup(t, requestChan)
 	testGetBeehives(t, requestChan)
 	testLoginBeehive(t, requestChan)
 }
@@ -92,3 +96,33 @@ func testLoginBeehive(t *testing.T, requestChan chan Db_request) {
 		}
 	}
 }
+
+func testSignup(t *testing.T, requestChan chan Db_request) {
+
+	requests := []Db_request{{
+		request: "signup",
+		parameter: Cmd_data{},
+	}}
+
+	results := []map[string]string{{
+		"playerId": "?",
+	},}
+
+	for i := 0; i < len(requests); i++ {
+		dataChan := make(chan []Cmd_data)
+		requests[i].dataChan = dataChan
+
+		requestChan <- requests[i]
+		data := <-dataChan
+
+		for res := range data[0] {
+			r, ok := data[0][res]
+			if !ok {
+				t.Errorf("signup: Test %d: Return value '%s' missing.", i, res)
+			} else if r != results[i][res] && results[i][res] != "?" {
+				t.Errorf("signup: Test %d: Return value '%s' failed. Wanted: '%s' got '%s'", i, res, results[i][res], data[0][res])
+			}
+		}
+	}
+}
+

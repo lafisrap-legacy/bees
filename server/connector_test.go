@@ -1,4 +1,4 @@
-package main
+package beeserver
 
 import (
 	"code.google.com/p/go.net/websocket"
@@ -24,10 +24,10 @@ func TestConnector(t *testing.T) {
 		panic(config)
 	}
 
-	requestChan, _ := StartDatabase(config)
-	StartController(config, requestChan)
-
 	doneChan := make(chan bool)
+	requestChan := StartDatabase(config,doneChan)
+	StartController(config, requestChan, doneChan)
+
 	countChan := make(chan bool)
 	go count(countChan, doneChan)
 

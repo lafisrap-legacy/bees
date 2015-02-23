@@ -1,16 +1,14 @@
-package main
+package beeserver
 
 // Bees Controller, all application logic supposed to happen here
 //
 
 import (
 	"time"
-	_ "encoding/json"
 	"fmt"
 	"strconv"
-	_ "io"
-	_ "log"
-	_ "os"
+	"log"
+	"github.com/jimlawless/cfg"
 )
 
 const (
@@ -27,13 +25,38 @@ type Command struct {
 
 type Cmd_data map[string]string
 
+func StartServer() chan bool {
+	config := LoadConfig()
+	if config == nil {
+		panic(config)
+	}
+
+	doneChan := make(chan bool)
+
+	requestChan := StartDatabase(config,doneChan)
+	commandChan := StartController(config, requestChan, doneChan)
+	StartConnector(config, commandChan,doneChan)
+
+	return doneChan
+}
+
+func LoadConfig() map[string]string {
+	m := make(map[string]string)
+	err := cfg.Load("bees.cfg", m)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return m
+}
+
 type Session struct {
 	playerId string
 	beehive string
 	timestamp time.Time
 }
 
-func StartController(_ map[string]string, requestChan chan Db_request) chan Command {
+func StartController(_ map[string]string, requestChan chan Db_request, doneChan chan bool) chan Command {
 
 	commandChan := make(chan Command)
 

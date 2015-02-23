@@ -13,6 +13,9 @@ This document contains the database structural design for bees server and the co
 * **beehives**: All beehives with there enrry code and maintainer
 * **games**: All available games
 * **variations**: All available variations of games
+* **rounds**: Information to one game round of a variation
+* **questions**: Sphinx questions
+* **answers**: Sphinx answers
 * **plays**: All plays certain players hav played, with result
 * **achievments**: All achivments players won while playing variations
 * **contributions**: All contributions player made to a variation, coded in JSON
@@ -38,7 +41,30 @@ Live game content is not stored in the database.
 
 ### variations
 **name**: Name of the variation  
-**id**: Machine readable name / git directory  
+**id**: Machine readable name / git directory 
+
+### rounds
+**index**: round index
+**variation**: variation id
+**content**: JSON content for round
+
+### questions
+**id**: id of question
+**variation**: variation id
+**question**: Question in text
+**answeredRight**: % of right answers
+**averageTime**: Average time till answer
+**likes**: Number of Likes
+**playerid**: Id of creator (0 == developer)
+**created**: creation date
+
+### answers 
+**id**: id of answer
+**question**: id of question
+**answer**: Answer in text
+**right**: Right or wrong answer?
+
+
 
 ### plays
 **id**: id of play  
@@ -59,38 +85,45 @@ Live game content is not stored in the database.
 **description**: JSON data describing the contribution  
 
 ## Commands
-### signup
+#### signup
 -> Handed through to signup request
-### login
-#### Params
+#### signoff
+
+#### login
+###### Params
 * playerId
 
-#### Result  
+###### Result  
 * sessionId
 
-##### Tasks
+###### Tasks
 * Check for double login, and in case logout the other 
 * Check for playerId in Database
 * Create a session id, bind it to the playerId in memory ???
 
+#### logout
+#### saveState
+#### getBeehives
+#### loginBeehive
+
 ## Requests
-### signup
-#### Params  
+#### signup
+###### Params  
 * magicSpell or nil
 
-#### Result
+###### Result
 * playerId
 
-#### Tasks
+###### Tasks
 * If no magic spell is given, create playerId (SHA1 hash) and set home beehive to default
 * If so then find corresponding playerId
 
-### login
-#### Params
+#### login
+###### Params
 * playerId
 
-#### Result  
+###### Result  
 * sessionId
 
+###### Tasks
 * 
-

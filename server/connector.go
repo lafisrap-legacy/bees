@@ -1,4 +1,4 @@
-package main
+package beeserver
 
 import (
 	"code.google.com/p/go.net/websocket"
@@ -13,6 +13,7 @@ type socket struct {
 	done chan bool
 }
 
+// Close closes a socket connection and sends done
 func (s socket) Close() error {
 	s.done <- true
 	return nil
@@ -20,14 +21,20 @@ func (s socket) Close() error {
 
 var dbChan = make(chan string)
 
-func StartConnector(config map[string]string, commandChan chan Command) {
+// StartConnector starts up the websocket connector of the bee server
+// 	config		settings from config file
+// 	commandChan	channel to send commands to the controller
+// 	doneChan	channel to signal end or get it signaled
+func StartConnector(config map[string]string, commandChan chan Command, doneChan chan bool) {
 
 	http.Handle(config["wsdir"], websocket.Handler(func(ws *websocket.Conn) {
-		fmt.Printf("Started new socket handler on %s ...\n",config["wsaddress"]+":"+config["wsport"])
+		fmt.Printf("New socket handler started ...")
 		s := socket{ws, make(chan bool)}
 		go translateMessages(s, commandChan)
 		<-s.done
 	}))
+
+	fmt.Printf("Bees connector started on %s. Listening ...\n",config["wsaddress"]+":"+config["wsport"])
 
 	err := http.ListenAndServe(config["wsaddress"]+":"+config["wsport"], nil)
 	if err != nil {
