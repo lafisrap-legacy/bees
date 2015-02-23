@@ -12,12 +12,11 @@ This document contains the layer design for the bees client. It builds on the la
 * **TitleLayer** (/cc.Layer) Layer for title and game startup
 * **MenuLayer** (/cc.Menu) Layer for moving menus
 * **ScoreLayer** (/cc.Layer) Layer for game scores and beehive frames
-* **OverviewLayer** (/cc.Layer) Layer for games overview
 * **SphinxLayer** (/cc.gameLayer) Layer for Sphinx interaction game
 * **QuestionsLayer** (/cc.gameLayer) Layer for player questions
 
 ## Layers methods
-### communicationsLayer
+### WebLayer
 #### Layer Globals
 playerId, string[40]  
 sessionId, string[40]  
