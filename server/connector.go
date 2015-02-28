@@ -34,7 +34,7 @@ func StartConnector(config map[string]string, commandChan chan Command, doneChan
 		<-s.done
 	}))
 
-	fmt.Printf("Bees connector started on %s. Listening ...\n",config["wsaddress"]+":"+config["wsport"])
+	fmt.Printf("Bees connector started on %s. Listening ...\n", config["wsaddress"]+":"+config["wsport"])
 
 	err := http.ListenAndServe(config["wsaddress"]+":"+config["wsport"], nil)
 	if err != nil {
@@ -64,7 +64,7 @@ func translateMessages(s socket, commandChan chan Command) {
 			delete(message, "command")
 			commandChan <- Command{
 				command:   command,
-				sid:	   sid,
+				sid:       sid,
 				dataChan:  dataChan,
 				parameter: message,
 			}
@@ -82,8 +82,8 @@ func catchReturn(dataChan chan []Cmd_data, encoder *json.Encoder, command string
 	select {
 	case data := <-dataChan:
 		cdata := map[string]interface{}{
-			"command":  command,
-			"data": data,
+			"command": command,
+			"data":    data,
 		}
 		encoder.Encode(&cdata)
 	}

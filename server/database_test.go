@@ -100,13 +100,13 @@ func testLoginBeehive(t *testing.T, requestChan chan Db_request) {
 func testSignup(t *testing.T, requestChan chan Db_request) {
 
 	requests := []Db_request{{
-		request: "signup",
+		request:   "signup",
 		parameter: Cmd_data{},
 	}}
 
 	results := []map[string]string{{
 		"playerId": "?",
-	},}
+	}}
 
 	for i := 0; i < len(requests); i++ {
 		dataChan := make(chan []Cmd_data)
@@ -125,4 +125,3 @@ func testSignup(t *testing.T, requestChan chan Db_request) {
 		}
 	}
 }
-
