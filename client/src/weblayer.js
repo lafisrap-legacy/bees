@@ -1,4 +1,4 @@
-var BEES_SERVER_ADDRESS = "ws://192.168.1.18:4000/socket",
+var BEES_SERVER_ADDRESS = "ws://192.168.1.21:4000/socket",
 	BEES_RECONNECT_TIME = 10;
 	
 JSON.stringifyWithEscapes = function(obj) {
@@ -53,6 +53,13 @@ var WebLayer = cc.Class.extend({
 				// if there is no bee server reachable, game cannot start
 		    this.ws.send('{"command":"signup"}');
 		}
+    },
+    
+    registerVariation: function( variation ) {
+    	self = this;
+    	self.whenReady(function() {
+	    	self.ws.send('{"command":"registerVariation", "sid":"'+self.sid+'", "variation":"'+variation+'"}');		
+	    });
     },
     
     saveState: function() {

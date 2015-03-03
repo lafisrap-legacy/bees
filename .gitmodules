@@ -1,3 +1,3 @@
-[submodule "client/games/bees.stories"]
-	path = client/games/bees.stories
-	url = https://github.com/lavisrap/bees.stories
+[submodule "client/games/bees.wordbattle"]
+	path = client/games/bees.wordbattle
+	url = https://github.com/lavisrap/bees.wordbattle

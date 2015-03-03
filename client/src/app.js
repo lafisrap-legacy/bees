@@ -100,7 +100,8 @@ var BeesScene = cc.Scene.extend({
         _b_retain(this.menuLayer,"BeesScene, menuLayer");
 
         this.GameState().currentGame = "Geschichten";
-        this.weblayer.saveState();        
+        this.weblayer.saveState(); // tmp   
+        this.weblayer.registerVariation( "Das Eselein" );    
     },
     
     onExit: function() {
