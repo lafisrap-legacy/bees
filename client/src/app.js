@@ -56,8 +56,17 @@ var TitleLayer = cc.Layer.extend({
 				// ignore location, hide anyway
 				self.stopListeners();
 				self.getParent().showMenu([{
-					label: "Erster Eintrag",
-					cb: function() { cc.log("Erster Eintrag gewählt!")}
+					label: "Worte versenken",
+					cb: function() { 
+						var g_resources = [];
+						for (var r in gameRes["wordbattle"]) {
+							g_resources.push(gameRes["wordbattle"][r]);
+						}
+
+					    cc.LoaderScene.preload(g_resources, function () {
+					        cc.director.runScene(new WordBattleScene());
+    					}, this);
+					}
 				},{
 					label: "Zweiter Eintrag",
 					cb: function() { cc.log("Zweiter Eintrag gewählt!")}
