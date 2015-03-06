@@ -13,6 +13,9 @@ import (
 const (
 	// time till inactive sessions are cleared
 	sessionExpire time.Duration = 3000 * time.Second
+
+	// interval for invitation information 
+	invitationInterval time.Duration = 1 * time.Second
 )
 
 // Command is the basic structure for controller commands
@@ -30,10 +33,12 @@ type Command struct {
 // Session is the basic structure for player sessions
 type Session struct {
 	playerId   string
+	playerName string
+	encryptedSid string
 	beehive    *Beehive
+	dataChan   *chan []Cmd_data
 	variation  variation
 	inviting   *Session // inviting the player of a session
-	accepting  bool
 	lastAccess time.Time
 }
 
@@ -46,8 +51,8 @@ type variation string
 //	sessions	Array with all player sessions of a beehive
 type Beehive struct {
 	sessions map[string]*Session
+	invitees map[variation]map[string]*Session
 }
-
 var beehives map[string]*Beehive
 
 // Cmd_data is a map for command parameter to and from the controller
@@ -129,12 +134,15 @@ func handleCommands(commandChan chan Command, requestChan chan Db_request) {
 	}
 
 	sessionTicker := time.NewTicker(sessionExpire)
+	invitationTicker := time.NewTicker(invitationInterval)
 	for {
 		select {
 		case cmd := <-commandChan:
 			go commandInterpreter(cmd, requestChan)
 		case <-sessionTicker.C:
-			go expireSession(sessions)
+			go expireSession()
+		case <-invitationTicker.C:
+			go sendInvitation()
 		}
 	}
 }
@@ -152,6 +160,7 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 	if cmd.sid != "" {
 		// look for session
 		if session, ok = sessions[cmd.sid]; ok {
+			session.dataChan = &dataChan
 			session.lastAccess = time.Now()
 		} else {
 
@@ -197,27 +206,23 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 		requestChan <- request
 		data := <-dataChan
 
-		// check if beehive is list
-		beehive, ok := beehives[data[0]["beehive"]]
-		if !ok {
-			cmd.dataChan <- []Cmd_data{{
-				"error": "Beehive " + data[0]["beehive"] + " not found. ",
-			}}
-			return
-		}
-		// register session
-		sid := GetHash(nil)
-		session = &Session{
-			playerId:   cmd.parameter["playerId"],
-			beehive:    beehive,
-			lastAccess: time.Now(),
-		}
-		sessions[sid] = session
-		// tell beehive that session is active
-		beehive.sessions[sid] = session
+		_, err := data[0]["error"]
+		if !err {
+			// register session
+			sid := GetHash(nil)
+			beehive := beehives[data[0]["beehive"]]
+			session = &Session{
+				playerId:   cmd.parameter["playerId"],
+				beehive:    beehive,
+				lastAccess: time.Now(),
+			}
+			sessions[sid] = session
+			// tell beehive that session is active
+			beehive.sessions[sid] = session
 
-		// set return value
-		data[0]["sid"] = sid
+			// set return value
+			data[0]["sid"] = sid
+		}
 
 		cmd.dataChan <- data
 	case "logout":
@@ -239,13 +244,23 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 
 		cmd.dataChan <- []Cmd_data{}
 	case "acceptInvitations":
-		// parameters: variation
-		// rets: (every half second: accepting list (encr. sids), inviting list)
+		if session.variation != "" {
+			session.beehive.invitees[session.variation][cmd.sid] = session
+		} else {
+			cmd.dataChan <- []Cmd_data{{
+				"error": "Variation not registered. Use 'registerVariation' command.",
+			}}
+		}
+		fmt.Printf("acceptInvitations: true.\n")
+		cmd.dataChan <- []Cmd_data{}
 	case "invite":
 		// parameters: encr. sid
 		// rets: ok
 	case "stopInvitations":
-		// parameter: none
+		delete(session.beehive.invitees, session.variation)
+
+		fmt.Printf("acceptInvitations: false.\n")
+		cmd.dataChan <- []Cmd_data{}
 	default:
 		cmd.dataChan <- []Cmd_data{{
 			"error": "Command not available.",
@@ -254,12 +269,24 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 }
 
 // expireSession deletes all sessinos that are not used anymore. Relogin required after ...
-func expireSession(sessions map[string]*Session) {
+func expireSession() {
 	now := time.Now()
 	for sid := range sessions {
 		if now.After(sessions[sid].lastAccess.Add(sessionExpire)) {
 			delete(sessions, sid)
 			fmt.Printf("Deleting %s from session.\n", sid)
+		}
+	}
+}
+
+// sendInvitations sends invitation list to all accepting players
+func sendInvitation() {
+	for b := range beehives {
+		for v := range beehives[b].invitees {
+			sids := beehives[b].invitees[v]
+			for sid := range sids {
+				fmt.Println("%s",sid)
+			}
 		}
 	}
 }

@@ -108,18 +108,19 @@ func distributeRequest(db *sql.DB, req Db_request) {
 // existing account. This is meant for activation one player account on different
 // devices and as a backup facility.
 func Signup(db *sql.DB, p Cmd_data) []Cmd_data {
-	var playerId string
+	var playerId, playerIdSha1 string
 
 	magicSpell, ok := p["magicSpell"]
 
 	if !ok {
 		var id string
 		for playerId == "" {
-			// create player id
+			// create player id (first get a random value, than get its SHA1 hash)
 			playerId = GetHash(nil)
+			playerIdSha1 = GetHash([]byte(playerId))
 
 			// look if playerId is already in use (very unlikly)
-			err := db.QueryRow("select id from players where id = ?", playerId).Scan(&id)
+			err := db.QueryRow("select id from players where id = ?", playerIdSha1).Scan(&id)
 			switch {
 			case err == sql.ErrNoRows:
 			case err == nil:
@@ -130,7 +131,7 @@ func Signup(db *sql.DB, p Cmd_data) []Cmd_data {
 		}
 
 		// insert new player id
-		_, err := db.Exec("insert into players (id, beehive, magicspell, logins, gamestate) values (?,?,?,?,?)", playerId, "yaylaswiese", "", 0, "")
+		_, err := db.Exec("insert into players (id, beehive, magicspell, logins, gamestate) values (?,?,?,?,?)", playerIdSha1, "yaylaswiese", "", 0, "")
 		if err != nil {
 			panic("signup: " + err.Error())
 		}
@@ -164,19 +165,20 @@ func Signoff(db *sql.DB, session *Session, p Cmd_data) []Cmd_data {
 func Login(db *sql.DB, p Cmd_data) []Cmd_data {
 
 	playerId, ok := p["playerId"]
+	playerIdSha1 := GetHash([]byte(playerId))
 	var err error
 	if ok && playerId != "" {
 
 		// look if playerId is available
 		var id, beehive, magicspell, gamestate string
 		var logins int
-		err := db.QueryRow("SELECT id, beehive, magicspell, logins, gamestate FROM players WHERE id = ?", playerId).Scan(&id, &beehive, &magicspell, &logins, &gamestate)
+		err = db.QueryRow("SELECT id, beehive, magicspell, logins, gamestate FROM players WHERE id = ?", playerIdSha1).Scan(&id, &beehive, &magicspell, &logins, &gamestate)
 		switch {
 		case err == sql.ErrNoRows:
 			err = errors.New("Player id not found.")
 		case err == nil:
 			// increment login counter
-			_, err := db.Exec("UPDATE players SET logins = ? WHERE id = ?", logins+1, playerId)
+			_, err = db.Exec("UPDATE players SET logins = ? WHERE id = ?", logins+1, playerIdSha1)
 			if err != nil {
 				panic("login: UPDATE" + err.Error())
 			}
