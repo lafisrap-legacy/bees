@@ -1,4 +1,4 @@
-var BEES_SERVER_ADDRESS = "ws://192.168.1.21:4000/socket",
+var BEES_SERVER_ADDRESS = "ws://192.168.1.50:4000/socket",
 	BEES_RECONNECT_TIME = 10;
 	
 JSON.stringifyWithEscapes = function(obj) {

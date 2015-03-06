@@ -56,8 +56,12 @@ var TitleLayer = cc.Layer.extend({
 				// ignore location, hide anyway
 				self.stopListeners();
 				self.getParent().showMenu([{
-					label: "Erster Eintrag",
-					cb: function() { cc.log("Erster Eintrag gewählt!")}
+					label: "Worte versenken",
+					cb: function() { 
+					    cc.LoaderScene.preload(_b_getResources("wordbattle","Das Eselein"), function () {
+					        cc.director.runScene(new WordBattleScene(self.getParent(),"Das Eselein"));
+    					}, this);
+					}
 				},{
 					label: "Zweiter Eintrag",
 					cb: function() { cc.log("Zweiter Eintrag gewählt!")}
@@ -101,7 +105,6 @@ var BeesScene = cc.Scene.extend({
 
         this.GameState().currentGame = "Geschichten";
         this.weblayer.saveState(); // tmp   
-        this.weblayer.registerVariation( "Das Eselein" );    
     },
     
     onExit: function() {
@@ -128,5 +131,17 @@ var _b_release = function(obj) {
 	obj.release();		
 	delete retained[obj.__instanceId];
 }
+
+var _b_getResources = function(game, variation) {
+
+	var g_resources = [], vars = ["All",variation];
+	for(var v in vars) { 
+		for(var r in gameRes[game][vars[v]]) {
+			g_resources.push(gameRes[game][vars[v]][r]);
+		}
+	}
+	return g_resources;
+}
+
 
 

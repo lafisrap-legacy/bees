@@ -14,6 +14,9 @@
         "src/resource.js",
         "src/app.js",
         "src/weblayer.js",
-        "src/menulayer.js"
+        "src/menulayer.js",
+        
+        "src/games/wordbattle/src/resource.js",
+        "src/games/wordbattle/src/app.js"
     ]
 }

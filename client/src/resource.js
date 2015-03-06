@@ -10,7 +10,10 @@ var res = {
 
 };
 
+var gameRes = {};
+var gameVar = {};
+
 var g_resources = [];
-for (var i in res) {
-    g_resources.push(res[i]);
+for (var r in res) {
+    g_resources.push(res[r]);
 }
