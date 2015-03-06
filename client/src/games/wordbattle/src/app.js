@@ -16,11 +16,14 @@ var WordBattleScene = cc.Scene.extend({
 	game: "wordbattle",
 	variation: null,
 	ctor: function(mainScene, variation) {
+        this._super();
+
     	this.main = mainScene;
-    	this.main.getState().currentGame = game;
-    	this.main.getState().currentVariation = variation;
     	this.variation = variation;
-        this.main.weblayer.registerVariation(this.game+"/"+variation);   
+
+    	this.main.getState().currentGame 	  = this.game;
+    	this.main.getState().currentVariation = this.variation;
+        this.main.weblayer.registerVariation(this.game+"/"+this.variation);   
 
 		this.main.saveState(); 
 	},
