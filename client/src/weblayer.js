@@ -9,10 +9,12 @@ var WebLayer = cc.Class.extend({
 	ws: null,
 	sid: null,
 	sidCbs: [],
-	scene: null,
+	playerId: null,
+	playerName: null,
+	//scene: null,
 	
     ctor:function (scene) {
-		this.scene = scene;
+		//this.scene = scene;
 
 		this.initWebsocket();             	
         return true;
@@ -43,15 +45,22 @@ var WebLayer = cc.Class.extend({
 
     // call this function if you have no sid
     login: function() {
-    	var playerId = cc.sys.localStorage.getItem('playerId');
+    	this.playerId = cc.sys.localStorage.getItem('playerId');
+    	this.playerName = cc.sys.localStorage.getItem('playerName');
 
-	    if( playerId ) {
+	    if( this.playerId ) {
 	    	this.sid = null;
-		    this.ws.send('{"command":"login", "playerId":"'+playerId+'"}');
+		    this.ws.send('{"command":"login", "playerId":"'+this.playerId+'"}');
 		} else {
 			// if it is a browser, ask for magic spell, signup with this
 				// if there is no bee server reachable, game cannot start
 		    this.ws.send('{"command":"signup"}');
+		}
+		
+		if( !this.playerName ) {
+			n = cc.loader.getRes(res.names_json);
+			this.playerName = n[Math.trunc(Math.random()*n.length)].name;
+	    	cc.sys.localStorage.setItem('playerName',this.playerName);
 		}
     },
     
@@ -83,9 +92,14 @@ var WebLayer = cc.Class.extend({
 
 		cc.log("Received JSON: " + JSON.stringify(data));
 
+		ret = data.data[0];
+		if( ret.error ) {
+			cc.log("onMessage, Error from Bees server: "+ret.error);
+			return
+		}
 		switch( data.command ) {
 		case "login":
-			this.sid = data.data[0].sid;
+			this.sid = ret.sid;
 			cc.assert(this.sid != null && typeof this.sid === "string","onmessage 'login': Received bad sid.");
 
 			// We are logged in, so we call the waiting callbacks
@@ -105,15 +119,13 @@ var WebLayer = cc.Class.extend({
 			break;
 		default:
 			if( data.data[0] && data.data[0].error ) {
-				cc.log("onmessage, Error from Bees server: "+data.data[0].error);
+				cc.log("onmessage, unknown command: "+data.command);
 			}
 		}		
 	},
 
 	onError : function(evt) {
-		for( e in evt ) {
-			cc.log("onError: "+evt[e]);
-		}
+		cc.log("onError: "+evt);
 	},
 
 	onClose : function(evt) {

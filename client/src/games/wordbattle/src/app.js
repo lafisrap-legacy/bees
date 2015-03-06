@@ -11,13 +11,18 @@ var WordBattleLayer = cc.Layer.extend({
 });
 
 var WordBattleScene = cc.Scene.extend({
-	weblayer: null,
+	main: null,
+	gameState: null,
 	game: "wordbattle",
 	variation: null,
 	ctor: function(mainScene, variation) {
-    	this.weblayer = mainScene.weblayer;
+    	this.main = mainScene;
+    	this.main.getState().currentGame = game;
+    	this.main.getState().currentVariation = variation;
     	this.variation = variation;
-        this.weblayer.registerVariation(this.game+"/"+variation);    
+        this.main.weblayer.registerVariation(this.game+"/"+variation);   
+
+		this.main.saveState(); 
 	},
     onEnter:function () {
         this._super();

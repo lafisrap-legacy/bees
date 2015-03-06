@@ -8,10 +8,11 @@ var res = {
 	amtype72_png : "res/fonts/amtype36.png",
 	amtype72_fnt : "res/fonts/amtype36.fnt",
 
+	// global
+	names_json : "res/global/names.json"
 };
 
 var gameRes = {};
-var gameVar = {};
 
 var g_resources = [];
 for (var r in res) {
