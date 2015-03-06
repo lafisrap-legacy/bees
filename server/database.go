@@ -205,15 +205,18 @@ func Login(db *sql.DB, p Cmd_data) []Cmd_data {
 func SaveState(db *sql.DB, session *Session, p Cmd_data) []Cmd_data {
 
 	var err error
-	playerId := session.playerId
-	gameState, ok := p["gameState"] // here I get a map,stringify it?
+	var res sql.Result
+	gameState, ok := p["gameState"]
 	if ok {
 
-		_, err = db.Exec("UPDATE players SET gamestate = ? WHERE id = ?", gameState, playerId)
+		res, err = db.Exec("UPDATE players SET gamestate = ? WHERE id = ?", gameState, session.playerId)
 		if err != nil {
 			panic("saveState: UPDATE" + err.Error())
+		} else if r, _ := res.RowsAffected() ; r == 0 {
+			err = errors.New("GameState: PlayerId not found.")
+		} else {
+			return []Cmd_data{}
 		}
-		return []Cmd_data{}
 	} else {
 		err = errors.New("GameState parameter missing.")
 	}

@@ -212,7 +212,7 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 			sid := GetHash(nil)
 			beehive := beehives[data[0]["beehive"]]
 			session = &Session{
-				playerId:   cmd.parameter["playerId"],
+				playerId:   GetHash([]byte(cmd.parameter["playerId"])),
 				beehive:    beehive,
 				lastAccess: time.Now(),
 			}
