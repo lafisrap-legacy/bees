@@ -8,10 +8,12 @@
 * Player selection
 
 ## Later
-* Input name, boy/girl
+* Display a connection sign
+* nmp for jsfmt
 * Choose player on web (add local password)
-* Testing Spine
+* Testing Spine: Yaylas Wiese animation
 * Romans Font
+* Input name, boy/girl
 * Different names:
 	* refreshSession
 * Utilities

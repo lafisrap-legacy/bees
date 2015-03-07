@@ -1,41 +1,37 @@
 var BeesPlayerId = "";
 
+// TitleLayer is the entrance layer of the game. It serves the main menu.
+//
+// Methods
+// -------
+// initListener starts touch events of the title layer
+// stopListener stops touch events 
+//
+// Properties
+// ----------
+// -none-
 var TitleLayer = cc.Layer.extend({
-    sprite:null,
     ctor:function () {
         this._super();
         
         var size = cc.winSize;
 
-        var helloLabel = new cc.LabelTTF("Willkommen auf Yayla's Wiese", "Arial", 38);
-        // position the label on the center of the screen
-        helloLabel.x = size.width / 2;
-        helloLabel.y = 0;
-        // add the label as a child to this layer
-        this.addChild(helloLabel, 5);
-
-        this.sprite = new cc.Sprite(res.beehive_jpg);
-        this.sprite.attr({
+        var bs = new cc.Sprite(res.beehive_jpg);
+        bs.attr({
             x: size.width / 2,
             y: size.height / 2,
             scale: 1,
             rotation: 0
         });
-        this.addChild(this.sprite, 0);
+        this.addChild(bs, 0);
 
-        this.sprite.runAction(
+        bs.runAction(
             cc.spawn(
                 cc.scaleTo(2.5, 1.12, 1.12),
                 cc.moveBy(2.5, 50, 20)
             )
         );
-        helloLabel.runAction(
-            cc.spawn(
-                cc.moveBy(2.5, cc.p(0, size.height - 40)),
-                cc.tintTo(2.5,255,0,0)
-            )
-        );
-        
+
         this.initListeners();
 
         return true;
@@ -55,11 +51,11 @@ var TitleLayer = cc.Layer.extend({
 
 				// ignore location, hide anyway
 				self.stopListeners();
-				self.getParent().showMenu([{
+				$b.showMenu([{
 					label: "Worte versenken",
 					cb: function() { 
 					    cc.LoaderScene.preload(_b_getResources("wordbattle","Das Eselein"), function () {
-					        cc.director.runScene(new WordBattleScene(self.getParent(),"Das Eselein"));
+					        cc.director.runScene(new WordBattleScene("Das Eselein"));
     					}, this);
 					}
 				},{
@@ -91,13 +87,28 @@ var TitleLayer = cc.Layer.extend({
     },
 });
 
+// BeeScene is the main scene. It's instance is contained in $b
+//
+// Methods
+// -------
+// showMenu displays the menu with custom entries and callbacks
+// getState retrieves the object of the current state, so props can be read or modified
+// saveState saves the current state to local storage and database (S)
+// registerVariation activates the current variation on the bees server (S)
+//
+// Properties
+// ----------
+// weblayer contains a pointer to all websocket related functionality
+// menuLayer contains a pointer to the menu functionality
+// gameState contains the current game state, everything you need to restore it
+//
 var BeesScene = cc.Scene.extend({
 	weblayer: null,
 	menuLayer: null,
 	gameState: {},
     onEnter:function () {
         this._super();
-        this.weblayer = new WebLayer(this);
+        this.weblayer = new WebLayer();
         var title = new TitleLayer();
         this.addChild(title);
         this.menuLayer = new MenuLayer();
@@ -108,26 +119,43 @@ var BeesScene = cc.Scene.extend({
     	_b_release(this.menuLayer);
     },
     
+    // showMenu parameter
+    //
+    // labelsAndCallbacks: 	see MenuLayer.show
+ 	// fcb: 				see MenuLayer.show
+ 	//
     showMenu: function(labelsAndCallbacks,fcb) {
 		this.addChild(this.menuLayer);
 		this.menuLayer.show(labelsAndCallbacks,fcb);
     },
     
-    getState: function() 	{ return this.gameState; },
-    saveState: function() 	{ return this.weblayer.saveState(this.gameState); }
+    getState: 			function() 			{ return this.gameState; },
+    saveState: 			function() 			{ return this.weblayer.saveState(this.gameState); },
+    registerVariation: 	function(variation) { return this.weblayer.registerVariation(variation); } 
 });
 
-var retained = []
+// GLOBAL VARIABLES
+//
+// _b_retained contains all currently retained cocos2d objects. They all have to be released after usage
+
+var _b_retained = []
+
+// GLOBAL FUNCTIONS
+//
+// _b_retain registers a cocos2d object as retains (saves it from being garbage collected)
+// _b_release unregisters a cocos2d object
+// _b_getRessources prepares all resources of a variation to be preloaded
+
 var _b_retain = function(obj,name) {
 	obj.retain();
-    retained[obj.__instanceId] = name;
+    _b_retained[obj.__instanceId] = name;
 }
 
 var _b_release = function(obj) {
 
-	cc.assert(obj && retained[obj.__instanceId], "_b_release: Object not valid or not in retained array.");
+	cc.assert(obj && _b_retained[obj.__instanceId], "_b_release: Object not valid or not in retained array.");
 	obj.release();		
-	delete retained[obj.__instanceId];
+	delete _b_retained[obj.__instanceId];
 }
 
 var _b_getResources = function(game, variation) {
