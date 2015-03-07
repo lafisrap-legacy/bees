@@ -72,7 +72,7 @@ func StartServer() chan bool {
 
 	requestChan := StartDatabase(config, doneChan)
 	commandChan := StartController(config, requestChan, doneChan)
-	StartConnector(config, commandChan, doneChan)
+	go StartConnector(config, commandChan, doneChan)
 
 	return doneChan
 }

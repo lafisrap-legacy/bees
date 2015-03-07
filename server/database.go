@@ -77,8 +77,6 @@ func serveDatabase(db *sql.DB, requestChan chan Db_request, doneChan chan bool) 
 		select {
 		case req := <-requestChan:
 			go distributeRequest(db, req)
-		case <-doneChan:
-			return
 		}
 	}
 }
