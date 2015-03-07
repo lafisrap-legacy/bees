@@ -1,17 +1,38 @@
-var BEES_MAX_MENU_ENTRIES = 6,
-	BEES_MAX_MENU_PADDING = -10,
-	BEES_MENU_Y_OFFSETS = [-4, -5, 2, 4, 8, 15];
+// MenuLayer Constants
+//
+// _B_MAX_MENU_ENTRIES: maximum number of menu entries (depends on available pngs)
+// _B_MAX_MENU_PADDING: standard padding of menu pngs
+// _B_MENU_Y_OFFSETS: modifications of standard padding
+//
+var _B_MAX_MENU_ENTRIES = 6,
+	_B_MAX_MENU_PADDING = -10,
+	_B_MENU_Y_OFFSETS = [-4, -5, 2, 4, 8, 15];
 	
-cc.assert(BEES_MENU_Y_OFFSETS.length === BEES_MAX_MENU_ENTRIES, "MenuLayer: Array size of BEES_MENU_Y_OFFSETS must match BEES_MAX_MENU_ENTRIES.") 
+cc.assert(_B_MENU_Y_OFFSETS.length === _B_MAX_MENU_ENTRIES, "MenuLayer: Array size of _B_MENU_Y_OFFSETS must match _B_MAX_MENU_ENTRIES.") 
 
+
+// MenuLayer is the main menu layer of the game.
+//
+// Methods
+// -------
+// initListener starts touch events of the title layer
+// stopListener stops touch events 
+// show starts the menu in animation
+// hide starts the menu out animation
+//
+// Properties
+// ----------
+// _finalCallback contains a pointer to the callback function that is called on menu hide
+// _touchListener contains a pointer to the touch listeners of the event manager
+//
 var MenuLayer = cc.Layer.extend({
 
 	_finalCallback: null,
+	_touchListener: null,
 	
     ctor: function () {
         this._super();
         
-		// load sprites into cache
 	    cc.spriteFrameCache.addSpriteFrames(res.menu_plist);
 	},
 	
@@ -38,17 +59,41 @@ var MenuLayer = cc.Layer.extend({
 	stopListeners: function() {
         if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
     },
-    
+
+    // show 
+	//
+    // Parameter
+    //
+    // labelsAndCallbacks is a object array with two properties
+    //		label contains the label of the menu entry
+    //		cb contains the callback function called when the menu is selected
+    //
+    //		example:
+    //
+	//		[{
+	//			label: "Menu Entry One",
+	//			cb: function() { 
+	//				// ... code
+	//			}
+	//		},{
+	//			label: "Menu Entry Two",
+	//			cb: function() { 
+	//				// ... code
+	//			}
+	//		}]		
+	//
+	// finalCallback is the final callback function. It is called after the menu is hidden again    
 	show: function(labelsAndCallbacks, finalCallback) {
 		
-        var size = cc.winSize;
-		var gate, menu;			    
+        var size = cc.winSize, gate, menu;
+        			    
 	    this.initListeners();
 	    this._finalCallback = finalCallback;
 	    cc.assert( this._finalCallback && typeof this._finalCallback == "function", "this._finalCallback should be a function.")
 		
+		// Create menu items from object
 		var items = [];
-		for( var i=0 ; i<labelsAndCallbacks.length ; i++ ) {
+		for( var i=0 ; i<Math.min(labelsAndCallbacks.length,_B_MAX_MENU_ENTRIES) ; i++ ) {
 			var frame = cc.spriteFrameCache.getSpriteFrame("item"+(i+1)),
 	    		spritesNormal = cc.Sprite.create(frame,cc.rect(0,0,380,100)),
 	    		spritesSelected =cc.Sprite.create(frame,cc.rect(0,0,380,100)),
@@ -64,20 +109,17 @@ var MenuLayer = cc.Layer.extend({
 			var menuSprite = new cc.MenuItemSprite(spritesNormal, spritesSelected, spritesDisabled, labelsAndCallbacks[i].cb, this);
 			items.push(menuSprite);
 		}
-		
+
+		// Create, adjust and animate menu		
 		this.menu = new cc.Menu(items);		
 		cc.assert( this.menu, "Menu could not be created!");
-		this.menu.alignItemsVerticallyWithPadding(BEES_MAX_MENU_PADDING);
 
 		var ch = this.menu.children;
-		for( var i=0 ; i<ch.length ; i++ ) {
-			ch[i].y = ch[i].y + BEES_MENU_Y_OFFSETS[i];
-		}
-		
-        this.addChild(this.menu,1);
     	this.menu.setPosition(cc.p(1136 * 1.1,320));
 	    this.menu.setScale(0.1);
-
+		this.menu.alignItemsVerticallyWithPadding(_B_MAX_MENU_PADDING);
+		for( var i=0 ; i<ch.length ; i++ ) ch[i].y = ch[i].y + _B_MENU_Y_OFFSETS[i];
+		
 		this.menu.runAction(cc.sequence(
 			cc.delayTime(0.33),
 			cc.EaseElasticOut.create(
@@ -88,14 +130,16 @@ var MenuLayer = cc.Layer.extend({
 			)
 		));
 
-		// creating gate		
+		// Create, adjust and animate gate
 		this.gate = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("gate"),cc.rect(0,0,1136,640)),
 		this.gate.setPosition(cc.p(1136*1.5,370));
 		this.gate.setScale(1.15);
-		
 		this.gate.runAction(cc.EaseSineOut.create(
 			cc.moveTo(1,568,360)
 		));
+
+		// Show menu and gate
+        this.addChild(this.menu,1);
         this.addChild(this.gate,0);
 
         return true;

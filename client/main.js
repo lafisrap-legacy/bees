@@ -54,7 +54,8 @@ cc.game.onStart = function(){
     cc.view.resizeWithBrowserSize(true);
     //load resources
     cc.LoaderScene.preload(g_resources, function () {
-        cc.director.runScene(new BeesScene());
+    	$b = new BeesScene()
+        cc.director.runScene($b);
     }, this);
 };
 cc.game.run();

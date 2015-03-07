@@ -11,27 +11,24 @@ var WordBattleLayer = cc.Layer.extend({
 });
 
 var WordBattleScene = cc.Scene.extend({
-	main: null,
 	gameState: null,
 	game: "wordbattle",
 	variation: null,
-	ctor: function(mainScene, variation) {
+	ctor: function(variation) {
         this._super();
 
-    	this.main = mainScene;
     	this.variation = variation;
 
-    	this.main.getState().currentGame 	  = this.game;
-    	this.main.getState().currentVariation = this.variation;
-        this.main.weblayer.registerVariation(this.game+"/"+this.variation);   
+    	$b.getState().currentGame 	  = this.game;
+    	$b.getState().currentVariation = this.variation;
+        $b.registerVariation(this.game+"/"+this.variation);   
 
-		this.main.saveState(); 
+		$b.saveState(); 
 	},
     onEnter:function () {
         this._super();
 
-        var layer = new WordBattleLayer();
-        this.addChild(layer);
+        this.addChild(new WordBattleLayer());
     }
 });
 
