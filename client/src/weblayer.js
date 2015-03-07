@@ -11,10 +11,10 @@ var WebLayer = cc.Class.extend({
 	sidCbs: [],
 	playerId: null,
 	playerName: null,
-	//scene: null,
+	scene: null,
 	
     ctor:function (scene) {
-		//this.scene = scene;
+		this.scene = scene;
 
 		this.initWebsocket();             	
         return true;
@@ -71,10 +71,10 @@ var WebLayer = cc.Class.extend({
 	    });
     },
     
-    saveState: function() {
+    saveState: function(state) {
     	self = this;
     	self.whenReady(function() {
-	    	self.ws.send('{"command":"saveState", "sid":"'+self.sid+'", "gameState":"'+JSON.stringifyWithEscapes(self.scene.GameState())+'"}');		
+	    	self.ws.send('{"command":"saveState", "sid":"'+self.sid+'", "gameState":"'+JSON.stringifyWithEscapes(state)+'"}');		
     	});
 	},
     	    
@@ -92,7 +92,7 @@ var WebLayer = cc.Class.extend({
 
 		cc.log("Received JSON: " + JSON.stringify(data));
 
-		ret = data.data[0];
+		ret = data.data.length && data.data[0] || {};
 		if( ret.error ) {
 			cc.log("onMessage, Error from Bees server: "+ret.error);
 			return

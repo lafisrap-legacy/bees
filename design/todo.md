@@ -1,25 +1,29 @@
 # To Do
-* Next Steps
-	* Adding database and command structure for word battle to design doc
-		* specially: get together 
-	* Creating a standalone and an embedded game stub
-	* Programming a simple get 
+
+## Next
+* SHA1 for session id
+* send currently waiting players
+* Invite other player
+* Broadcast / subscribe
+* Player selection
+
+## Later
+* Input name, boy/girl
+* Choose player on web (add local password)
 * Testing Spine
 * Romans Font
 * Different names:
 	* refreshSession
-* Game standalone / in beehive
 * Utilities
-	* Read md-texts into database (paragraphs, w/ image urls) Update or rebuild 
-	* Read questions into database
+	* Read md-texts into database (paragraphs, w/ image urls) Update or 
+
+
+## rebuild 
+* Read questions into database
 * Session (Server side, memory):
-	* Current game
-	* Current invitations (who, whom)
-	* Current plays (who with whom ... sending JSON)
+	* see code 
 * Variations: 
-	* Game type (e.g. Word Battle)
-	* Name (e.g. Das Eselein)
-	* Rounds (e.g. paragraphs, own table!)
+	* see code
 * Sphinx Questions (new table!)
 	* Question
 	* Right answers (own table?)

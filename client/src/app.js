@@ -102,9 +102,6 @@ var BeesScene = cc.Scene.extend({
         this.addChild(title);
         this.menuLayer = new MenuLayer();
         _b_retain(this.menuLayer,"BeesScene, menuLayer");
-
-        this.GameState().currentGame = "Geschichten";
-        this.weblayer.saveState(); // tmp   
     },
     
     onExit: function() {
@@ -116,7 +113,8 @@ var BeesScene = cc.Scene.extend({
 		this.menuLayer.show(labelsAndCallbacks,fcb);
     },
     
-    GameState: function() { return this.gameState; }
+    getState: function() 	{ return this.gameState; },
+    saveState: function() 	{ return this.weblayer.saveState(this.gameState); }
 });
 
 var retained = []
