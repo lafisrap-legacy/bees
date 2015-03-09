@@ -131,7 +131,8 @@ var BeesScene = cc.Scene.extend({
     
     getState: 			function() 			{ return this.gameState; },
     saveState: 			function() 			{ return this.weblayer.saveState(this.gameState); },
-    registerVariation: 	function(variation) { return this.weblayer.registerVariation(variation); } 
+    registerVariation: 	function(variation) { return this.weblayer.registerVariation(variation); },
+    sendCommand:		function(command)	{ return this.weblayer.sendCommand(command); }
 });
 
 // GLOBAL VARIABLES
