@@ -38,7 +38,8 @@ func StartConnector(config map[string]string, commandChan chan Command, doneChan
 
 	err := http.ListenAndServe(config["wsaddress"]+":"+config["wsport"], nil)
 	if err != nil {
-		panic(err.Error())
+		fmt.Println("Error: "+err.Error())
+		doneChan <- true
 	}
 }
 
