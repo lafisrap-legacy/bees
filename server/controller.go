@@ -34,7 +34,7 @@ type Command struct {
 type Session struct {
 	playerId   string
 	playerName string
-	encryptedSid string
+	sha1Sid string
 	beehive    *Beehive
 	dataChan   *chan []Cmd_data
 	variation  variation
@@ -50,6 +50,7 @@ type variation string
 // Beehive is the basic struture for beehive life
 //	sessions	Array with all player sessions of a beehive
 type Beehive struct {
+	name string
 	sessions map[string]*Session
 	invitees map[variation]map[string]*Session
 }
@@ -126,6 +127,7 @@ func handleCommands(commandChan chan Command, requestChan chan Db_request) {
 
 		bh := Beehive{
 			sessions: make(map[string]*Session),
+			invitees: make(map[variation]map[string]*Session),
 		}
 
 		beehives[shortname] = &bh
@@ -211,9 +213,11 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 			// register session
 			sid := GetHash(nil)
 			beehive := beehives[data[0]["beehive"]]
+			/////fmt.Println("Login:",cmd.parameter["playerId"])
 			session = &Session{
 				playerId:   GetHash([]byte(cmd.parameter["playerId"])),
 				beehive:    beehive,
+				sha1Sid:	GetHash([]byte(sid)),
 				lastAccess: time.Now(),
 			}
 			sessions[sid] = session
@@ -235,7 +239,7 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 		if ok {
 			session.variation = variation(vid)
 
-			fmt.Printf("registerVariation: %v\n", session)
+			fmt.Println("registerVariation:", session)
 		} else {
 			cmd.dataChan <- []Cmd_data{{
 				"error": "Parameter 'variation' missing.",
@@ -245,7 +249,15 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 		cmd.dataChan <- []Cmd_data{}
 	case "acceptInvitations":
 		if session.variation != "" {
-			session.beehive.invitees[session.variation][cmd.sid] = session
+			fmt.Println("acceptInvitations:")
+			vari, ok := session.beehive.invitees[session.variation]
+			if !ok {
+				vari = make(map[string]*Session)
+				fmt.Println("acceptInvitations vari:", vari)
+				session.beehive.invitees[session.variation] = vari
+			}
+			fmt.Println("acceptInvitations cmd.sid:", cmd.sid)
+			vari[cmd.sid] = session
 		} else {
 			cmd.dataChan <- []Cmd_data{{
 				"error": "Variation not registered. Use 'registerVariation' command.",
@@ -282,10 +294,34 @@ func expireSession() {
 // sendInvitations sends invitation list to all accepting players
 func sendInvitation() {
 	for b := range beehives {
-		for v := range beehives[b].invitees {
-			sids := beehives[b].invitees[v]
-			for sid := range sids {
-				fmt.Println("%s",sid)
+		inv := beehives[b].invitees
+		for vari := range inv {
+			sids := inv[vari]
+			fmt.Println(len(sids),"to send to with variation",vari)
+			if len(sids) > 1 {
+				for sid := range sids {
+					data := make([]Cmd_data,5)
+					for s := range sids {
+						var inviting, invited string = "false", "false"
+						if sids[s].inviting == sids[sid] {
+							inviting = "true"
+						}
+						if sids[sid].inviting == sids[s] {
+							invited = "true"
+						}
+
+						if sid != s {
+							data = append(data,Cmd_data{
+								"sid": sids[s].sha1Sid,
+								"name": sids[s].playerName,
+								"inviting": inviting,
+								"invited": invited,
+							})
+						}
+					}
+					*(sids[sid].dataChan) <- data
+					fmt.Println("Packet sent to",sid,":",data)
+				}
 			}
 		}
 	}
