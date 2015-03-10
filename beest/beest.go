@@ -5,6 +5,23 @@ import (
 	"os"
 )
 
+/*
+type frame struct {
+	frame string
+	offset string
+	rotated bool
+	sourceColorRect string
+	sourceSize string
+}
+
+type Plist struct {
+	Frames map[string]frame
+	Metadata map[string]string
+}
+*/
+
+type Plist map[string]interface{}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "beest"
@@ -22,17 +39,20 @@ func main() {
 	// app logic
 	app.Commands = []cli.Command{
 		{
-			Name:      "add",
-			ShortName: "a",
-			Usage:     "add a task to the list",
-			Action: func(c *cli.Context) {
-				println("added task: ", c.Args().First())
-			},
+			Name:      "createfont",
+			ShortName: "f",
+			Usage:     "convert cocos2d plist to bitmap font",
+			Action:    createFont,
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "lang",
-					Value: "english",
-					Usage: "language for the greeting",
+					Name:  "plist",
+					Value: "",
+					Usage: "cocos2d plist file",
+				},
+				cli.StringFlag{
+					Name:  "fnt",
+					Value: "",
+					Usage: "font file",
 				},
 			},
 		},
