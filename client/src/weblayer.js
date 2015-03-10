@@ -3,7 +3,7 @@
 // _B_SERVER_ADDRESS: websocket address of bee server
 // _B_RECONNECT_TIME: Seconds after a reconnected is tried, if there is no connection 
 //
-var _B_SERVER_ADDRESS = "ws://192.168.1.11:4000/socket",
+var _B_SERVER_ADDRESS = "ws://192.168.1.10:4000/socket",
 	_B_RECONNECT_TIME = 10;
 
 // WebLayer contains all websocket related functionality 
@@ -94,6 +94,15 @@ var WebLayer = cc.Class.extend({
 	    });
     },
     
+	sendCommand: function(command) {
+    	self = this;
+		command["sid"] = self.sid
+		
+    	self.whenReady(function() {
+	    	self.ws.send(JSON.stringify(command));		
+	    });
+	},
+    
     saveState: function(state) {
     	self = this;
     	self.whenReady(function() {
@@ -159,7 +168,7 @@ var WebLayer = cc.Class.extend({
 			
 			// and try to open it again
 			setTimeout(function() {
-				self.ctor();
+				if( !self.sid ) self.ctor();
 			}, _B_RECONNECT_TIME*1000 );
 	}
 });

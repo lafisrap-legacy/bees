@@ -21,7 +21,21 @@ var WordBattleScene = cc.Scene.extend({
 
     	$b.getState().currentGame 	  = this.game;
     	$b.getState().currentVariation = this.variation;
-        $b.registerVariation(this.game+"/"+this.variation);   
+
+        $b.sendCommand({
+        	command: "registerVariation",
+        	variation: this.game+"/"+this.variation
+        });   
+
+        $b.sendCommand({
+        	command: "acceptInvitations"
+        });   
+
+		setTimeout(function() {	
+		    $b.sendCommand({
+        		command: "stopInvitations"
+        	});   
+		},100000);
 
 		$b.saveState(); 
 	},
