@@ -54,6 +54,11 @@ func main() {
 					Value: "",
 					Usage: "font file",
 				},
+				cli.StringFlag{
+					Name:  "name",
+					Value: "",
+					Usage: "font name",
+				},
 			},
 		},
 		{
