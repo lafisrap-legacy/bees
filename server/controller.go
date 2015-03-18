@@ -36,7 +36,7 @@ type Session struct {
 	playerName string
 	sha1Sid string
 	beehive    *Beehive
-	dataChan   *chan []Cmd_data
+	notificationChan   *chan []Cmd_data
 	variation  variation
 	inviting   *Session // inviting the player of a session
 	lastAccess time.Time
@@ -162,7 +162,6 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 	if cmd.sid != "" {
 		// look for session
 		if session, ok = sessions[cmd.sid]; ok {
-			session.dataChan = &dataChan
 			session.lastAccess = time.Now()
 		} else {
 
@@ -242,7 +241,7 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 			vari, ok := session.beehive.invitees[session.variation]
 			if !ok {
 				vari = make(map[string]*Session)
-				fmt.Println("acceptInvitations vari:", vari)
+				fmt.Println("acceptInvitations variation:", vari)
 				session.beehive.invitees[session.variation] = vari
 			}
 			fmt.Println("acceptInvitations cmd.sid:", cmd.sid)
@@ -258,7 +257,7 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 		// parameters: encr. sid
 		// rets: ok
 	case "stopInvitations":
-		delete(session.beehive.invitees, session.variation)
+		delete(session.beehive.invitees[session.variation], cmd.sid)
 
 		fmt.Printf("acceptInvitations: false.\n")
 		cmd.dataChan <- []Cmd_data{}
@@ -269,13 +268,17 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 	}
 }
 
+func setNotificationChan(notificationChan chan []Cmd_data, sid string) {
+	sessions[sid].notificationChan = &notificationChan
+}
+
 // expireSession deletes all sessinos that are not used anymore. Relogin required after ...
 func expireSession() {
 	now := time.Now()
 	for sid := range sessions {
 		if now.After(sessions[sid].lastAccess.Add(sessionExpire)) {
 			delete(sessions, sid)
-			fmt.Printf("Deleting %s from session.\n", sid)
+			fmt.Println("Deleting",sid,"from sessions.")
 		}
 	}
 }
@@ -283,33 +286,32 @@ func expireSession() {
 // sendInvitations sends invitation list to all accepting players
 func sendInvitation() {
 	for b := range beehives {
-		inv := beehives[b].invitees
-		for vari := range inv {
-			sids := inv[vari]
-			fmt.Println(len(sids),"to send to with variation",vari)
-			if len(sids) > 1 {
-				for sid := range sids {
-					data := make([]Cmd_data,5)
-					for s := range sids {
-						var inviting, invited string = "false", "false"
-						if sids[s].inviting == sids[sid] {
-							inviting = "true"
+		invitees := beehives[b].invitees
+		for variation := range invitees {
+			varSessions := invitees[variation]
+			fmt.Println(len(varSessions),"to send to with variation",variation,". Length:", len(varSessions))
+			if len(varSessions) > 1 {
+				for sid := range varSessions {
+					data := make([]Cmd_data,0)
+					for s := range varSessions {
+						var inviting, invited string = "no", "no"
+						if varSessions[s].inviting == varSessions[sid] {
+							inviting = "yes"
 						}
-						if sids[sid].inviting == sids[s] {
-							invited = "true"
+						if varSessions[sid].inviting == varSessions[s] {
+							invited = "yes"
 						}
 
 						if sid != s {
 							data = append(data,Cmd_data{
-								"sid": sids[s].sha1Sid,
-								"name": sids[s].playerName,
+								"sid": varSessions[s].sha1Sid,
+								"name": varSessions[s].playerName,
 								"inviting": inviting,
 								"invited": invited,
 							})
 						}
 					}
-					*(sids[sid].dataChan) <- data
-					fmt.Println("Packet sent to",sid,":",data)
+					*(varSessions[sid].notificationChan) <- data
 				}
 			}
 		}

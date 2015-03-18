@@ -29,13 +29,13 @@ var dbChan = make(chan string)
 func StartConnector(config map[string]string, commandChan chan Command, doneChan chan bool) {
 
 	http.Handle(config["wsdir"], websocket.Handler(func(ws *websocket.Conn) {
-		fmt.Printf("New socket handler started ...")
+		fmt.Println("New socket handler started ...")
 		s := socket{ws, make(chan bool)}
 		go translateMessages(s, commandChan)
 		<-s.done
 	}))
 
-	fmt.Printf("Bees connector started on %s. Listening ...\n", config["wsaddress"]+":"+config["wsport"])
+	fmt.Println("Bees connector started on %s. Listening ...", config["wsaddress"]+":"+config["wsport"])
 
 	err := http.ListenAndServe(config["wsaddress"]+":"+config["wsport"], nil)
 	if err != nil {
@@ -51,6 +51,7 @@ func translateMessages(s socket, commandChan chan Command) {
 	var sid string
 	var err error
 	var ok bool
+
 	for {
 		var message Cmd_data
 		var command string
@@ -119,6 +120,11 @@ func catchReturn(dataChan chan []Cmd_data, encoder *json.Encoder, command string
 
 		if command == "login" {
 			if sid, ok := data[0]["sid"]; ok {
+
+				notificationChan := make(chan []Cmd_data)
+				go catchNotifications(notificationChan, encoder)
+				setNotificationChan(notificationChan, sid)
+
 				return sid
 			}
 		}
@@ -126,3 +132,18 @@ func catchReturn(dataChan chan []Cmd_data, encoder *json.Encoder, command string
 
 	return ""
 }
+
+func catchNotifications(notificationChan chan []Cmd_data, encoder *json.Encoder) {
+	for {
+		select {
+		case note := <-notificationChan:
+			cdata := map[string]interface{}{
+				"command": "notification",
+				"data":    note,
+			}
+			encoder.Encode(&cdata)
+		}
+	}
+}
+
+
