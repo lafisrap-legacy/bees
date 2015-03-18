@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"errors"
 )
 
 type socket struct {
@@ -46,40 +47,68 @@ func StartConnector(config map[string]string, commandChan chan Command, doneChan
 func translateMessages(s socket, commandChan chan Command) {
 	decoder := json.NewDecoder(s)
 	encoder := json.NewEncoder(s)
+
+	var sid string
+	var err error
+	var ok bool
 	for {
 		var message Cmd_data
-		err := decoder.Decode(&message)
+		var command string
+		err = decoder.Decode(&message)
 		if err != nil {
 			fmt.Println(err)
 			s.done <- true
 			return
 		}
 		dataChan := make(chan []Cmd_data)
-		if command, ok := message["command"]; ok {
-			var sid string
-			if sid, ok = message["sid"]; !ok {
-				sid = ""
+		if command, ok = message["command"]; ok {
+			var msgSid string
+			if msgSid, ok = message["sid"]; !ok {
+				if command != "login" && command != "signup" {
+					err = errors.New("No session id (sid) provided.")
+				}
 			} else {
 				delete(message, "sid")
+				if sid == "" || sid != msgSid {
+					err = errors.New("No session or session id wrong.")
+				}
 			}
 			delete(message, "command")
-			commandChan <- Command{
-				command:   command,
-				sid:       sid,
-				dataChan:  dataChan,
-				parameter: message,
+
+			if command == "login" && sid != "" {
+				err = errors.New("Session already active. Logout first.")
 			}
 
-			if sid == "" {
-				sid = command
-			}
+			if err == nil {
+				commandChan <- Command{
+					command:   command,
+					sid:       sid,
+					dataChan:  dataChan,
+					parameter: message,
+				}
 
-			go catchReturn(dataChan, encoder, command)
+				newSid := catchReturn(dataChan, encoder, command)
+				if newSid != "" {
+					sid = newSid
+				}
+			}
+		} else {
+			err = errors.New("No command.")
+		}
+
+		if err != nil {
+			cdata := map[string]interface{}{
+				"command": command,
+				"data":    []Cmd_data{{
+					"error": err.Error(),
+				}},
+			}
+			encoder.Encode(&cdata)
 		}
 	}
 }
 
-func catchReturn(dataChan chan []Cmd_data, encoder *json.Encoder, command string) {
+func catchReturn(dataChan chan []Cmd_data, encoder *json.Encoder, command string) string {
 	select {
 	case data := <-dataChan:
 		cdata := map[string]interface{}{
@@ -87,5 +116,13 @@ func catchReturn(dataChan chan []Cmd_data, encoder *json.Encoder, command string
 			"data":    data,
 		}
 		encoder.Encode(&cdata)
+
+		if command == "login" {
+			if sid, ok := data[0]["sid"]; ok {
+				return sid
+			}
+		}
 	}
+
+	return ""
 }

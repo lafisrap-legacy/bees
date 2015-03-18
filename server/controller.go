@@ -171,16 +171,6 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 			}}
 			return
 		}
-	} else {
-		if cmd.command != "login" && cmd.command != "signup" {
-
-			cmd.dataChan <- []Cmd_data{{
-				"error": "Session id is missing.",
-			}}
-			return
-		} else {
-			session = nil
-		}
 	}
 
 	request := Db_request{
@@ -213,7 +203,6 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 			// register session
 			sid := GetHash(nil)
 			beehive := beehives[data[0]["beehive"]]
-			/////fmt.Println("Login:",cmd.parameter["playerId"])
 			session = &Session{
 				playerId:   GetHash([]byte(cmd.parameter["playerId"])),
 				beehive:    beehive,
