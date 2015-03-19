@@ -14,7 +14,7 @@ const (
 	// time till inactive sessions are cleared
 	sessionExpire time.Duration = 3000 * time.Second
 
-	// interval for invitation information 
+	// interval for invitation information
 	invitationInterval time.Duration = 1 * time.Second
 )
 
@@ -32,14 +32,14 @@ type Command struct {
 
 // Session is the basic structure for player sessions
 type Session struct {
-	playerId   string
-	playerName string
-	sha1Sid string
-	beehive    *Beehive
-	notificationChan   *chan []Cmd_data
-	variation  variation
-	inviting   *Session // inviting the player of a session
-	lastAccess time.Time
+	playerId         string
+	playerName       string
+	sha1Sid          string
+	beehive          *Beehive
+	notificationChan *chan []Cmd_data
+	variation        variation
+	inviting         *Session // inviting the player of a session
+	lastAccess       time.Time
 }
 
 var sessions map[string]*Session
@@ -50,10 +50,11 @@ type variation string
 // Beehive is the basic struture for beehive life
 //	sessions	Array with all player sessions of a beehive
 type Beehive struct {
-	name string
+	name     string
 	sessions map[string]*Session
 	invitees map[variation]map[string]*Session
 }
+
 var beehives map[string]*Beehive
 
 // Cmd_data is a map for command parameter to and from the controller
@@ -199,13 +200,19 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 
 		_, err := data[0]["error"]
 		if !err {
+			playerName, ok := cmd.parameter["playerName"]
+			if !ok {
+				playerName = "N.N."
+			}
+
 			// register session
 			sid := GetHash(nil)
 			beehive := beehives[data[0]["beehive"]]
 			session = &Session{
 				playerId:   GetHash([]byte(cmd.parameter["playerId"])),
+				playerName: playerName,
 				beehive:    beehive,
-				sha1Sid:	GetHash([]byte(sid)),
+				sha1Sid:    GetHash([]byte(sid)),
 				lastAccess: time.Now(),
 			}
 			sessions[sid] = session
@@ -275,7 +282,7 @@ func logout(sid *string) {
 	stopInvitations(sid)
 	delete(sessions, *sid)
 
-	fmt.Println("Logging out",sid,".")
+	fmt.Println("Logging out", sid, ".")
 }
 
 func stopInvitations(sid *string) {
@@ -297,7 +304,7 @@ func expireSession() {
 	for sid := range sessions {
 		if now.After(sessions[sid].lastAccess.Add(sessionExpire)) {
 			delete(sessions, sid)
-			fmt.Println("Deleting",sid,"from sessions.")
+			fmt.Println("Deleting", sid, "from sessions.")
 		}
 	}
 }
@@ -308,10 +315,10 @@ func sendInvitation() {
 		invitees := beehives[b].invitees
 		for variation := range invitees {
 			varSessions := invitees[variation]
-			fmt.Println(len(varSessions),"to send to with variation",variation,". Length:", len(varSessions))
+			fmt.Println(len(varSessions), "to send to with variation", variation, ". Length:", len(varSessions))
 			if len(varSessions) > 1 {
 				for sid := range varSessions {
-					data := make([]Cmd_data,0)
+					data := make([]Cmd_data, 0)
 					for s := range varSessions {
 						var inviting, invited string = "no", "no"
 						if varSessions[s].inviting == varSessions[sid] {
@@ -322,11 +329,11 @@ func sendInvitation() {
 						}
 
 						if sid != s {
-							data = append(data,Cmd_data{
-								"sid": varSessions[s].sha1Sid,
-								"name": varSessions[s].playerName,
+							data = append(data, Cmd_data{
+								"sid":      varSessions[s].sha1Sid,
+								"name":     varSessions[s].playerName,
 								"inviting": inviting,
-								"invited": invited,
+								"invited":  invited,
 							})
 						}
 					}

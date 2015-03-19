@@ -3,10 +3,10 @@ package beeserver
 import (
 	"code.google.com/p/go.net/websocket"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"errors"
 )
 
 type socket struct {
@@ -40,7 +40,7 @@ func StartConnector(config map[string]string, commandChan chan Command, doneChan
 
 	err := http.ListenAndServe(config["wsaddress"]+":"+config["wsport"], nil)
 	if err != nil {
-		fmt.Println("Error: "+err.Error())
+		fmt.Println("Error: " + err.Error())
 		doneChan <- true
 	}
 }
@@ -58,7 +58,7 @@ func translateMessages(s socket, commandChan chan Command) {
 		var command string
 		err = decoder.Decode(&message)
 		if err != nil {
-			fmt.Println("Connection error: ",err.Error())
+			fmt.Println("Connection error: ", err.Error())
 			logout(&sid)
 			s.done <- true
 			return
@@ -102,7 +102,7 @@ func translateMessages(s socket, commandChan chan Command) {
 		if err != nil {
 			cdata := map[string]interface{}{
 				"command": command,
-				"data":    []Cmd_data{{
+				"data": []Cmd_data{{
 					"error": err.Error(),
 				}},
 			}
@@ -147,5 +147,3 @@ func catchNotifications(notificationChan chan []Cmd_data, encoder *json.Encoder)
 		}
 	}
 }
-
-

@@ -206,11 +206,11 @@ func SaveState(db *sql.DB, session *Session, p Cmd_data) []Cmd_data {
 	var res sql.Result
 	gameState, ok := p["gameState"]
 	if ok {
-		fmt.Println("PlayerId:",session.playerId)
+		fmt.Println("PlayerId:", session.playerId)
 		res, err = db.Exec("UPDATE players SET gamestate = ? WHERE id = ?", gameState, session.playerId)
 		if err != nil {
 			panic("saveState: UPDATE" + err.Error())
-		} else if r, _ := res.RowsAffected() ; r == 0 {
+		} else if r, _ := res.RowsAffected(); r == 0 {
 			fmt.Println("SaveState: State not changed.")
 			// err = errors.New("SaveState: PlayerId not found.")
 			// 	r return 0 if PlayerId is not found or if UPDATE didn't change data, so err msg is incorrect
