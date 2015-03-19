@@ -3,7 +3,8 @@
 // _B_SERVER_ADDRESS: websocket address of bee server
 // _B_RECONNECT_TIME: Seconds after a reconnected is tried, if there is no connection 
 //
-var _B_SERVER_ADDRESS = "ws://192.168.1.10:4000/socket",
+//var _B_SERVER_ADDRESS = "ws://192.168.1.10:4000/socket",
+var _B_SERVER_ADDRESS = "ws://localhost:4000/socket",
 	_B_RECONNECT_TIME = 10;
 
 // WebLayer contains all websocket related functionality 
@@ -32,6 +33,7 @@ var WebLayer = cc.Class.extend({
 	sidCbs: [],
 	playerId: null,
 	playerName: null,
+	notificationCb: null,
 	
     ctor:function () {
     	var self = this;
@@ -69,21 +71,21 @@ var WebLayer = cc.Class.extend({
 
     	this.playerId = cc.sys.localStorage.getItem('playerId');
     	this.playerName = cc.sys.localStorage.getItem('playerName');
+		
+		if( !this.playerName ) {
+			n = cc.loader.getRes(res.names_json);
+			this.playerName = n[Math.trunc(Math.random()*n.length)].name;
+	    	cc.sys.localStorage.setItem('playerName',this.playerName);
+		}
 
 	    if( this.playerId ) {
-		    this.ws.send('{"command":"login", "playerId":"'+this.playerId+'"}');
+		    this.ws.send('{"command":"login", "playerId":"'+this.playerId+'", "playerName":"'+this.playerName+'"}');
 		    // the server reply is collected in OnMessage / case: "login"
 		} else {
 			// if it is a browser, ask for magic spell, signup with this
 				// if there is no bee server reachable, game cannot start
 		    this.ws.send('{"command":"signup"}');
 		    // the server reply is collected in OnMessage / case: "signup"
-		}
-		
-		if( !this.playerName ) {
-			n = cc.loader.getRes(res.names_json);
-			this.playerName = n[Math.trunc(Math.random()*n.length)].name;
-	    	cc.sys.localStorage.setItem('playerName',this.playerName);
 		}
     },
     
@@ -102,7 +104,16 @@ var WebLayer = cc.Class.extend({
 	    	self.ws.send(JSON.stringify(command));		
 	    });
 	},
-    
+   
+	acceptInvitations: function(cb) {
+    	self.whenReady(function() {
+	    	self.ws.send('{"command":"acceptInvitations", "sid":"'+self.sid+'"}');		
+			self.notificationCb = cb;
+
+			cc.assert(typeof cb === "function", "acceptInvitations: Callback must be a function.")
+	    });
+	},
+ 
     saveState: function(state) {
     	self = this;
     	self.whenReady(function() {
@@ -148,6 +159,11 @@ var WebLayer = cc.Class.extend({
 			cc.sys.localStorage.setItem('playerId',BeesPlayerId);
 
 			this.login();
+			break;
+		case "notification":
+			cc.assert(self.notificationCb != null, "No callback available for notification from server.");
+
+			self.notificationCb(data.data);
 			break;
 		default:
 			if( data.data[0] && data.data[0].error ) {
