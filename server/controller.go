@@ -218,7 +218,7 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 
 		cmd.dataChan <- data
 	case "logout":
-		delete(sessions, cmd.sid)
+		logout(&(cmd.sid))
 
 		cmd.dataChan <- []Cmd_data{}
 	// pure controller commands ()
@@ -257,9 +257,7 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 		// parameters: encr. sid
 		// rets: ok
 	case "stopInvitations":
-		delete(session.beehive.invitees[session.variation], cmd.sid)
-
-		fmt.Printf("acceptInvitations: false.\n")
+		stopInvitations(&(cmd.sid))
 		cmd.dataChan <- []Cmd_data{}
 	default:
 		cmd.dataChan <- []Cmd_data{{
@@ -270,6 +268,27 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 
 func setNotificationChan(notificationChan chan []Cmd_data, sid string) {
 	sessions[sid].notificationChan = &notificationChan
+}
+
+func logout(sid *string) {
+
+	stopInvitations(sid)
+	delete(sessions, *sid)
+
+	fmt.Println("Logging out",sid,".")
+}
+
+func stopInvitations(sid *string) {
+
+	session := sessions[*sid]
+
+	delete(session.beehive.invitees[session.variation], *sid)
+
+	if len(session.beehive.invitees[session.variation]) == 0 {
+		delete(session.beehive.invitees, session.variation)
+	}
+
+	fmt.Printf("acceptInvitations: false.\n")
 }
 
 // expireSession deletes all sessinos that are not used anymore. Relogin required after ...

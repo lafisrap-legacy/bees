@@ -33,6 +33,7 @@ func StartConnector(config map[string]string, commandChan chan Command, doneChan
 		s := socket{ws, make(chan bool)}
 		go translateMessages(s, commandChan)
 		<-s.done
+		fmt.Println("Connection gone ...")
 	}))
 
 	fmt.Println("Bees connector started on %s. Listening ...", config["wsaddress"]+":"+config["wsport"])
@@ -57,7 +58,8 @@ func translateMessages(s socket, commandChan chan Command) {
 		var command string
 		err = decoder.Decode(&message)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("Connection error: ",err.Error())
+			logout(&sid)
 			s.done <- true
 			return
 		}
