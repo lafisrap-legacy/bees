@@ -2,16 +2,15 @@ package beeserver
 
 import (
 	"testing"
-	//"fmt"
 )
 
 const (
-	beehives = 2
+	_beehives = 2
 )
 
 func TestDatabase(t *testing.T) {
 
-	config := LoadConfig()
+	config := loadConfig()
 	if config == nil {
 		panic(config)
 	}
@@ -38,8 +37,8 @@ func testGetBeehives(t *testing.T, requestChan chan Db_request) {
 	requestChan <- req
 	data := <-dataChan
 
-	if len(data) != beehives {
-		t.Errorf("Number of beehives: %d, wanted: %d", len(data), beehives)
+	if len(data) != _beehives {
+		t.Errorf("Number of beehives: %d, wanted: %d", len(data), _beehives)
 	}
 }
 

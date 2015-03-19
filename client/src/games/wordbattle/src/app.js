@@ -27,15 +27,15 @@ var WordBattleScene = cc.Scene.extend({
         	variation: this.game+"/"+this.variation
         });   
 
-        $b.sendCommand({
-        	command: "acceptInvitations"
-        });   
+		$b.acceptInvitations(function(data) {
+			for( var i=0 ; i<data.length ; i++ ) {
+				cc.log("Got message from player "+data[i].name+". Sid: "+data[i].sid);
+			}
+		});
 
 		setTimeout(function() {	
-		    $b.sendCommand({
-        		command: "stopInvitations"
-        	});   
-		},100000);
+		    $b.sendCommand({command: "stopInvitations"});   
+		},50000);
 
 		$b.saveState(); 
 	},

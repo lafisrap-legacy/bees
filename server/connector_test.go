@@ -19,7 +19,7 @@ type result struct {
 
 func TestConnector(t *testing.T) {
 
-	config := LoadConfig()
+	config := loadConfig()
 	if config == nil {
 		panic(config)
 	}
