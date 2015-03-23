@@ -26,6 +26,9 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "beest"
 	app.Usage = "configure and monitor a beeserver"
+	app.Author = "Michael Schmidt"
+	app.Email = "michael@c2064.org"
+	app.Version = "0.0.1"
 
 	// setting flags
 	app.Flags = []cli.Flag{
@@ -40,7 +43,7 @@ func main() {
 	app.Commands = []cli.Command{
 		{
 			Name:      "createfont",
-			ShortName: "f",
+			ShortName: "cf",
 			Usage:     "convert cocos2d plist to bitmap font",
 			Action:    createFont,
 			Flags: []cli.Flag{
@@ -54,25 +57,12 @@ func main() {
 					Value: "",
 					Usage: "font file",
 				},
-				cli.StringFlag{
-					Name:  "name",
-					Value: "",
-					Usage: "font name",
-				},
-			},
-		},
-		{
-			Name:      "complete",
-			ShortName: "c",
-			Usage:     "complete a task on the list",
-			Action: func(c *cli.Context) {
-				println("completed task: ", c.Args().First())
 			},
 		},
 		{
 			Name:      "template",
 			ShortName: "r",
-			Usage:     "options for task templates",
+			Usage:     "just to have an example in the code",
 			Subcommands: []cli.Command{
 				{
 					Name:  "add",
