@@ -57,6 +57,7 @@ type fntCommon struct {
 }
 
 type fntChar struct {
+	Char	 string
 	Id       string
 	X        string
 	Y        string
@@ -121,17 +122,21 @@ func createFont(c *cli.Context) {
 		frame := frames[f].(map[string]interface{})["frame"].(_frame)
 		offset := frames[f].(map[string]interface{})["offset"].(_pos)
 		char[rune] = fntChar{
+			Char:	  f,
 			Id:       rune,
 			X:        strconv.Itoa(frame.x),
 			Y:        strconv.Itoa(frame.y),
 			Width:    strconv.Itoa(frame.w),
 			Height:   strconv.Itoa(frame.h),
 			Xoffset:  strconv.Itoa(offset.x),
-			Yoffset:  strconv.Itoa(150-frame.h),
+			Yoffset:  strconv.Itoa(offset.y),
 			Xadvance: strconv.Itoa(frame.w),
 			Page:     "0",
 			Chnl:     "0",
 		}
+
+		fmt.Println(f,":",char[rune])
+		
 		max = math.Max(max, float64(frame.h))
 	}
 
@@ -172,6 +177,7 @@ func createFont(c *cli.Context) {
 	} else if jsonFilename[len(jsonFilename)-5:] != ".json" {
 		jsonFilename = jsonFilename + ".json"
 	}
+	
 	var jsonData jsonInputFmt
 	jsonInput, err := ioutil.ReadFile(jsonFilename)
 	if err != nil {
@@ -180,10 +186,27 @@ func createFont(c *cli.Context) {
 			fmt.Println("Couldn't create ", jsonFile, "(", err.Error(), ")")
 			return
 		}
-		jsonFile.WriteString(createfont_json_template)
+		
+		// fill some font specific information into the json template	
+		err = json.Unmarshal([]byte(createfont_json_template), &jsonData)
+		if err != nil {
+			fmt.Println("Error while reading json template: ", err.Error())
+			return
+		}
+		for i := range jsonData.Char {
+			jChar := jsonData.Char[i]
+			pChar := plistData.Char[i]
+			fmt.Println(jChar,"///",pChar)
+			height, _ := strconv.Atoi(pChar.Height)
+			jChar.Yoffset = strconv.Itoa( int(max) - height )
+			jChar.Xadvance = pChar.Width
+			jsonData.Char[i] = jChar
+		}
+		jsonStr, _ := json.MarshalIndent(jsonData, "  ", "    ")
+		jsonFile.WriteString(string(jsonStr))
 		fmt.Println(jsonFilename, "was created.")
 		fmt.Println("Please enter your modifications into the file and run 'beest createfont' again.")
-		return
+		fmt.Println("First you might want to adjust the Yoffset and Xadvance parameter of every character.")
 	} else {
 		err = json.Unmarshal(jsonInput, &jsonData)
 		if err != nil {
@@ -400,6 +423,8 @@ func getArray(decoder *xml.Decoder) []string {
 }
 
 func getUnicode(char string) string {
+	//fmt.Println("Character name "+char+" found.")			
+
 	if len(char) >= 4 {
 		switch char {
 		case "ampersand":
@@ -427,6 +452,7 @@ func getUnicode(char string) string {
 		case "quotation":
 			char = "?"
 		case "slash":
+			fmt.Println("Character name / found.")			
 			char = "/"
 		case "star":
 			char = "*"
