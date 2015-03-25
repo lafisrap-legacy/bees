@@ -105,6 +105,7 @@ var TitleLayer = cc.Layer.extend({
 var BeesScene = cc.Scene.extend({
 	weblayer: null,
 	menuLayer: null,
+	selectPlayerLayer: null,
 	gameState: {},
     onEnter:function () {
         this._super();
@@ -127,6 +128,28 @@ var BeesScene = cc.Scene.extend({
     showMenu: function(labelsAndCallbacks,fcb) {
 		this.addChild(this.menuLayer);
 		this.menuLayer.show(labelsAndCallbacks,fcb);
+    },
+    
+    connectPlayer: function(cb, baseLayer) {
+    	
+		var self = this;
+    	
+    	if( this.selectPlayerLayer ) {
+    		this.removeChild(this.selectPlayerLayer);
+			_b_release(this.selectPlayerLayer);
+		}
+
+		this.selectPlayerLayer = new SelectPlayerLayer(function(player) {
+			_b_release(self.selectPlayerLayer);
+			cb();
+		}, [{
+			"label": "Moritz"
+		},{
+			"label": "Mausi"
+		}]);		
+		
+        (baseLayer || this).addChild(this.selectPlayerLayer,5);
+		_b_retain(this.selectPlayerLayer,"BeeScene, connectPlayer")
     },
     
     getState: 			function() 			{ return this.gameState; },

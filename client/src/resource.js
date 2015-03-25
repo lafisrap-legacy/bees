@@ -5,8 +5,12 @@ var res = {
     // menu
 	menu_png : "res/menu/menu.png",
     menu_plist : "res/menu/menu.plist",
-	amtype72_png : "res/fonts/amtype36.png",
-	amtype72_fnt : "res/fonts/amtype36.fnt",
+	amtype36_png : "res/fonts/amtype36.png",
+	amtype36_fnt : "res/fonts/amtype36.fnt",
+
+	// list view
+	listview_png : "res/listview/listview.png",
+    listview_plist : "res/listview/listview.plist",
 
 	// global
 	names_json : "res/global/names.json"
