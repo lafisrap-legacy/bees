@@ -70,10 +70,17 @@ type fntChar struct {
 	Chnl     string
 }
 
+type fntKerning struct {
+	First	string
+	Second	string
+	Amount	string
+}
+
 type jsonInputFmt struct {
 	Info   fntInfo
 	Common fntCommon
 	Char   map[string]fntChar
+	Kerning []fntKerning
 }
 
 var _b_regexNumbers = regexp.MustCompile("[0-9]+")
@@ -104,6 +111,13 @@ func createFont(c *cli.Context) {
 		return
 	}
 	defer pInput.Close()
+	
+	pos := strings.LastIndex(pFile, "/")
+	if pos == -1 {
+		pos = 0
+	}
+	fontName := pFile[pos : len(pFile)-6]
+	fmt.Println("Fontname:", fontName)
 
 	// retrieve XML
 	pList := make(map[string]interface{})
@@ -135,8 +149,6 @@ func createFont(c *cli.Context) {
 			Chnl:     "0",
 		}
 
-		fmt.Println(f,":",char[rune])
-		
 		max = math.Max(max, float64(frame.h))
 	}
 
@@ -179,6 +191,7 @@ func createFont(c *cli.Context) {
 	}
 	
 	var jsonData jsonInputFmt
+	tFile := c.String("template")
 	jsonInput, err := ioutil.ReadFile(jsonFilename)
 	if err != nil {
 		jsonFile, err := os.Create(jsonFilename)
@@ -187,27 +200,95 @@ func createFont(c *cli.Context) {
 			return
 		}
 		
-		// fill some font specific information into the json template	
-		err = json.Unmarshal([]byte(createfont_json_template), &jsonData)
-		if err != nil {
-			fmt.Println("Error while reading json template: ", err.Error())
-			return
+		if tFile == "" {
+			// fill some font specific information into the json template	
+			err = json.Unmarshal([]byte(createfont_json_template), &jsonData)
+			if err != nil {
+				fmt.Println("Error while reading json template: ", err.Error())
+				return
+			}
+
+			jsonData.Info.Face = fontName
+			jsonData.Info.Size = strconv.Itoa(int(max))
+		
+			for i := range jsonData.Char {
+				jChar := jsonData.Char[i]
+				pChar := plistData.Char[i]
+				height, _ := strconv.Atoi(pChar.Height)
+				jChar.Yoffset = strconv.Itoa( int(max) - height )
+				jChar.Xadvance = pChar.Width
+				jsonData.Char[i] = jChar
+			}
+			fmt.Println("Creating", jsonFilename, "...")
+			fmt.Println("Please enter your modifications into the file and run 'beest createfont' again.")
+			fmt.Println("First you might want to adjust the Yoffset parameter of every character to adjust the height.")
+			fmt.Println("The fnt file was created anyway, so you can test the font.")
+		} else {
+			jsonInput, err := ioutil.ReadFile(tFile)
+			if err != nil {
+				fmt.Println("Couldn't read template file ", jsonInput, "(", err.Error(), ")")
+				return		
+			}
+			err = json.Unmarshal(jsonInput, &jsonData)
+			if err != nil {
+				fmt.Println("Error while unmarshalling json template file: ", err.Error())
+				return
+			}
+			// Now resize all size values
+			if jsonData.Info.Size == "" {
+				fmt.Println( "Template Info.Size parameter is \"\". It must have a value.")
+				return
+			}
+			oldSize, _ := strconv.ParseFloat(jsonData.Info.Size,64)
+			newSize := max
+			if newSize > oldSize {
+				fmt.Println("The target font size is larger than the template font size. Choose a larger template.")
+				return
+			}
+			ratio := newSize / oldSize;
+
+			jsonData.Info.Face = fontName
+			jsonData.Info.Size = strconv.Itoa(int(max))
+
+			for c := range jsonData.Char {
+				char := jsonData.Char[c]
+				
+				if char.Xoffset != "" {
+					newf, _ :=strconv.ParseFloat(char.Xoffset,64)
+					char.Xoffset = strconv.Itoa(int(newf*ratio))
+				}
+				if char.Yoffset != "" {
+					newf, _ :=strconv.ParseFloat(char.Yoffset,64)
+					char.Yoffset = strconv.Itoa(int(newf*ratio))
+				}
+				if char.Xadvance != "" {
+					newf, _ :=strconv.ParseFloat(char.Xadvance,64)
+					char.Xadvance = strconv.Itoa(int(newf*ratio))
+				}
+				
+				jsonData.Char[c] = char
+			}
+			for c := 0 ; c < len(jsonData.Kerning) ; c++ {
+				pair := jsonData.Kerning[c]
+				
+				if pair.Amount != "" {
+					fmt.Println("Pair.Amount:",pair.Amount)
+					newf, _ :=strconv.ParseFloat(pair.Amount,64)
+					pair.Amount = strconv.Itoa(int(newf*ratio))
+				}
+				
+				jsonData.Kerning[c] = pair
+			}			
 		}
-		for i := range jsonData.Char {
-			jChar := jsonData.Char[i]
-			pChar := plistData.Char[i]
-			fmt.Println(jChar,"///",pChar)
-			height, _ := strconv.Atoi(pChar.Height)
-			jChar.Yoffset = strconv.Itoa( int(max) - height )
-			jChar.Xadvance = pChar.Width
-			jsonData.Char[i] = jChar
-		}
+		
 		jsonStr, _ := json.MarshalIndent(jsonData, "  ", "    ")
 		jsonFile.WriteString(string(jsonStr))
-		fmt.Println(jsonFilename, "was created.")
-		fmt.Println("Please enter your modifications into the file and run 'beest createfont' again.")
-		fmt.Println("First you might want to adjust the Yoffset and Xadvance parameter of every character.")
+
+	} else if tFile != "" {
+		fmt.Println("A json file already exists. Delete it before you use a template for a new file.")
+		return		
 	} else {
+		fmt.Println("JSON:",jsonInput, jsonData)
 		err = json.Unmarshal(jsonInput, &jsonData)
 		if err != nil {
 			fmt.Println("Error while reading json file: ", err.Error())
@@ -229,12 +310,6 @@ func createFont(c *cli.Context) {
 		return
 	}
 	defer fntOutput.Close()
-
-	// create fnt file
-	pos := strings.LastIndex(fntFile, "/")
-	if pos == -1 {
-		pos = 0
-	}
 
 	// copy data from jsonFile if there are modifications
 	pInfo := plistData.Info
@@ -284,20 +359,15 @@ func createFont(c *cli.Context) {
 
 		pChar[i] = ch		
 	}
-	
-	fntName := plistData.Info.Face
-	if fntName == "" {
-		fntName = fntFile[pos : len(fntFile)-4]
-	}
-
+		
 	// ... info line ...
-	fntOutput.WriteString("info face=\"" + fntName + "\" size=" + plistData.Info.Size + " bold=" + plistData.Info.Bold + " italic=" + plistData.Info.Italic + " charset=\"" + plistData.Info.Charset + "\" unicode=" + plistData.Info.Unicode + " stretchH=" + plistData.Info.StretchH + " smooth=" + plistData.Info.Smooth + " aa=" + plistData.Info.Aa + " padding=" + plistData.Info.Padding + " spacing=" + plistData.Info.Spacing + "\n")
+	fntOutput.WriteString("info face=\"" + fontName + "\" size=" + plistData.Info.Size + " bold=" + plistData.Info.Bold + " italic=" + plistData.Info.Italic + " charset=\"" + plistData.Info.Charset + "\" unicode=" + plistData.Info.Unicode + " stretchH=" + plistData.Info.StretchH + " smooth=" + plistData.Info.Smooth + " aa=" + plistData.Info.Aa + " padding=" + plistData.Info.Padding + " spacing=" + plistData.Info.Spacing + "\n")
 
 	// ... common line ...
 	fntOutput.WriteString("common lineHeight=" + plistData.Common.LineHeight + " base=" + plistData.Common.Base + " scaleW=" + plistData.Common.ScaleW + " scaleH=" + plistData.Common.ScaleH + " pages=" + plistData.Common.Pages + " packed=" + plistData.Common.Packed + "\n")
 
 	// ... page ...
-	fntOutput.WriteString("page id=0 file=\"" + fntName + ".png\"\n")
+	fntOutput.WriteString("page id=0 file=\"" + fontName + ".png\"\n")
 
 	// ... chars ...
 	fntOutput.WriteString("chars count=" + strconv.Itoa(len(frames)) + "\n")
@@ -312,6 +382,12 @@ func createFont(c *cli.Context) {
 	for c := range plistData.Char {
 		fntOutput.WriteString("char id=" + c + " x=" + plistData.Char[c].X + " y=" + plistData.Char[c].Y + " width=" + plistData.Char[c].Width + " height=" + plistData.Char[c].Height + " xoffset=" + plistData.Char[c].Xoffset + " yoffset=" + plistData.Char[c].Yoffset + " xadvance=" + plistData.Char[c].Xadvance + " page=" + plistData.Char[c].Page + " chnl=" + plistData.Char[c].Chnl + "\n")
 		//fmt.Println( "\""+getUnicode(keys[f])+"\":{\"char\": \""+keys[f]+"\",\"id\": \""+getUnicode(keys[f])+"\",\"x\": \"\",\"y\": \"\",\"width\": \"\",\"height\": \"\",\"xoffset\": \"\",\"yoffset\": \"\",\"xadvance\": \"\",\"page\": \"\",\"chnl\": \"\"},");
+	}
+	
+	// ... kerning ...
+	for i:=0 ; i<len(jsonData.Kerning) ; i++ {
+		k := jsonData.Kerning[i]
+		fntOutput.WriteString("kerning first=" + k.First + " second=" + k.Second + " amount=" + k.Amount + "\n")
 	}
 }
 
@@ -452,14 +528,13 @@ func getUnicode(char string) string {
 		case "quotation":
 			char = "?"
 		case "slash":
-			fmt.Println("Character name / found.")			
 			char = "/"
 		case "star":
 			char = "*"
 		case "space":
 			char = " "
 		default:
-			fmt.Println("Character name " + char + " not found. Take it as normal character.")
+			//fmt.Println("Character name " + char + " not found. Take it as normal character.")
 		}
 	}
 

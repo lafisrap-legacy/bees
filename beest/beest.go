@@ -50,12 +50,22 @@ func main() {
 				cli.StringFlag{
 					Name:  "plist",
 					Value: "",
-					Usage: "cocos2d plist file",
+					Usage: "cocos2d plist file (input)",
+				},
+				cli.StringFlag{
+					Name:  "json",
+					Value: "",
+					Usage: "json file (input)",
 				},
 				cli.StringFlag{
 					Name:  "fnt",
 					Value: "",
-					Usage: "font file",
+					Usage: "font file (output)",
+				},
+				cli.StringFlag{
+					Name:  "template",
+					Value: "",
+					Usage: "json template file for resizing",
 				},
 			},
 		},
