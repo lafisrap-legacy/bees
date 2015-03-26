@@ -1383,6 +1383,506 @@
               "First": "70",
               "Second": "122",
               "Amount": "-5"
+          },
+          {
+              "First": "72",
+              "Second": "69",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "70",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "71",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "72",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "79",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "80",
+              "Amount": "1"
+          },
+          {
+              "First": "72",
+              "Second": "81",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "85",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "97",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "99",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "100",
+              "Amount": "1"
+          },
+          {
+              "First": "72",
+              "Second": "101",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "102",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "103",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "107",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "108",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "109",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "110",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "111",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "112",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "113",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "114",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "117",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "118",
+              "Amount": "2"
+          },
+          {
+              "First": "72",
+              "Second": "119",
+              "Amount": "2"
+          },
+          {
+              "First": "74",
+              "Second": "75",
+              "Amount": "2"
+          },
+          {
+              "First": "74",
+              "Second": "76",
+              "Amount": "2"
+          },
+          {
+              "First": "74",
+              "Second": "84",
+              "Amount": "2"
+          },
+          {
+              "First": "74",
+              "Second": "87",
+              "Amount": "2"
+          },
+          {
+              "First": "74",
+              "Second": "89",
+              "Amount": "2"
+          },
+          {
+              "First": "74",
+              "Second": "116",
+              "Amount": "2"
+          },
+          {
+              "First": "76",
+              "Second": "87",
+              "Amount": "-3"
+          },
+          {
+              "First": "76",
+              "Second": "89",
+              "Amount": "-3"
+          },
+          {
+              "First": "76",
+              "Second": "97",
+              "Amount": "2"
+          },
+          {
+              "First": "76",
+              "Second": "98",
+              "Amount": "2"
+          },
+          {
+              "First": "76",
+              "Second": "105",
+              "Amount": "2"
+          },
+          {
+              "First": "76",
+              "Second": "106",
+              "Amount": "-5"
+          },
+          {
+              "First": "76",
+              "Second": "118",
+              "Amount": "-3"
+          },
+          {
+              "First": "77",
+              "Second": "97",
+              "Amount": "2"
+          },
+          {
+              "First": "77",
+              "Second": "101",
+              "Amount": "2"
+          },
+          {
+              "First": "77",
+              "Second": "105",
+              "Amount": "2"
+          },
+          {
+              "First": "77",
+              "Second": "117",
+              "Amount": "2"
+          },
+          {
+              "First": "78",
+              "Second": "97",
+              "Amount": "-2"
+          },
+          {
+              "First": "78",
+              "Second": "101",
+              "Amount": "-2"
+          },
+          {
+              "First": "78",
+              "Second": "111",
+              "Amount": "-3"
+          },
+          {
+              "First": "79",
+              "Second": "106",
+              "Amount": "-3"
+          },
+          {
+              "First": "80",
+              "Second": "106",
+              "Amount": "-3"
+          },
+          {
+              "First": "84",
+              "Second": "74",
+              "Amount": "-5"
+          },
+          {
+              "First": "84",
+              "Second": "77",
+              "Amount": "-3"
+          },
+          {
+              "First": "84",
+              "Second": "78",
+              "Amount": "-3"
+          },
+          {
+              "First": "84",
+              "Second": "88",
+              "Amount": "-3"
+          },
+          {
+              "First": "84",
+              "Second": "90",
+              "Amount": "-3"
+          },
+          {
+              "First": "86",
+              "Second": "97",
+              "Amount": "-5"
+          },
+          {
+              "First": "86",
+              "Second": "100",
+              "Amount": "-5"
+          },
+          {
+              "First": "86",
+              "Second": "101",
+              "Amount": "-3"
+          },
+          {
+              "First": "86",
+              "Second": "111",
+              "Amount": "-5"
+          },
+          {
+              "First": "89",
+              "Second": "97",
+              "Amount": "-5"
+          },
+          {
+              "First": "89",
+              "Second": "101",
+              "Amount": "-5"
+          },
+          {
+              "First": "89",
+              "Second": "111",
+              "Amount": "-5"
+          },
+          {
+              "First": "90",
+              "Second": "101",
+              "Amount": "-3"
+          },
+          {
+              "First": "90",
+              "Second": "111",
+              "Amount": "-3"
+          },
+          {
+              "First": "90",
+              "Second": "117",
+              "Amount": "-3"
+          },
+          {
+              "First": "90",
+              "Second": "119",
+              "Amount": "-3"
+          },
+          {
+              "First": "97",
+              "Second": "118",
+              "Amount": "-3"
+          },
+          {
+              "First": "97",
+              "Second": "106",
+              "Amount": "-5"
+          },
+          {
+              "First": "98",
+              "Second": "106",
+              "Amount": "-5"
+          },
+          {
+              "First": "99",
+              "Second": "106",
+              "Amount": "-5"
+          },
+          {
+              "First": "100",
+              "Second": "106",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "97",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "98",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "99",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "100",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "101",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "102",
+              "Amount": "-2"
+          },
+          {
+              "First": "102",
+              "Second": "103",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "105",
+              "Amount": "-2"
+          },
+          {
+              "First": "102",
+              "Second": "106",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "109",
+              "Amount": "-3"
+          },
+          {
+              "First": "102",
+              "Second": "110",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "111",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "112",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "113",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "114",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "115",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "116",
+              "Amount": "-2"
+          },
+          {
+              "First": "102",
+              "Second": "117",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "118",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "119",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "120",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "121",
+              "Amount": "-5"
+          },
+          {
+              "First": "102",
+              "Second": "122",
+              "Amount": "-5"
+          },
+          {
+              "First": "109",
+              "Second": "106",
+              "Amount": "-3"
+          },
+          {
+              "First": "111",
+              "Second": "106",
+              "Amount": "-3"
+          },
+          {
+              "First": "111",
+              "Second": "116",
+              "Amount": "-3"
+          },
+          {
+              "First": "112",
+              "Second": "106",
+              "Amount": "-3"
+          },
+          {
+              "First": "115",
+              "Second": "106",
+              "Amount": "-3"
+          },
+          {
+              "First": "116",
+              "Second": "106",
+              "Amount": "-2"
+          },
+          {
+              "First": "119",
+              "Second": "106",
+              "Amount": "-3"
+          },
+          {
+              "First": "121",
+              "Second": "106",
+              "Amount": "-2"
+          },
+          {
+              "First": "122",
+              "Second": "106",
+              "Amount": "-3"
           }
       ]
   }
