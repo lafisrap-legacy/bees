@@ -231,7 +231,7 @@ func createFont(c *cli.Context) {
 			}
 			err = json.Unmarshal(jsonInput, &jsonData)
 			if err != nil {
-				fmt.Println("Error while unmarshalling json template file: ", err.Error())
+				fmt.Println("Error while unmarshalling json template file ",tFile,":", err.Error())
 				return
 			}
 			// Now resize all size values
@@ -272,7 +272,6 @@ func createFont(c *cli.Context) {
 				pair := jsonData.Kerning[c]
 				
 				if pair.Amount != "" {
-					fmt.Println("Pair.Amount:",pair.Amount)
 					newf, _ :=strconv.ParseFloat(pair.Amount,64)
 					pair.Amount = strconv.Itoa(int(newf*ratio))
 				}
@@ -288,7 +287,6 @@ func createFont(c *cli.Context) {
 		fmt.Println("A json file already exists. Delete it before you use a template for a new file.")
 		return		
 	} else {
-		fmt.Println("JSON:",jsonInput, jsonData)
 		err = json.Unmarshal(jsonInput, &jsonData)
 		if err != nil {
 			fmt.Println("Error while reading json file: ", err.Error())
