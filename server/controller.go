@@ -36,7 +36,7 @@ type Session struct {
 	playerName       string
 	sha1Sid          string
 	beehive          *Beehive
-	notificationChan *chan []Cmd_data
+	notificationChan *chan notification
 	variation        variation
 	inviting         *Session // inviting the player of a session
 	lastAccess       time.Time
@@ -273,7 +273,7 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 	}
 }
 
-func setNotificationChan(notificationChan chan []Cmd_data, sid string) {
+func setNotificationChan(notificationChan chan notification, sid string) {
 	sessions[sid].notificationChan = &notificationChan
 }
 
@@ -282,7 +282,7 @@ func logout(sid *string) {
 	stopInvitations(sid)
 	delete(sessions, *sid)
 
-	fmt.Println("Logging out", sid, ".")
+	fmt.Println("Logging out", *sid)
 }
 
 func stopInvitations(sid *string) {
@@ -316,7 +316,7 @@ func sendInvitation() {
 		for variation := range invitees {
 			varSessions := invitees[variation]
 			fmt.Println(len(varSessions), "to send to with variation", variation, ". Length:", len(varSessions))
-			if len(varSessions) > 1 {
+			if len(varSessions) >= 1 {
 				for sid := range varSessions {
 					data := make([]Cmd_data, 0)
 					for s := range varSessions {
@@ -337,7 +337,11 @@ func sendInvitation() {
 							})
 						}
 					}
-					*(varSessions[sid].notificationChan) <- data
+					note := notification{
+						command: "playerlist",
+						data: data,
+					}
+					*(varSessions[sid].notificationChan) <- note
 				}
 			}
 		}

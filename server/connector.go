@@ -14,6 +14,11 @@ type socket struct {
 	done chan bool
 }
 
+type notification struct {
+	command string
+	data []Cmd_data
+}
+
 // Close closes a socket connection and sends done
 func (s socket) Close() error {
 	s.done <- true
@@ -73,7 +78,7 @@ func translateMessages(s socket, commandChan chan Command) {
 			} else {
 				delete(message, "sid")
 				if sid == "" || sid != msgSid {
-					err = errors.New("No session or session id wrong.")
+					err = errors.New("No session or session id wrong.("+msgSid+")")
 				}
 			}
 			delete(message, "command")
@@ -123,7 +128,7 @@ func catchReturn(dataChan chan []Cmd_data, encoder *json.Encoder, command string
 		if command == "login" {
 			if sid, ok := data[0]["sid"]; ok {
 
-				notificationChan := make(chan []Cmd_data)
+				notificationChan := make(chan notification)
 				go catchNotifications(notificationChan, encoder)
 				setNotificationChan(notificationChan, sid)
 
@@ -135,13 +140,13 @@ func catchReturn(dataChan chan []Cmd_data, encoder *json.Encoder, command string
 	return ""
 }
 
-func catchNotifications(notificationChan chan []Cmd_data, encoder *json.Encoder) {
+func catchNotifications(notificationChan chan notification, encoder *json.Encoder) {
 	for {
 		select {
 		case note := <-notificationChan:
 			cdata := map[string]interface{}{
-				"command": "notification",
-				"data":    note,
+				"command": note.command,
+				"data":    note.data,
 			}
 			encoder.Encode(&cdata)
 		}
