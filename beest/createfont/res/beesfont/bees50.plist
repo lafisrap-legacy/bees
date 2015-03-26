@@ -1,0 +1,1427 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>frames</key>
+	<dict>
+		<key>0</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 0}, {20, 36}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {20, 36}}</string>
+			<key>sourceSize</key>
+			<string>{20, 36}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 36}, {17, 34}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {17, 34}}</string>
+			<key>sourceSize</key>
+			<string>{17, 34}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>2</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 70}, {26, 35}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {26, 35}}</string>
+			<key>sourceSize</key>
+			<string>{26, 35}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>3</key>
+		<dict>
+			<key>frame</key>
+			<string>{{20, 0}, {23, 38}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {23, 38}}</string>
+			<key>sourceSize</key>
+			<string>{23, 38}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>4</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 105}, {23, 35}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {23, 35}}</string>
+			<key>sourceSize</key>
+			<string>{23, 35}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>5</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 140}, {25, 33}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {25, 33}}</string>
+			<key>sourceSize</key>
+			<string>{25, 33}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>6</key>
+		<dict>
+			<key>frame</key>
+			<string>{{23, 105}, {25, 35}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {25, 35}}</string>
+			<key>sourceSize</key>
+			<string>{25, 35}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>7</key>
+		<dict>
+			<key>frame</key>
+			<string>{{26, 38}, {26, 38}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {26, 38}}</string>
+			<key>sourceSize</key>
+			<string>{26, 38}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>8</key>
+		<dict>
+			<key>frame</key>
+			<string>{{43, 0}, {24, 38}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {24, 38}}</string>
+			<key>sourceSize</key>
+			<string>{24, 38}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>9</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 173}, {24, 37}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {24, 37}}</string>
+			<key>sourceSize</key>
+			<string>{24, 37}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>A</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 210}, {28, 41}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {28, 41}}</string>
+			<key>sourceSize</key>
+			<string>{28, 41}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>Ä</key>
+		<dict>
+			<key>frame</key>
+			<string>{{25, 140}, {28, 41}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {28, 41}}</string>
+			<key>sourceSize</key>
+			<string>{28, 41}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>a1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{26, 76}, {24, 21}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {24, 21}}</string>
+			<key>sourceSize</key>
+			<string>{24, 21}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>ä1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{24, 181}, {24, 26}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {24, 26}}</string>
+			<key>sourceSize</key>
+			<string>{24, 26}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>ampersand</key>
+		<dict>
+			<key>frame</key>
+			<string>{{48, 97}, {30, 35}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {30, 35}}</string>
+			<key>sourceSize</key>
+			<string>{30, 35}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>B</key>
+		<dict>
+			<key>frame</key>
+			<string>{{52, 38}, {27, 37}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {27, 37}}</string>
+			<key>sourceSize</key>
+			<string>{27, 37}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>b1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{67, 0}, {23, 33}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {23, 33}}</string>
+			<key>sourceSize</key>
+			<string>{23, 33}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>bracketclose</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 251}, {14, 39}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {14, 39}}</string>
+			<key>sourceSize</key>
+			<string>{14, 39}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>bracketopen</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 290}, {16, 41}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {16, 41}}</string>
+			<key>sourceSize</key>
+			<string>{16, 41}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>C</key>
+		<dict>
+			<key>frame</key>
+			<string>{{14, 251}, {26, 31}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {26, 31}}</string>
+			<key>sourceSize</key>
+			<string>{26, 31}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>c1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{50, 76}, {19, 21}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {19, 21}}</string>
+			<key>sourceSize</key>
+			<string>{19, 21}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>comma1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{69, 75}, {12, 16}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {12, 16}}</string>
+			<key>sourceSize</key>
+			<string>{12, 16}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>comma2</key>
+		<dict>
+			<key>frame</key>
+			<string>{{79, 33}, {13, 12}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {13, 12}}</string>
+			<key>sourceSize</key>
+			<string>{13, 12}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>D</key>
+		<dict>
+			<key>frame</key>
+			<string>{{79, 45}, {28, 29}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {28, 29}}</string>
+			<key>sourceSize</key>
+			<string>{28, 29}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>d1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{90, 0}, {22, 33}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {22, 33}}</string>
+			<key>sourceSize</key>
+			<string>{22, 33}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>E</key>
+		<dict>
+			<key>frame</key>
+			<string>{{28, 207}, {20, 26}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {20, 26}}</string>
+			<key>sourceSize</key>
+			<string>{20, 26}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>e1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 331}, {22, 22}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {22, 22}}</string>
+			<key>sourceSize</key>
+			<string>{22, 22}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>exclamation</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 353}, {12, 50}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {12, 50}}</string>
+			<key>sourceSize</key>
+			<string>{12, 50}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>F</key>
+		<dict>
+			<key>frame</key>
+			<string>{{16, 282}, {21, 31}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {21, 31}}</string>
+			<key>sourceSize</key>
+			<string>{21, 31}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>f1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 403}, {21, 42}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {21, 42}}</string>
+			<key>sourceSize</key>
+			<string>{21, 42}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>G</key>
+		<dict>
+			<key>frame</key>
+			<string>{{12, 353}, {28, 34}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {28, 34}}</string>
+			<key>sourceSize</key>
+			<string>{28, 34}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>g1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{22, 313}, {22, 34}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {22, 34}}</string>
+			<key>sourceSize</key>
+			<string>{22, 34}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>H</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 445}, {27, 32}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {27, 32}}</string>
+			<key>sourceSize</key>
+			<string>{27, 32}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>h1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{21, 387}, {22, 36}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {22, 36}}</string>
+			<key>sourceSize</key>
+			<string>{22, 36}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>hash</key>
+		<dict>
+			<key>frame</key>
+			<string>{{37, 282}, {29, 31}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {29, 31}}</string>
+			<key>sourceSize</key>
+			<string>{29, 31}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>I</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 477}, {15, 31}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {15, 31}}</string>
+			<key>sourceSize</key>
+			<string>{15, 31}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>i1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{15, 477}, {10, 31}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {10, 31}}</string>
+			<key>sourceSize</key>
+			<string>{10, 31}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>J</key>
+		<dict>
+			<key>frame</key>
+			<string>{{25, 477}, {19, 32}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {19, 32}}</string>
+			<key>sourceSize</key>
+			<string>{19, 32}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>j1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{40, 233}, {19, 46}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {19, 46}}</string>
+			<key>sourceSize</key>
+			<string>{19, 46}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>K</key>
+		<dict>
+			<key>frame</key>
+			<string>{{40, 347}, {25, 32}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {25, 32}}</string>
+			<key>sourceSize</key>
+			<string>{25, 32}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>k1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{48, 181}, {19, 44}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {19, 44}}</string>
+			<key>sourceSize</key>
+			<string>{19, 44}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>L</key>
+		<dict>
+			<key>frame</key>
+			<string>{{44, 313}, {22, 28}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {22, 28}}</string>
+			<key>sourceSize</key>
+			<string>{22, 28}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>l1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{53, 132}, {19, 44}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {19, 44}}</string>
+			<key>sourceSize</key>
+			<string>{19, 44}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>M</key>
+		<dict>
+			<key>frame</key>
+			<string>{{27, 423}, {34, 32}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {34, 32}}</string>
+			<key>sourceSize</key>
+			<string>{34, 32}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>m1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{27, 455}, {28, 22}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {28, 22}}</string>
+			<key>sourceSize</key>
+			<string>{28, 22}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>minus</key>
+		<dict>
+			<key>frame</key>
+			<string>{{48, 225}, {25, 8}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {24, 8}}</string>
+			<key>sourceSize</key>
+			<string>{25, 8}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>N</key>
+		<dict>
+			<key>frame</key>
+			<string>{{44, 477}, {30, 35}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {30, 35}}</string>
+			<key>sourceSize</key>
+			<string>{30, 35}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>n1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{55, 455}, {20, 21}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {20, 21}}</string>
+			<key>sourceSize</key>
+			<string>{20, 21}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>O</key>
+		<dict>
+			<key>frame</key>
+			<string>{{74, 476}, {25, 29}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {25, 29}}</string>
+			<key>sourceSize</key>
+			<string>{25, 29}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>Ö</key>
+		<dict>
+			<key>frame</key>
+			<string>{{43, 379}, {25, 33}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {25, 33}}</string>
+			<key>sourceSize</key>
+			<string>{25, 33}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>o1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{65, 341}, {22, 20}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {22, 20}}</string>
+			<key>sourceSize</key>
+			<string>{22, 20}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>ö1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{61, 412}, {22, 25}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {22, 25}}</string>
+			<key>sourceSize</key>
+			<string>{22, 25}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>P</key>
+		<dict>
+			<key>frame</key>
+			<string>{{75, 437}, {25, 29}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {25, 29}}</string>
+			<key>sourceSize</key>
+			<string>{25, 29}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>p1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{99, 466}, {22, 34}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {22, 34}}</string>
+			<key>sourceSize</key>
+			<string>{22, 34}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>percent</key>
+		<dict>
+			<key>frame</key>
+			<string>{{67, 176}, {34, 41}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {34, 40}}</string>
+			<key>sourceSize</key>
+			<string>{34, 41}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>plus</key>
+		<dict>
+			<key>frame</key>
+			<string>{{72, 132}, {33, 29}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {32, 29}}</string>
+			<key>sourceSize</key>
+			<string>{33, 29}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>point</key>
+		<dict>
+			<key>frame</key>
+			<string>{{28, 233}, {11, 9}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {11, 9}}</string>
+			<key>sourceSize</key>
+			<string>{11, 9}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>Q</key>
+		<dict>
+			<key>frame</key>
+			<string>{{78, 91}, {28, 33}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {28, 33}}</string>
+			<key>sourceSize</key>
+			<string>{28, 33}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>q1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{59, 233}, {22, 34}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {22, 34}}</string>
+			<key>sourceSize</key>
+			<string>{22, 34}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>quotation</key>
+		<dict>
+			<key>frame</key>
+			<string>{{81, 74}, {18, 17}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {18, 17}}</string>
+			<key>sourceSize</key>
+			<string>{18, 17}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>R</key>
+		<dict>
+			<key>frame</key>
+			<string>{{68, 361}, {27, 32}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {27, 32}}</string>
+			<key>sourceSize</key>
+			<string>{27, 32}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>r1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{83, 393}, {19, 23}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {19, 23}}</string>
+			<key>sourceSize</key>
+			<string>{19, 23}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>S</key>
+		<dict>
+			<key>frame</key>
+			<string>{{100, 416}, {27, 32}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {27, 32}}</string>
+			<key>sourceSize</key>
+			<string>{27, 32}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>s1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{121, 448}, {20, 24}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {20, 24}}</string>
+			<key>sourceSize</key>
+			<string>{20, 24}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>slash</key>
+		<dict>
+			<key>frame</key>
+			<string>{{66, 267}, {30, 47}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {30, 47}}</string>
+			<key>sourceSize</key>
+			<string>{30, 47}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>space</key>
+		<dict>
+			<key>frame</key>
+			<string>{{74, 505}, {88, 1}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {0, 0}}</string>
+			<key>sourceSize</key>
+			<string>{88, 1}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>star</key>
+		<dict>
+			<key>frame</key>
+			<string>{{66, 314}, {24, 25}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {24, 25}}</string>
+			<key>sourceSize</key>
+			<string>{24, 25}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>T</key>
+		<dict>
+			<key>frame</key>
+			<string>{{121, 472}, {24, 31}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {24, 31}}</string>
+			<key>sourceSize</key>
+			<string>{24, 31}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>t1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{90, 314}, {17, 39}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {17, 39}}</string>
+			<key>sourceSize</key>
+			<string>{17, 39}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>U</key>
+		<dict>
+			<key>frame</key>
+			<string>{{95, 353}, {25, 27}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {25, 27}}</string>
+			<key>sourceSize</key>
+			<string>{25, 27}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>Ü</key>
+		<dict>
+			<key>frame</key>
+			<string>{{102, 380}, {25, 31}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {25, 31}}</string>
+			<key>sourceSize</key>
+			<string>{25, 31}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>u1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{81, 217}, {19, 21}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {19, 21}}</string>
+			<key>sourceSize</key>
+			<string>{19, 21}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>ü1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{81, 238}, {19, 26}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {19, 26}}</string>
+			<key>sourceSize</key>
+			<string>{19, 26}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>V</key>
+		<dict>
+			<key>frame</key>
+			<string>{{96, 264}, {28, 32}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {28, 32}}</string>
+			<key>sourceSize</key>
+			<string>{28, 32}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>v1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{100, 217}, {18, 22}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {18, 22}}</string>
+			<key>sourceSize</key>
+			<string>{18, 22}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>W</key>
+		<dict>
+			<key>frame</key>
+			<string>{{100, 239}, {34, 25}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {34, 25}}</string>
+			<key>sourceSize</key>
+			<string>{34, 25}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>w1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{101, 161}, {23, 20}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {23, 20}}</string>
+			<key>sourceSize</key>
+			<string>{23, 20}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>X</key>
+		<dict>
+			<key>frame</key>
+			<string>{{101, 181}, {30, 31}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {30, 31}}</string>
+			<key>sourceSize</key>
+			<string>{30, 31}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>x1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{118, 212}, {19, 20}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {19, 20}}</string>
+			<key>sourceSize</key>
+			<string>{19, 20}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>Y</key>
+		<dict>
+			<key>frame</key>
+			<string>{{105, 124}, {26, 32}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {26, 32}}</string>
+			<key>sourceSize</key>
+			<string>{26, 32}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>y1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{106, 74}, {20, 30}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {20, 30}}</string>
+			<key>sourceSize</key>
+			<string>{20, 30}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>Z</key>
+		<dict>
+			<key>frame</key>
+			<string>{{107, 33}, {34, 33}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {34, 33}}</string>
+			<key>sourceSize</key>
+			<string>{34, 33}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>z1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{100, 448}, {19, 17}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {19, 17}}</string>
+			<key>sourceSize</key>
+			<string>{19, 17}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		</dict>
+		<key>metadata</key>
+		<dict>
+		<key>format</key>
+		<integer>2</integer>
+		<key>textureFileName</key>
+		<string>bees50.png</string>
+		<key>size</key>
+		<string>{512, 512}</string>
+	</dict></dict></plist>

@@ -1,0 +1,1329 @@
+{
+      "Info": {
+          "Face": "bees200",
+          "Size": "200",
+          "Bold": "",
+          "Italic": "",
+          "Charset": "",
+          "Unicode": "",
+          "StretchH": "",
+          "Smooth": "",
+          "Aa": "",
+          "Padding": "",
+          "Spacing": "",
+          "Outline": ""
+      },
+      "Common": {
+          "LineHeight": "",
+          "Base": "",
+          "ScaleW": "",
+          "ScaleH": "",
+          "Pages": "",
+          "Packed": "",
+          "AlphaChnl": "",
+          "RedChnl": "",
+          "GreenChnl": "",
+          "BlueChnl": ""
+      },
+      "Char": {
+          "100": {
+              "Char": "d",
+              "Id": "100",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "56",
+              "Xadvance": "86",
+              "Page": "",
+              "Chnl": ""
+          },
+          "101": {
+              "Char": "e",
+              "Id": "101",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "99",
+              "Xadvance": "88",
+              "Page": "",
+              "Chnl": ""
+          },
+          "102": {
+              "Char": "f",
+              "Id": "102",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "19",
+              "Xadvance": "82",
+              "Page": "",
+              "Chnl": ""
+          },
+          "103": {
+              "Char": "g",
+              "Id": "103",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "101",
+              "Xadvance": "87",
+              "Page": "",
+              "Chnl": ""
+          },
+          "104": {
+              "Char": "h",
+              "Id": "104",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "45",
+              "Xadvance": "89",
+              "Page": "",
+              "Chnl": ""
+          },
+          "105": {
+              "Char": "i",
+              "Id": "105",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "65",
+              "Xadvance": "40",
+              "Page": "",
+              "Chnl": ""
+          },
+          "106": {
+              "Char": "j",
+              "Id": "106",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "60",
+              "Xadvance": "77",
+              "Page": "",
+              "Chnl": ""
+          },
+          "107": {
+              "Char": "k",
+              "Id": "107",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "13",
+              "Xadvance": "74",
+              "Page": "",
+              "Chnl": ""
+          },
+          "108": {
+              "Char": "l",
+              "Id": "108",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "14",
+              "Xadvance": "75",
+              "Page": "",
+              "Chnl": ""
+          },
+          "109": {
+              "Char": "m",
+              "Id": "109",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "102",
+              "Xadvance": "110",
+              "Page": "",
+              "Chnl": ""
+          },
+          "110": {
+              "Char": "n",
+              "Id": "110",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "103",
+              "Xadvance": "81",
+              "Page": "",
+              "Chnl": ""
+          },
+          "111": {
+              "Char": "o",
+              "Id": "111",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "107",
+              "Xadvance": "88",
+              "Page": "",
+              "Chnl": ""
+          },
+          "112": {
+              "Char": "p",
+              "Id": "112",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "101",
+              "Xadvance": "87",
+              "Page": "",
+              "Chnl": ""
+          },
+          "113": {
+              "Char": "q",
+              "Id": "113",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "104",
+              "Xadvance": "89",
+              "Page": "",
+              "Chnl": ""
+          },
+          "114": {
+              "Char": "r",
+              "Id": "114",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "97",
+              "Xadvance": "77",
+              "Page": "",
+              "Chnl": ""
+          },
+          "115": {
+              "Char": "s",
+              "Id": "115",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "91",
+              "Xadvance": "79",
+              "Page": "",
+              "Chnl": ""
+          },
+          "116": {
+              "Char": "t",
+              "Id": "116",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "33",
+              "Xadvance": "69",
+              "Page": "",
+              "Chnl": ""
+          },
+          "117": {
+              "Char": "u",
+              "Id": "117",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "106",
+              "Xadvance": "75",
+              "Page": "",
+              "Chnl": ""
+          },
+          "118": {
+              "Char": "v",
+              "Id": "118",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "98",
+              "Xadvance": "71",
+              "Page": "",
+              "Chnl": ""
+          },
+          "119": {
+              "Char": "w",
+              "Id": "119",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "100",
+              "Xadvance": "90",
+              "Page": "",
+              "Chnl": ""
+          },
+          "120": {
+              "Char": "x",
+              "Id": "120",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "102",
+              "Xadvance": "75",
+              "Page": "",
+              "Chnl": ""
+          },
+          "121": {
+              "Char": "y",
+              "Id": "121",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "110",
+              "Xadvance": "81",
+              "Page": "",
+              "Chnl": ""
+          },
+          "122": {
+              "Char": "z",
+              "Id": "122",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "112",
+              "Xadvance": "74",
+              "Page": "",
+              "Chnl": ""
+          },
+          "196": {
+              "Char": "Ä",
+              "Id": "196",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "35",
+              "Xadvance": "112",
+              "Page": "",
+              "Chnl": ""
+          },
+          "214": {
+              "Char": "Ö",
+              "Id": "214",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "52",
+              "Xadvance": "100",
+              "Page": "",
+              "Chnl": ""
+          },
+          "220": {
+              "Char": "Ü",
+              "Id": "220",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "60",
+              "Xadvance": "99",
+              "Page": "",
+              "Chnl": ""
+          },
+          "228": {
+              "Char": "ä",
+              "Id": "228",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "83",
+              "Xadvance": "97",
+              "Page": "",
+              "Chnl": ""
+          },
+          "246": {
+              "Char": "ö",
+              "Id": "246",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "88",
+              "Xadvance": "88",
+              "Page": "",
+              "Chnl": ""
+          },
+          "252": {
+              "Char": "ü",
+              "Id": "252",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "83",
+              "Xadvance": "75",
+              "Page": "",
+              "Chnl": ""
+          },
+          "32": {
+              "Char": "space",
+              "Id": "32",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "197",
+              "Xadvance": "88",
+              "Page": "",
+              "Chnl": ""
+          },
+          "33": {
+              "Char": "exclamation",
+              "Id": "33",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "0",
+              "Xadvance": "47",
+              "Page": "",
+              "Chnl": ""
+          },
+          "35": {
+              "Char": "hash",
+              "Id": "35",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "53",
+              "Xadvance": "117",
+              "Page": "",
+              "Chnl": ""
+          },
+          "37": {
+              "Char": "percent",
+              "Id": "37",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "36",
+              "Xadvance": "134",
+              "Page": "",
+              "Chnl": ""
+          },
+          "38": {
+              "Char": "ampersand",
+              "Id": "38",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "59",
+              "Xadvance": "120",
+              "Page": "",
+              "Chnl": ""
+          },
+          "40": {
+              "Char": "bracketopen",
+              "Id": "40",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "36",
+              "Xadvance": "63",
+              "Page": "",
+              "Chnl": ""
+          },
+          "41": {
+              "Char": "bracketclose",
+              "Id": "41",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "42",
+              "Xadvance": "56",
+              "Page": "",
+              "Chnl": ""
+          },
+          "42": {
+              "Char": "star",
+              "Id": "42",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "74",
+              "Xadvance": "130",
+              "Page": "",
+              "Chnl": ""
+          },
+          "43": {
+              "Char": "plus",
+              "Id": "43",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "64",
+              "Xadvance": "130",
+              "Page": "",
+              "Chnl": ""
+          },
+          "44": {
+              "Char": "comma2",
+              "Id": "44",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "152",
+              "Xadvance": "50",
+              "Page": "",
+              "Chnl": ""
+          },
+          "45": {
+              "Char": "minus",
+              "Id": "45",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "96",
+              "Xadvance": "100",
+              "Page": "",
+              "Chnl": ""
+          },
+          "46": {
+              "Char": "point",
+              "Id": "46",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "162",
+              "Xadvance": "43",
+              "Page": "",
+              "Chnl": ""
+          },
+          "47": {
+              "Char": "slash",
+              "Id": "47",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "9",
+              "Xadvance": "118",
+              "Page": "",
+              "Chnl": ""
+          },
+          "48": {
+              "Char": "0",
+              "Id": "48",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "53",
+              "Xadvance": "81",
+              "Page": "",
+              "Chnl": ""
+          },
+          "49": {
+              "Char": "1",
+              "Id": "49",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "61",
+              "Xadvance": "67",
+              "Page": "",
+              "Chnl": ""
+          },
+          "50": {
+              "Char": "2",
+              "Id": "50",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "57",
+              "Xadvance": "105",
+              "Page": "",
+              "Chnl": ""
+          },
+          "51": {
+              "Char": "3",
+              "Id": "51",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "48",
+              "Xadvance": "92",
+              "Page": "",
+              "Chnl": ""
+          },
+          "52": {
+              "Char": "4",
+              "Id": "52",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "57",
+              "Xadvance": "92",
+              "Page": "",
+              "Chnl": ""
+          },
+          "53": {
+              "Char": "5",
+              "Id": "53",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "65",
+              "Xadvance": "100",
+              "Page": "",
+              "Chnl": ""
+          },
+          "54": {
+              "Char": "6",
+              "Id": "54",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "59",
+              "Xadvance": "98",
+              "Page": "",
+              "Chnl": ""
+          },
+          "55": {
+              "Char": "7",
+              "Id": "55",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "46",
+              "Xadvance": "105",
+              "Page": "",
+              "Chnl": ""
+          },
+          "56": {
+              "Char": "8",
+              "Id": "56",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "46",
+              "Xadvance": "95",
+              "Page": "",
+              "Chnl": ""
+          },
+          "57": {
+              "Char": "9",
+              "Id": "57",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "50",
+              "Xadvance": "95",
+              "Page": "",
+              "Chnl": ""
+          },
+          "63": {
+              "Char": "quotation",
+              "Id": "63",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "32",
+              "Xadvance": "71",
+              "Page": "",
+              "Chnl": ""
+          },
+          "65": {
+              "Char": "A",
+              "Id": "65",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "35",
+              "Xadvance": "112",
+              "Page": "",
+              "Chnl": ""
+          },
+          "66": {
+              "Char": "B",
+              "Id": "66",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "51",
+              "Xadvance": "107",
+              "Page": "",
+              "Chnl": ""
+          },
+          "67": {
+              "Char": "C",
+              "Id": "67",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "76",
+              "Xadvance": "102",
+              "Page": "",
+              "Chnl": ""
+          },
+          "68": {
+              "Char": "D",
+              "Id": "68",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "72",
+              "Xadvance": "111",
+              "Page": "",
+              "Chnl": ""
+          },
+          "69": {
+              "Char": "E",
+              "Id": "69",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "75",
+              "Xadvance": "80",
+              "Page": "",
+              "Chnl": ""
+          },
+          "70": {
+              "Char": "F",
+              "Id": "70",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "62",
+              "Xadvance": "82",
+              "Page": "",
+              "Chnl": ""
+          },
+          "71": {
+              "Char": "G",
+              "Id": "71",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "61",
+              "Xadvance": "110",
+              "Page": "",
+              "Chnl": ""
+          },
+          "72": {
+              "Char": "H",
+              "Id": "72",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "72",
+              "Xadvance": "106",
+              "Page": "",
+              "Chnl": ""
+          },
+          "73": {
+              "Char": "I",
+              "Id": "73",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "70",
+              "Xadvance": "60",
+              "Page": "",
+              "Chnl": ""
+          },
+          "74": {
+              "Char": "J",
+              "Id": "74",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "65",
+              "Xadvance": "76",
+              "Page": "",
+              "Chnl": ""
+          },
+          "75": {
+              "Char": "K",
+              "Id": "75",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "71",
+              "Xadvance": "100",
+              "Page": "",
+              "Chnl": ""
+          },
+          "76": {
+              "Char": "L",
+              "Id": "76",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "76",
+              "Xadvance": "88",
+              "Page": "",
+              "Chnl": ""
+          },
+          "77": {
+              "Char": "M",
+              "Id": "77",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "71",
+              "Xadvance": "136",
+              "Page": "",
+              "Chnl": ""
+          },
+          "78": {
+              "Char": "N",
+              "Id": "78",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "60",
+              "Xadvance": "120",
+              "Page": "",
+              "Chnl": ""
+          },
+          "79": {
+              "Char": "O",
+              "Id": "79",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "74",
+              "Xadvance": "100",
+              "Page": "",
+              "Chnl": ""
+          },
+          "80": {
+              "Char": "P",
+              "Id": "80",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "73",
+              "Xadvance": "99",
+              "Page": "",
+              "Chnl": ""
+          },
+          "81": {
+              "Char": "Q",
+              "Id": "81",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "68",
+              "Xadvance": "113",
+              "Page": "",
+              "Chnl": ""
+          },
+          "82": {
+              "Char": "R",
+              "Id": "82",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "70",
+              "Xadvance": "108",
+              "Page": "",
+              "Chnl": ""
+          },
+          "83": {
+              "Char": "S",
+              "Id": "83",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "70",
+              "Xadvance": "108",
+              "Page": "",
+              "Chnl": ""
+          },
+          "84": {
+              "Char": "T",
+              "Id": "84",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "75",
+              "Xadvance": "97",
+              "Page": "",
+              "Chnl": ""
+          },
+          "85": {
+              "Char": "U",
+              "Id": "85",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "80",
+              "Xadvance": "99",
+              "Page": "",
+              "Chnl": ""
+          },
+          "86": {
+              "Char": "V",
+              "Id": "86",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "65",
+              "Xadvance": "110",
+              "Page": "",
+              "Chnl": ""
+          },
+          "87": {
+              "Char": "W",
+              "Id": "87",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "83",
+              "Xadvance": "134",
+              "Page": "",
+              "Chnl": ""
+          },
+          "88": {
+              "Char": "X",
+              "Id": "88",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "65",
+              "Xadvance": "118",
+              "Page": "",
+              "Chnl": ""
+          },
+          "89": {
+              "Char": "Y",
+              "Id": "89",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "62",
+              "Xadvance": "102",
+              "Page": "",
+              "Chnl": ""
+          },
+          "90": {
+              "Char": "Z",
+              "Id": "90",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "63",
+              "Xadvance": "134",
+              "Page": "",
+              "Chnl": ""
+          },
+          "97": {
+              "Char": "a",
+              "Id": "97",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "114",
+              "Xadvance": "97",
+              "Page": "",
+              "Chnl": ""
+          },
+          "98": {
+              "Char": "b",
+              "Id": "98",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "58",
+              "Xadvance": "92",
+              "Page": "",
+              "Chnl": ""
+          },
+          "99": {
+              "Char": "c",
+              "Id": "99",
+              "X": "",
+              "Y": "",
+              "Width": "",
+              "Height": "",
+              "Xoffset": "",
+              "Yoffset": "103",
+              "Xadvance": "74",
+              "Page": "",
+              "Chnl": ""
+          }
+      },
+      "Kerning": [{
+          "first": "65",
+          "second": "68",
+          "amount": "-20"
+      },{
+          "first": "65",
+          "second": "82",
+          "amount": "-20"
+      },{
+          "first": "65",
+          "second": "83",
+          "amount": "10"
+      },{
+          "first": "65",
+          "second": "86",
+          "amount": "-20"
+      },{
+          "first": "65",
+          "second": "87",
+          "amount": "-20"
+      },{
+          "first": "65",
+          "second": "88",
+          "amount": "10"
+      },{
+          "first": "65",
+          "second": "89",
+          "amount": "-15"
+      },{
+          "first": "65",
+          "second": "98",
+          "amount": "10"
+      },{
+          "first": "65",
+          "second": "106",
+          "amount": "-20"
+      },{
+          "first": "65",
+          "second": "118",
+          "amount": "-15"
+      },{
+          "first": "68",
+          "second": "71",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "79",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "81",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "85",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "89",
+          "amount": "-10"
+      },{
+          "first": "68",
+          "second": "97",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "99",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "100",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "101",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "102",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "103",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "106",
+          "amount": "-15"
+      },{
+          "first": "68",
+          "second": "107",
+          "amount": "5"
+      },{
+          "first": "68",
+          "second": "108",
+          "amount": "5"
+      },{
+          "first": "68",
+          "second": "109",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "110",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "111",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "112",
+          "amount": "5"
+      },{
+          "first": "68",
+          "second": "113",
+          "amount": "5"
+      },{
+          "first": "68",
+          "second": "114",
+          "amount": "5"
+      },{
+          "first": "68",
+          "second": "117",
+          "amount": "10"
+      },{
+          "first": "68",
+          "second": "119",
+          "amount": "10"
+      },{
+          "first": "70",
+          "second": "74",
+          "amount": "-10"
+      },{
+          "first": "70",
+          "second": "75",
+          "amount": "10"
+      },{
+          "first": "70",
+          "second": "76",
+          "amount": "10"
+      },{
+          "first": "70",
+          "second": "77",
+          "amount": "-10"
+      },{
+          "first": "70",
+          "second": "78",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "97",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "98",
+          "amount": "-5"
+      },{
+          "first": "70",
+          "second": "99",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "100",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "101",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "103",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "106",
+          "amount": "-10"
+      },{
+          "first": "70",
+          "second": "109",
+          "amount": "-10"
+      },{
+          "first": "70",
+          "second": "110",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "111",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "112",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "113",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "114",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "115",
+          "amount": "-10"
+      },{
+          "first": "70",
+          "second": "116",
+          "amount": "10"
+      },{
+          "first": "70",
+          "second": "117",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "118",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "119",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "120",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "121",
+          "amount": "-15"
+      },{
+          "first": "70",
+          "second": "122",
+          "amount": "-20"
+      }]
+}
