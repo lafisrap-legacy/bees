@@ -49,6 +49,25 @@ var SelectPlayerLayer = cc.Layer.extend({
         			    
 	    this.initListeners();
 		
+		// Create, adjust and animate bar
+		var b = this._bar = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bar"),cc.rect(0,0,550,115));
+		b.setPosition(cc.p(cc.width/2,cc.height+50));
+		b.setScale(2);
+		b.runAction(
+			cc.spawn(
+				cc.EaseSineOut.create(
+					cc.moveTo(0.33,size.width/2,size.height-100)
+				),
+				cc.scaleTo(0.33,1)
+			)
+		);
+		var bl = this._BarLabel = cc.LabelBMFont.create( _b_t.playerlist.noplayers , "res/fonts/amtype36.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
+		bl.setPosition(cc.p(275,55));
+		bl.setColor(cc.color(122,80,77,155));
+		b.addChild(bl, 5);	
+		_b_retain(this._BarLabel,"SelectPlayerLayer, show, _BarLabel")
+        this.addChild(this._bar,0);
+		
 		// Create menu items from object
 		this.initListview(labels);
 		
@@ -67,22 +86,6 @@ var SelectPlayerLayer = cc.Layer.extend({
 			));
 		}
 
-		// Create, adjust and animate bar
-		this._bar = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bar"),cc.rect(0,0,550,115)),
-		this._bar.setPosition(cc.p(size.width/2,size.height+50));
-		this._bar.setScale(2);
-		this._bar.runAction(
-			cc.spawn(
-				cc.EaseSineOut.create(
-					cc.moveTo(0.33,size.width/2,size.height-100)
-				),
-				cc.scaleTo(0.33,1)
-			)
-		);
-
-		// Show bar
-        this.addChild(this._bar,0);
-			
         $b.acceptInvitations(function(data) {
         	var labels = [];
 			for( var i=0 ; i<data.length ; i++ ) {
@@ -124,6 +127,9 @@ var SelectPlayerLayer = cc.Layer.extend({
 	    ));
 	    
 	    this.stopListeners();
+	    
+	    _b_release(this._BarLabel);
+	    if( this._listview ) _b_release(this._listview);
 	    	
 		$b.sendCommand({command: "stopInvitations"}); 
 	},
@@ -163,9 +169,15 @@ var SelectPlayerLayer = cc.Layer.extend({
     	
 		if( this._listview ) {
 			this.removeChild(this._listview);
+			_b_release(this._listview);
 			this._listview = null;
-		}		
-    	if( labels.length == 0 ) return
+		}
+    	if( labels.length == 0 ) {
+    		this._BarLabel.setCString(_b_t.playerlist.noplayers)
+    		return
+    	} else {
+    		this._BarLabel.setCString(_b_t.playerlist.choose)
+    	}
     	
     	this._currentLabels = labels;
     	cc.log("Init Listview!");
@@ -192,6 +204,7 @@ var SelectPlayerLayer = cc.Layer.extend({
 		cc.assert( this._listview, "Listview could not be created!");
 
 		this.addChild(this._listview,1);
+		_b_retain(this._listview,"SelectPlayerLayer, initListview, _listview")
 
 		var ch = this._listview.children;
 		this._listview.alignItemsVerticallyWithPadding(_B_MAX_MENU_PADDING);
