@@ -28,6 +28,7 @@ var SelectPlayerLayer = cc.Layer.extend({
 	_finalCallback: null,
 	_currentLabels: null,
 	_listview: null,
+	_height: 0,
 
     ctor: function(finalCallback, labels) {
         this._super();  
@@ -37,15 +38,6 @@ var SelectPlayerLayer = cc.Layer.extend({
 
 	    cc.spriteFrameCache.addSpriteFrames(res.listview_plist);
 	    
-	    		// Create, adjust and animate gate
-		this.gate = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("gate"),cc.rect(0,0,1136,640)),
-		this.gate.setPosition(cc.p(1136*0.5,370));
-		this.gate.setScale(1.15);
-		this.gate.runAction(cc.EaseSineOut.create(
-			cc.moveTo(1,568,360)
-		));
-        this.addChild(this.gate, 5);
-
         this.show(labels);      
 	},
 	
@@ -53,33 +45,43 @@ var SelectPlayerLayer = cc.Layer.extend({
 		
 		var self = this;
 		
-        var size = cc.winSize, gate, menu;
+        var size = cc.winSize;
         			    
 	    this.initListeners();
 		
 		// Create menu items from object
 		this.initListview(labels);
 		
-		this._listview.runAction(cc.sequence(
-			cc.delayTime(0.33),
-			cc.EaseElasticOut.create(
-				cc.spawn(
-					cc.scaleTo(2.5,1,1),
-					cc.moveTo(2.5,930,250)
+		var lv = this.listview;
+		if( lv ) {
+			lv.setPosition(cc.p(size.width/2,size.height*1.3));
+			lv.stopAllActions();
+			lv.runAction(cc.sequence(
+				cc.delayTime(0.33),
+				cc.EaseElasticOut.create(
+					cc.spawn(
+						cc.scaleTo(1.5,1,1),
+						cc.moveTo(1.5,size.width/2,size.height - this._height/2 - 180 )
+					)
 				)
+			));
+		}
+
+		// Create, adjust and animate bar
+		this._bar = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bar"),cc.rect(0,0,550,115)),
+		this._bar.setPosition(cc.p(size.width/2,size.height+50));
+		this._bar.setScale(2);
+		this._bar.runAction(
+			cc.spawn(
+				cc.EaseSineOut.create(
+					cc.moveTo(0.33,size.width/2,size.height-100)
+				),
+				cc.scaleTo(0.33,1)
 			)
-		));
+		);
 
-		// Create, adjust and animate gate
-		this.gate = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("gate"),cc.rect(0,0,1136,640)),
-		this.gate.setPosition(cc.p(1136*0.5,370));
-		this.gate.setScale(1.15);
-		this.gate.runAction(cc.EaseSineOut.create(
-			cc.moveTo(1,568,360)
-		));
-
-		// Show menu and gate
-        this.addChild(this.gate,0);
+		// Show bar
+        this.addChild(this._bar,0);
 			
         $b.acceptInvitations(function(data) {
         	var labels = [];
@@ -90,6 +92,9 @@ var SelectPlayerLayer = cc.Layer.extend({
 					invited: data[i].invited
 				});
 			}
+			labels.sort(function(a,b) { 
+				return a.label > b.label; 
+			});
 			self.initListview(labels);
 		});
 	},
@@ -97,19 +102,21 @@ var SelectPlayerLayer = cc.Layer.extend({
 	hide: function() {
     	var self = this;
     	
-    	this.menu.runAction(cc.sequence(
-    		cc.EaseSineIn.create(
-    			cc.moveTo(1,1136*1.5, 320)
-    		),
-    		cc.callFunc(function() {
-    			self.removeChild(self.menu);
-    			self.removeChild(self.gate);
-    			self.getParent().removeChild(self);
-    			self._finalCallback();
-    		})
-    	));
-    	
-    	this.gate.runAction(cc.EaseSineIn.create(
+    	if( this._listview ) {
+			this._listview.runAction(cc.sequence(
+				cc.EaseSineIn.create(
+					cc.moveTo(1,1136*1.5, 320)
+				),
+				cc.callFunc(function() {
+					self.removeChild(self.menu);
+					self.removeChild(self.gate);
+					self.getParent().removeChild(self);
+					self._finalCallback();
+				})
+			));
+		}
+		    	
+    	this._bar.runAction(cc.EaseSineIn.create(
     		cc.spawn(
 	    		cc.moveTo(1,1136*1.5, 320),
 	    		cc.scaleTo(1,1,1)
@@ -146,15 +153,22 @@ var SelectPlayerLayer = cc.Layer.extend({
     },
     
     initListview: function(labels) {
+
     	var items = [],
-    		l = this._currentLabels;
-    	
+    		cl = this._currentLabels;
+
     	// look if labels changed
-    	for( var i=0 ; l && i<l.length ; i++ ) if( l[i] != labels[i].label ) break;
-    	if( l && l.length == labels[i].length && i==l.length ) return;
+    	for( var i=0 ; cl && cl.length == labels.length && i<cl.length ; i++ ) if( cl[i].label != labels[i].label ) break;
+    	if( cl && cl.length == labels.length && i==cl.length ) return;
     	
-    	this._currentLabels = [];
-		if( this._listview ) this.removeChild(this._listview);		
+		if( this._listview ) {
+			this.removeChild(this._listview);
+			this._listview = null;
+		}		
+    	if( labels.length == 0 ) return
+    	
+    	this._currentLabels = labels;
+    	cc.log("Init Listview!");
     	
 		for( var i=0 ; i<Math.min(labels.length, _B_MAX_LISTVIEW_ENTRIES) ; i++ ) {
 			var frame = cc.spriteFrameCache.getSpriteFrame("listviewitem"+(i+1)),
@@ -177,13 +191,20 @@ var SelectPlayerLayer = cc.Layer.extend({
 		this._listview = new cc.Menu(items);		
 		cc.assert( this._listview, "Listview could not be created!");
 
+		this.addChild(this._listview,1);
+
 		var ch = this._listview.children;
-    	this._listview.setPosition(cc.p(568,320));
-	    this._listview.setScale(1);
 		this._listview.alignItemsVerticallyWithPadding(_B_MAX_MENU_PADDING);
+		this._listview.setPosition(cc.p(cc.width/2,cc.height - this._height/2 - 180));
 		for( var i=0 ; i<ch.length ; i++ ) ch[i].y = ch[i].y + _B_MENU_Y_OFFSETS[i];
 		
-		this.addChild(this._listview,1);
+		this._height = ch[0].y + ch[0].height/2 - ch[i-1].y + ch[i-1].height/2;
+		
+		this._listview.runAction(
+			cc.EaseSineOut.create(
+				cc.moveTo(0.5,cc.width/2,cc.height - this._height/2 - 180)
+			)
+		)
 	}
 });
 

@@ -107,13 +107,19 @@ var BeesScene = cc.Scene.extend({
 	menuLayer: null,
 	selectPlayerLayer: null,
 	gameState: {},
+	size: null,
+	
     onEnter:function () {
         this._super();
+        
         this.weblayer = new WebLayer();
         var title = new TitleLayer();
         this.addChild(title);
         this.menuLayer = new MenuLayer();
         _b_retain(this.menuLayer,"BeesScene, menuLayer");
+        
+        cc.width = cc.winSize.width;
+        cc.height = cc.winSize.height;
     },
     
     onExit: function() {
@@ -142,11 +148,7 @@ var BeesScene = cc.Scene.extend({
 		this.selectPlayerLayer = new SelectPlayerLayer(function(player) {
 			_b_release(self.selectPlayerLayer);
 			cb();
-		}, [{
-			"label": "Moritz"
-		},{
-			"label": "Mausi"
-		}]);		
+		}, []);		
 		
         (baseLayer || this).addChild(this.selectPlayerLayer,5);
 		_b_retain(this.selectPlayerLayer,"BeeScene, connectPlayer")

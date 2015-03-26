@@ -33,7 +33,8 @@ var WebLayer = cc.Class.extend({
 	sidCbs: [],
 	playerId: null,
 	playerName: null,
-	notificationCb: null,
+	
+	_playerlistCb: null,
 	
     ctor:function () {
     	var self = this;
@@ -108,7 +109,7 @@ var WebLayer = cc.Class.extend({
 	acceptInvitations: function(cb) {
     	self.whenReady(function() {
 	    	self.ws.send('{"command":"acceptInvitations", "sid":"'+self.sid+'"}');		
-			self.notificationCb = cb;
+			self._playerlistCb = cb;
 
 			cc.assert(typeof cb === "function", "acceptInvitations: Callback must be a function.")
 	    });
@@ -160,10 +161,12 @@ var WebLayer = cc.Class.extend({
 
 			this.login();
 			break;
-		case "notification":
-			cc.assert(self.notificationCb != null, "No callback available for notification from server.");
+			
+		// Notifications:
+		case "playerlist":
+			cc.assert(self._playerlistCb != null, "No callback available for notification from server.");
 
-			self.notificationCb(data.data);
+			self._playerlistCb(data.data);
 			break;
 		default:
 			if( data.data[0] && data.data[0].error ) {
