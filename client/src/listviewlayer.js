@@ -88,7 +88,7 @@ var SelectPlayerLayer = cc.Layer.extend({
 
         $b.acceptInvitations(function(data) {
 			data.sort(function(a,b) { 
-				return a.name > b.name; 
+				return a.name != b.name? a.name > b.name : a.invited != b.invited? a.invited > b.invited : a.inviting > b.inviting; 
 			});
 			self.initListview(data);
 		});
@@ -187,6 +187,15 @@ var SelectPlayerLayer = cc.Layer.extend({
 			spritesNormal.addChild(label, 5);	
 			//spritesSelected.addChild(label, 5);	
 			//spritesDisabled.addChild(label, 5);	
+			
+			// the following 4 lines has to move out of here into the show function, with retain
+			var icon1 = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("invited"),cc.rect(0,0,64,64)),
+				icon2 = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("inviting"),cc.rect(0,0,64,64));
+			icon1.setPosition(cc.p(50,50));
+			icon2.setPosition(cc.p(330,50));
+			
+			if( labels[i].invited == "yes" ) spritesNormal.addChild(icon1, 5);	
+			if( labels[i].inviting == "yes" ) spritesNormal.addChild(icon2, 5);
 
 			var listviewSprite = new cc.MenuItemSprite(spritesNormal, spritesSelected, spritesDisabled, this.onListviewTap, labels[i]);
 			items.push(listviewSprite);
