@@ -145,7 +145,7 @@ func handleCommands(commandChan chan Command, requestChan chan Db_request) {
 		case <-sessionTicker.C:
 			go expireSession()
 		case <-invitationTicker.C:
-			go sendInvitation()
+			go sendInvitations()
 		}
 	}
 }
@@ -261,8 +261,40 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 		fmt.Printf("acceptInvitations: true.\n")
 		cmd.dataChan <- []Cmd_data{}
 	case "invite":
-		// parameters: encr. sid
-		// rets: ok
+		sha1Sid, ok := cmd.parameter["invitee"]
+		if ok {
+			found := false
+			ss := session.beehive.sessions
+			for sid := range ss {
+				if ss[sid].sha1Sid == sha1Sid {
+					session.inviting = ss[sid]
+					found = true
+					break
+				}
+			}
+			if found {
+				fmt.Println("Player sid",sha1Sid,"invited!")
+			} else {
+				cmd.dataChan <- []Cmd_data{{
+					"error": "Invited player sid not found?",
+				}}
+			}
+		} else {
+			cmd.dataChan <- []Cmd_data{{
+				"error": "Parameter 'invitee' missing.",
+			}}
+		}
+		cmd.dataChan <- []Cmd_data{}
+	case "disinvite":
+		_, ok := cmd.parameter["invitee"] // parameter sha1Sid is only needed when multiple players can be invited
+		if ok {
+			session.inviting = nil
+		} else {
+			cmd.dataChan <- []Cmd_data{{
+				"error": "Parameter 'invitee' missing.",
+			}}
+		}
+		cmd.dataChan <- []Cmd_data{}
 	case "stopInvitations":
 		stopInvitations(&(cmd.sid))
 		cmd.dataChan <- []Cmd_data{}
@@ -310,12 +342,12 @@ func expireSession() {
 }
 
 // sendInvitations sends invitation list to all accepting players
-func sendInvitation() {
+func sendInvitations() {
 	for b := range beehives {
 		invitees := beehives[b].invitees
 		for variation := range invitees {
 			varSessions := invitees[variation]
-			fmt.Println(len(varSessions), "to send to with variation", variation, ". Length:", len(varSessions))
+			//fmt.Println(len(varSessions), "to send to with variation", variation, ". Length:", len(varSessions))
 			if len(varSessions) >= 1 {
 				for sid := range varSessions {
 					data := make([]Cmd_data, 0)

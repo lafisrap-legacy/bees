@@ -87,6 +87,7 @@ func translateMessages(s socket, commandChan chan Command) {
 				err = errors.New("Session already active. Logout first.")
 			}
 
+			fmt.Println("Received command",command,"with",message,"err:",err)
 			if err == nil {
 				commandChan <- Command{
 					command:   command,
