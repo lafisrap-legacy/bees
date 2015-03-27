@@ -156,9 +156,11 @@ var BeesScene = cc.Scene.extend({
     
     getState: 			function() 			{ return this.gameState; },
     saveState: 			function() 			{ return this.weblayer.saveState(this.gameState); },
+    sendCommand:		function(command)	{ return this.weblayer.sendCommand(command); },
     registerVariation: 	function(variation) { return this.weblayer.registerVariation(variation); },
     acceptInvitations: 	function(cb) 		{ return this.weblayer.acceptInvitations(cb); },
-    sendCommand:		function(command)	{ return this.weblayer.sendCommand(command); }
+    invitePlayer:		function(invitee)	{ return this.weblayer.invitePlayer(invitee); },
+    disinvitePlayer:	function(invitee)	{ return this.weblayer.disinvitePlayer(invitee); },
 });
 
 // GLOBAL VARIABLES

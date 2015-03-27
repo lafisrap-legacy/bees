@@ -6,7 +6,8 @@
 //
 var _B_MAX_LISTVIEW_ENTRIES = 6,
 	_B_MAX_LISTVIEW_PADDING = -10,
-	_B_LISTVIEW_Y_OFFSETS = [-4, -5, 2, 4, 8, 15];
+	_B_LISTVIEW_Y_OFFSETS = [-4, -5, 2, 4, 8, 15],
+	_B_BEESFONT_Y_OFFSET = -20;
 	
 cc.assert(_B_MENU_Y_OFFSETS.length === _B_MAX_MENU_ENTRIES, "MenuLayer: Array size of _B_MENU_Y_OFFSETS must match _B_MAX_MENU_ENTRIES.") 
 // SelectPlayerLayer provides list views for the game.
@@ -61,9 +62,8 @@ var SelectPlayerLayer = cc.Layer.extend({
 				cc.scaleTo(0.33,1)
 			)
 		);
-		var bl = this._BarLabel = cc.LabelBMFont.create( _b_t.playerlist.noplayers , "res/fonts/amtype36.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
-		bl.setPosition(cc.p(275,55));
-		bl.setColor(cc.color(122,80,77,155));
+		var bl = this._BarLabel = cc.LabelBMFont.create( _b_t.playerlist.noplayers , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
+		bl.setPosition(cc.p(275,75+_B_BEESFONT_Y_OFFSET));
 		b.addChild(bl, 5);	
 		_b_retain(this._BarLabel,"SelectPlayerLayer, show, _BarLabel")
         this.addChild(this._bar,0);
@@ -87,18 +87,10 @@ var SelectPlayerLayer = cc.Layer.extend({
 		}
 
         $b.acceptInvitations(function(data) {
-        	var labels = [];
-			for( var i=0 ; i<data.length ; i++ ) {
-				labels.push({
-					label: data[i].name,
-					inviting: data[i].inviting,
-					invited: data[i].invited
-				});
-			}
-			labels.sort(function(a,b) { 
-				return a.label > b.label; 
+			data.sort(function(a,b) { 
+				return a.name > b.name; 
 			});
-			self.initListview(labels);
+			self.initListview(data);
 		});
 	},
 	
@@ -163,8 +155,12 @@ var SelectPlayerLayer = cc.Layer.extend({
     	var items = [],
     		cl = this._currentLabels;
 
+    	this._currentLabels = labels;
+
     	// look if labels changed
-    	for( var i=0 ; cl && cl.length == labels.length && i<cl.length ; i++ ) if( cl[i].label != labels[i].label ) break;
+    	for( var i=0 ; cl && cl.length == labels.length && i<cl.length ; i++ ) {
+    		if( cl[i].name != labels[i].name || cl[i].invited != labels[i].invited || cl[i].inviting != labels[i].inviting ) break;
+    	}
     	if( cl && cl.length == labels.length && i==cl.length ) return;
     	
 		if( this._listview ) {
@@ -179,23 +175,20 @@ var SelectPlayerLayer = cc.Layer.extend({
     		this._BarLabel.setCString(_b_t.playerlist.choose)
     	}
     	
-    	this._currentLabels = labels;
-    	cc.log("Init Listview!");
-    	
 		for( var i=0 ; i<Math.min(labels.length, _B_MAX_LISTVIEW_ENTRIES) ; i++ ) {
 			var frame = cc.spriteFrameCache.getSpriteFrame("listviewitem"+(i+1)),
 	    		spritesNormal = cc.Sprite.create(frame,cc.rect(0,0,380,100)),
 	    		spritesSelected =cc.Sprite.create(frame,cc.rect(0,0,380,100)),
 	    		spritesDisabled =cc.Sprite.create(frame,cc.rect(0,0,380,100));
 
-			var label = cc.LabelBMFont.create( labels[i].label , "res/fonts/amtype36.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
-			label.setPosition(cc.p(190,label.getContentSize().height));
-			label.setColor(cc.color(122,80,77,155));
+			var label = cc.LabelBMFont.create( labels[i].name , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
+			label.setPosition(cc.p(190,label.getContentSize().height+_B_BEESFONT_Y_OFFSET));
+			label.setColor(cc.color(200,130,140,255));
 			spritesNormal.addChild(label, 5);	
 			//spritesSelected.addChild(label, 5);	
 			//spritesDisabled.addChild(label, 5);	
 
-			var listviewSprite = new cc.MenuItemSprite(spritesNormal, spritesSelected, spritesDisabled, this._finalCallback, labels[i]);
+			var listviewSprite = new cc.MenuItemSprite(spritesNormal, spritesSelected, spritesDisabled, this.onListviewTap, labels[i]);
 			items.push(listviewSprite);
 		}
 
@@ -218,6 +211,11 @@ var SelectPlayerLayer = cc.Layer.extend({
 				cc.moveTo(0.5,cc.width/2,cc.height - this._height/2 - 180)
 			)
 		)
+	},
+	
+	onListviewTap: function() {
+		if( this.invited == "yes" ) $b.disinvitePlayer(this.sid);
+		else 						$b.invitePlayer(this.sid);
 	}
 });
 

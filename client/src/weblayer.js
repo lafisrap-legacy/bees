@@ -114,6 +114,18 @@ var WebLayer = cc.Class.extend({
 			cc.assert(typeof cb === "function", "acceptInvitations: Callback must be a function.")
 	    });
 	},
+	
+	invitePlayer: function(invitee) {
+    	self.whenReady(function() {
+	    	self.ws.send('{"command":"invite", "sid":"'+self.sid+'", "invitee":"'+invitee+'"}');		
+	    });
+	},
+ 
+	disinvitePlayer: function(invitee) {
+    	self.whenReady(function() {
+	    	self.ws.send('{"command":"disinvite", "sid":"'+self.sid+'", "invitee":"'+invitee+'"}');		
+	    });
+	},
  
     saveState: function(state) {
     	self = this;
