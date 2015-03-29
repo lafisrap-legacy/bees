@@ -106,6 +106,7 @@ var BeesScene = cc.Scene.extend({
 	weblayer: null,
 	menuLayer: null,
 	selectPlayerLayer: null,
+	selectPlayerLayer: null,
 	gameState: {},
 	size: null,
 	
@@ -117,6 +118,8 @@ var BeesScene = cc.Scene.extend({
         this.addChild(title);
         this.menuLayer = new MenuLayer();
         _b_retain(this.menuLayer,"BeesScene, menuLayer");
+        this.selectPlayerLayer = new SelectPlayerLayer();
+        _b_retain(this.selectPlayerLayer,"BeesScene, selectPlayerLayer");
         
         cc.width = cc.winSize.width;
         cc.height = cc.winSize.height;
@@ -124,6 +127,7 @@ var BeesScene = cc.Scene.extend({
     
     onExit: function() {
     	_b_release(this.menuLayer);
+    	_b_release(this.selectPlayerLayer);
     },
     
     // showMenu parameter
@@ -140,18 +144,13 @@ var BeesScene = cc.Scene.extend({
     	
 		var self = this;
     	
-    	if( this.selectPlayerLayer ) {
-    		this.removeChild(this.selectPlayerLayer);
-			_b_release(this.selectPlayerLayer);
-		}
-
-		this.selectPlayerLayer = new SelectPlayerLayer(function(player) {
-			_b_release(self.selectPlayerLayer);
-			cb();
-		}, []);		
+		this.selectPlayerLayer.show([], function(player) {
+			cb(function() {
+				(baseLayer || self).removeChild(self.selectPlayerLayer);
+			});
+		});
 		
         (baseLayer || this).addChild(this.selectPlayerLayer,5);
-		_b_retain(this.selectPlayerLayer,"BeeScene, connectPlayer")
     },
     
     getState: 			function() 			{ return this.gameState; },
