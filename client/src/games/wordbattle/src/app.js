@@ -6,10 +6,11 @@ var WordBattleLayer = cc.Layer.extend({
         // 1. super init first
         this._super();
         
-        var size = cc.winSize;
-
 		$b.connectPlayer(function(player) {
-			cc.log("Player "+player.name+" connected!")
+			if( !player ) cc.director.runScene($b);
+
+			cc.log("Player "+player.name+" connected (sid:"+player.sid+")!");
+			cc.director.runScene($b);
 		}, this);
 		
         return true;

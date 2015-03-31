@@ -23,7 +23,7 @@ cc.assert(_B_LISTVIEW_Y_OFFSETS.length === _B_MAX_LISTVIEW_ENTRIES, "ListviewLay
 // -------
 // show inits the player selection menu and shows the bar
 // hide removes bar and available players
-// initListview fills the currently available players
+// drawListview fills the currently available players
 // onListviewTap callback call by click on a player bar
 // initListener starts touch events of the title layer
 // stopListener stops touch events 
@@ -79,10 +79,10 @@ var SelectPlayerLayer = cc.Layer.extend({
 		bar.addChild(bl, 5);	
         this.addChild(bar,0);
 		_b_retain(this._BarLabel,"SelectPlayerLayer, show, _BarLabel");
-		_b_retain(this._BarLabel,"SelectPlayerLayer, show, _bar");
+		_b_retain(this._bar,"SelectPlayerLayer, show, _bar");
 		
 		// Create menu items from object and animate them
-		this.initListview(players);
+		this.drawListview(players);
 		var lv = this._listview;
 		if( lv ) {
 			lv.setPosition(cc.p(cc.width/2,cc.height*1.3));
@@ -103,42 +103,73 @@ var SelectPlayerLayer = cc.Layer.extend({
 			data.sort(function(a,b) { 
 				return a.name != b.name? a.name > b.name : a.sid < b.sid; 
 			});
-			self.initListview(data);
-			
-			//somewhen this has to be called self._finalCallback(), and the hide();
+			self.drawListview(data);
 		});
 	},
 	
 	// hide hides the list and stops the invitation episode
-	hide: function() {
-    	var self = this;
+	hide: function(player) {
+    	var self = this,
+    		cp = this._currentPlayers;
+    	
+    	if( player ) {
+    		// The position of the player in the listview might have changed, so we search for sid
+    		var found = false;
+    		for( var i=0 ; i<cp.length ; i++ ) {
+    			if( cp[i].sid == player.sid ) {
+    				found = true;
+    				break;
+    			}
+    		}
+			if( found ) {
+				var sprite = this._listview.children[i];
+				
+				sprite.runAction(
+					cc.EaseSineIn.create(
+						cc.spawn(
+							cc.scaleTo(2,3,3),
+							cc.fadeOut(2)
+						)
+					)
+				)				
+			} else {
+				cc.assert(false, "Selected player was not found in the list.");
+			}
+    	}
     	
     	if( this._listview ) {
-			this._listview.runAction(cc.sequence(
+			this._listview.runAction(
 				cc.EaseSineIn.create(
-					cc.moveTo(1,cc.width*1.5, cc.height/2)
-				),
-				cc.callFunc(function() {
-					self.removeChild(self._listview);
-					self.removeChild(self._bar);
-					self.getParent().removeChild(self);
-				})
-			));
+					cc.fadeOut(2)
+				)
+			);
 		}
-		    	
+		
     	this._bar.runAction(cc.EaseSineIn.create(
     		cc.spawn(
-	    		cc.moveTo(1,1136*1.5, 320),
+	    		cc.moveTo(1,cc.width/2, cc.height * 1.5),
 	    		cc.scaleTo(1,1,1)
 	    	)
 	    ));
 	    
-	    this.stopListeners();
-	    
-	    _b_release(this._BarLabel);
-	    _b_release(this._bar);
-	    if( this._listview ) _b_release(this._listview);
-	    	
+		setTimeout(function() {
+			cc.log("Calling final callback ...");
+			self._finalCallback(player);
+
+			if( self._listview ) {
+				cc.log("Remove listview ...");
+				self.removeChild(self._listview);
+				_b_release(self._listview);
+			}			
+
+			self.removeChild(self._bar);
+			self.getParent().removeChild(self);
+			_b_release(self._BarLabel);
+			_b_release(self._bar);
+		}, 2000);
+		    	
+	    this.stopListeners();	    
+
 		$b.sendCommand({command: "stopInvitations"}); 
 	},
 	
@@ -156,7 +187,7 @@ var SelectPlayerLayer = cc.Layer.extend({
 					loc = touch.getLocation();	            		
 
 				// ignore location, hide anyway
-				//self.hide.call(self);		
+				self.hide();		
 			}
 		});
 			
@@ -168,11 +199,11 @@ var SelectPlayerLayer = cc.Layer.extend({
         if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
     },
     
-    // initListview creates a new list with available players every time something changes
+    // drawListview creates a new list with available players every time something changes
     //
 	// players is a list with the currently available players in current game variation
 	//
-    initListview: function(players) {
+    drawListview: function(players) {
 
     	var items = [],
     		cp = this._currentPlayers;
@@ -211,16 +242,16 @@ var SelectPlayerLayer = cc.Layer.extend({
 			label.setPosition(cc.p(190,label.getContentSize().height+_B_BEESFONT_Y_OFFSET));
 			label.setColor(cc.color(200,130,140,255));
 			spritesNormal.addChild(label, 5);	
+			spritesNormal.setCascadeOpacityEnabled(true);
 			//spritesSelected.addChild(label, 5);	
 			//spritesDisabled.addChild(label, 5);	
 			
-			// the following 4 lines has to move out of here into the show function, with retain
 			var icon1 = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("invited"),cc.rect(0,0,64,64)),
 				icon2 = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("inviting"),cc.rect(0,0,64,64));
 			icon1.setPosition(cc.p(50,50));
-			icon1.setScale(0.1)
+			icon1.setScale(0.0)
 			icon2.setPosition(cc.p(330,50));
-			icon2.setScale(0.1)
+			icon2.setScale(0.0)
 			
 			if( players[i].invited == "yes" ) {
 				spritesNormal.addChild(icon1, 5);	
@@ -238,7 +269,8 @@ var SelectPlayerLayer = cc.Layer.extend({
 					)
 				);
 			}
-			var listviewSprite = new cc.MenuItemSprite(spritesNormal, spritesSelected, spritesDisabled, this.onListviewTap, players[i]);
+			var listviewSprite = new cc.MenuItemSprite(spritesNormal, spritesSelected, spritesDisabled, this.onListviewTap, { self: this, player: players[i] });
+			
 			items.push(listviewSprite);
 		}
 
@@ -246,7 +278,7 @@ var SelectPlayerLayer = cc.Layer.extend({
 		this._listview = new cc.Menu(items);		
 		cc.assert( this._listview, "Listview could not be created!");
 		this.addChild(this._listview,1);
-		_b_retain(this._listview,"SelectPlayerLayer, initListview, _listview")
+		_b_retain(this._listview,"SelectPlayerLayer, drawListview, _listview")
 		var ch = this._listview.children;
 		this._listview.alignItemsVerticallyWithPadding(_B_MAX_MENU_PADDING);
 		this._listview.setPosition(cc.p(cc.width/2,cc.height - this._height/2 - 180));
@@ -263,8 +295,12 @@ var SelectPlayerLayer = cc.Layer.extend({
 	
 	// onListviewTap is called when a players taps on a name
 	onListviewTap: function() {
-		if( this.invited == "yes" ) $b.disinvitePlayer(this.sid);
-		else 						$b.invitePlayer(this.sid);
+		var tapInfo = this;
+	
+		if( tapInfo.player.invited == "yes" ) $b.disinvitePlayer(tapInfo.player.sid);
+		else 								  $b.invitePlayer(tapInfo.player.sid, function(player) {
+			tapInfo.self.hide(player);
+		});
 	}
 });
 

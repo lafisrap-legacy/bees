@@ -35,6 +35,7 @@ var WebLayer = cc.Class.extend({
 	playerName: null,
 	
 	_playerlistCb: null,
+	_connectPlayerCb: null,
 	
     ctor:function () {
     	var self = this;
@@ -91,14 +92,14 @@ var WebLayer = cc.Class.extend({
     },
     
     registerVariation: function( variation ) {
-    	self = this;
+    	var self = this;
     	self.whenReady(function() {
 	    	self.ws.send('{"command":"registerVariation", "sid":"'+self.sid+'", "variation":"'+variation+'"}');		
 	    });
     },
     
 	sendCommand: function(command) {
-    	self = this;
+    	var self = this;
 		command["sid"] = self.sid
 		
     	self.whenReady(function() {
@@ -107,6 +108,7 @@ var WebLayer = cc.Class.extend({
 	},
    
 	acceptInvitations: function(cb) {
+		var self = this;
     	self.whenReady(function() {
 	    	self.ws.send('{"command":"acceptInvitations", "sid":"'+self.sid+'"}');		
 			self._playerlistCb = cb;
@@ -115,13 +117,16 @@ var WebLayer = cc.Class.extend({
 	    });
 	},
 	
-	invitePlayer: function(invitee) {
+	invitePlayer: function(invitee, cb) {
+		var self = this;
     	self.whenReady(function() {
-	    	self.ws.send('{"command":"invite", "sid":"'+self.sid+'", "invitee":"'+invitee+'"}');		
+	    	self.ws.send('{"command":"invite", "sid":"'+self.sid+'", "invitee":"'+invitee+'"}');
+	    	self._connectPlayerCb = cb;		
 	    });
 	},
  
 	disinvitePlayer: function(invitee) {
+		var self = this;
     	self.whenReady(function() {
 	    	self.ws.send('{"command":"disinvite", "sid":"'+self.sid+'", "invitee":"'+invitee+'"}');		
 	    });
@@ -179,6 +184,11 @@ var WebLayer = cc.Class.extend({
 			cc.assert(self._playerlistCb != null, "No callback available for notification from server.");
 
 			self._playerlistCb(data.data);
+			break;
+		case "connectPlayer":
+			cc.assert(self._playerlistCb != null, "No callback available for notification from server.");
+
+			self._connectPlayerCb(data.data[0]); // for now only one player can be connected
 			break;
 		default:
 			if( data.data[0] && data.data[0].error ) {

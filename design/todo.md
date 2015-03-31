@@ -1,13 +1,16 @@
 # To Do
 
 ## Next
-* SHA1 for session id
-* send currently waiting players
-* Invite other player
+* Tap beside Listview, returns no player, goes back to start
 * Broadcast / subscribe
 * Player selection
 
 ## Later
+* Auto-Logout
+	* Connection break
+	* Relogin from client?
+* Invite multiple players
+* Server is started while clients are running, how do they recover?
 * Display a connection sign
 * nmp for jsfmt
 * Choose player on web (add local password)
