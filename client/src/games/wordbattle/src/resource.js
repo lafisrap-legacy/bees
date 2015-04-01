@@ -1,7 +1,7 @@
 // Resources for WordBattle
 // To adapt this resource file to another game you have to
 // (1) change the game name
-// (2) add 
+// (2) add ...
 
 (function() {
 
@@ -11,12 +11,11 @@
 	// game specific resources
 	gameRes[game] = {
 		"All": {
-			HelloWorld_png : path+"res/HelloWorld.png",
+			wordbattle_png : path+"res/wordbattle.png",
+			wordbattle_plist : path+"res/wordbattle.plist",
 		},
 		"Das Eselein" : {
 			Fairytale_json: 	path+"vars/Das Eselein/Das Eselein.json",
-			CloseNormal_png: 	path+"res/CloseNormal.png",
-			CloseSelected_png: 	path+"res/CloseSelected.png"
 		}
 	};
 })();

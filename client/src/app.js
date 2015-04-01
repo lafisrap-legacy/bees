@@ -51,6 +51,7 @@ var TitleLayer = cc.Layer.extend({
 
 				// ignore location, hide anyway
 				self.stopListeners();
+
 				$b.showMenu([{
 					label: "Worte versenken",
 					cb: function() { 
@@ -122,7 +123,11 @@ var BeesScene = cc.Scene.extend({
         _b_retain(this.selectPlayerLayer,"BeesScene, selectPlayerLayer");
         
         cc.width = cc.winSize.width;
-        cc.height = cc.winSize.height;
+        cc.height = cc.winSize.height;	
+        
+        cc.LoaderScene.preload(_b_getResources("wordbattle","Das Eselein"), function () {
+			cc.director.runScene(new WordBattleScene("Das Eselein"));
+		}, this);	
     },
     
     onExit: function() {

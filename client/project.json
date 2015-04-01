@@ -19,6 +19,6 @@
         "src/text.js",
         
         "src/games/wordbattle/src/resource.js",
-        "src/games/wordbattle/src/app.js"
+        "src/games/wordbattle/src/wordbattle.js"
     ]
 }

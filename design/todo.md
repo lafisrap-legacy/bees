@@ -1,24 +1,32 @@
 # To Do
 
 ## Next
-* Tap beside Listview, returns no player, goes back to start
-* Broadcast / subscribe
-* Player selection
+* 
 
 ## Later
 * Auto-Logout
 	* Connection break
 	* Relogin from client?
+* Computer-Player
+	* Register computer player
+	* Modify connectPlayer to support it
+	* Modify sendUpdate to support it
+* Badges
+	* Longest ship
+	* 7 Hits in one move
+	* 
+* Internet/No Internet
+	* Test different scenarios
+	* Reconnecting games
+	* "Player lost ..."
+	* Server is started while clients are running, how do they 
+	* Display a connection sign
+recover?
 * Invite multiple players
-* Server is started while clients are running, how do they recover?
-* Display a connection sign
-* nmp for jsfmt
+* nmp for jsfmt (jslint?)
 * Choose player on web (add local password)
 * Testing Spine: Yaylas Wiese animation
-* Romans Font
 * Input name, boy/girl
-* Different names:
-	* refreshSession
 * Utilities
 	* Read md-texts into database (paragraphs, w/ image urls) Update or 
 
