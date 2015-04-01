@@ -10,8 +10,9 @@ var WordBattleLayer = cc.Layer.extend({
 			if( !player ) cc.director.runScene($b);
 
 			cc.log("Player "+player.name+" connected (sid:"+player.sid+")!");
-			cc.director.runScene($b);
-		}, this);
+			
+			if( player.first == "yes" ) $b.sendUpdate({"gameinfo":"all"});
+		}, this.gameUpdate, this);
 		
         return true;
     },
@@ -44,6 +45,11 @@ var WordBattleLayer = cc.Layer.extend({
 	stopListeners: function() {
         if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
     },
+    
+    gameUpdate: function(data) {
+    	
+    	debugger;
+    }
 });
 
 var WordBattleScene = cc.Scene.extend({

@@ -30,13 +30,14 @@ cc.assert(_B_LISTVIEW_Y_OFFSETS.length === _B_MAX_LISTVIEW_ENTRIES, "ListviewLay
 //
 // Properties
 // ----------
-// _finalCallback contains a pointer to the callback function that is called on menu hide
+// _selectPlayerCb contains a pointer to the callback function that is called on menu hide
 // _currentPlayers holds the current player names and invite stati
 // _listview contains a cc.menu with all available players
 // _height is the current total height of all player bars
 //
 var SelectPlayerLayer = cc.Layer.extend({
-	_finalCallback: null,
+	_selectPlayerCb: null,
+	_updateGameCb: null,
 	_currentPlayers: null,
 	_listview: null,
 	_height: 0,
@@ -51,14 +52,16 @@ var SelectPlayerLayer = cc.Layer.extend({
 	
 	// show displays bar and player list
 	//
-	// finalCallback is called when a player pair is found or on abort
+	// selectPlayerCb is called when a player pair is found or on abort
 	// players is a list with the currently available players in current game variation
 	//
-	show: function(players, finalCallback) {
+	show: function(players, selectPlayerCb, updateGameCb) {
 		var self = this;
 		
-		this._finalCallback = finalCallback;
-	    cc.assert( this._finalCallback && typeof this._finalCallback == "function", "this._finalCallback should be a function.")
+		this._selectPlayerCb = selectPlayerCb;
+		this._updateGameCb = updateGameCb;
+	    cc.assert( this._selectPlayerCb && typeof this._selectPlayerCb == "function", "this._selectPlayerCb should be a function.")
+	    cc.assert( this._updateGameCb && typeof this._updateGameCb == "function", "this._updateGameCb should be a function.")
 
 	    this.initListeners();
 		
@@ -154,7 +157,7 @@ var SelectPlayerLayer = cc.Layer.extend({
 	    
 		setTimeout(function() {
 			cc.log("Calling final callback ...");
-			self._finalCallback(player);
+			self._selectPlayerCb(player);
 
 			if( self._listview ) {
 				cc.log("Remove listview ...");
@@ -300,7 +303,7 @@ var SelectPlayerLayer = cc.Layer.extend({
 		if( tapInfo.player.invited == "yes" ) $b.disinvitePlayer(tapInfo.player.sid);
 		else 								  $b.invitePlayer(tapInfo.player.sid, function(player) {
 			tapInfo.self.hide(player);
-		});
+		}, tapInfo.self._updateGameCb);
 	}
 });
 

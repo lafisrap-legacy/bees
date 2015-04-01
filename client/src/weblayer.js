@@ -36,6 +36,7 @@ var WebLayer = cc.Class.extend({
 	
 	_playerlistCb: null,
 	_connectPlayerCb: null,
+	_updateGameCb: null,
 	
     ctor:function () {
     	var self = this;
@@ -117,11 +118,12 @@ var WebLayer = cc.Class.extend({
 	    });
 	},
 	
-	invitePlayer: function(invitee, cb) {
+	invitePlayer: function(invitee, connectPlayerCb, updateGameCb) {
 		var self = this;
     	self.whenReady(function() {
 	    	self.ws.send('{"command":"invite", "sid":"'+self.sid+'", "invitee":"'+invitee+'"}');
-	    	self._connectPlayerCb = cb;		
+	    	self._connectPlayerCb = connectPlayerCb;
+	    	self._updateGameCb = updateGameCb;
 	    });
 	},
  
@@ -130,6 +132,13 @@ var WebLayer = cc.Class.extend({
     	self.whenReady(function() {
 	    	self.ws.send('{"command":"disinvite", "sid":"'+self.sid+'", "invitee":"'+invitee+'"}');		
 	    });
+	},
+	
+	sendUpdate: function(data) {
+		var self = this;
+    	self.whenReady(function() {
+	    	self.ws.send('{"command":"updateGame", "sid":"'+self.sid+'", "data":"'+JSON.stringifyWithEscapes(data)+'"}');		
+	    });		
 	},
  
     saveState: function(state) {
@@ -186,10 +195,15 @@ var WebLayer = cc.Class.extend({
 			self._playerlistCb(data.data);
 			break;
 		case "connectPlayer":
-			cc.assert(self._playerlistCb != null, "No callback available for notification from server.");
+			cc.assert(self._connectPlayerCb != null, "No callback available for notification from server.");
 
 			self._connectPlayerCb(data.data[0]); // for now only one player can be connected
 			break;
+		case "gameUpdate":	
+			cc.assert(self._connectPlayerCb != null, "No callback available for notification from server.");
+
+			self._updateGameCb(data.data);
+			break;			
 		default:
 			if( data.data[0] && data.data[0].error ) {
 				cc.log("onmessage, unknown command: "+data.command);

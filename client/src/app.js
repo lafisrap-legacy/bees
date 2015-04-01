@@ -140,18 +140,19 @@ var BeesScene = cc.Scene.extend({
 		this.menuLayer.show(labelsAndCallbacks,fcb);
     },
     
-    connectPlayer: function(cb, baseLayer) {
-		this.selectPlayerLayer.show([], function(player) { cb(player); });		
+    connectPlayer: function(connectCb, updateCb, baseLayer) {
+		this.selectPlayerLayer.show([], function(player) { connectCb(player); }, updateCb);		
         (baseLayer || this).addChild(this.selectPlayerLayer,5);
     },
     
-    getState: 			function() 			 { return this.gameState; },
-    saveState: 			function() 			 { return this.weblayer.saveState(this.gameState); },
-    sendCommand:		function(command)	 { return this.weblayer.sendCommand(command); },
-    registerVariation: 	function(variation)  { return this.weblayer.registerVariation(variation); },
-    acceptInvitations: 	function(cb) 		 { return this.weblayer.acceptInvitations(cb); },
-    invitePlayer:		function(invitee,cb) { return this.weblayer.invitePlayer(invitee, cb); },
-    disinvitePlayer:	function(invitee)	 { return this.weblayer.disinvitePlayer(invitee); },
+    getState: 			function() 			 	  { return this.gameState; },
+    saveState: 			function() 			 	  { return this.weblayer.saveState(this.gameState); },
+    sendCommand:		function(command)	 	  { return this.weblayer.sendCommand(command); },
+    registerVariation: 	function(variation)  	  { return this.weblayer.registerVariation(variation); },
+    acceptInvitations: 	function(cb) 		 	  { return this.weblayer.acceptInvitations(cb); },
+    invitePlayer:		function(invitee,cb1,cb2) { return this.weblayer.invitePlayer(invitee, cb1, cb2); },
+    sendUpdate:			function(data) 			  { return this.weblayer.sendUpdate(data); },    
+    disinvitePlayer:	function(invitee)	 	  { return this.weblayer.disinvitePlayer(invitee); },
 });
 
 // GLOBAL VARIABLES
