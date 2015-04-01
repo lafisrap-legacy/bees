@@ -12,7 +12,7 @@ import (
 
 const (
 	// time till inactive sessions are cleared
-	sessionExpire time.Duration = 3000 * time.Second
+	sessionExpire time.Duration = 60 * time.Second
 
 	// interval for invitation information
 	invitationInterval time.Duration = 1 * time.Second
@@ -39,10 +39,20 @@ type Session struct {
 	notificationChan *chan notification
 	variation        variation
 	inviting         *Session // inviting the player of a session
+	activeGame		 *Game
+	gameState		 string
 	lastAccess       time.Time
 }
 
+// Game basic structure
+type Game struct {
+	variation variation
+	players	map[string]*Session
+	spectators map[string]*Session
+}
+
 var sessions map[string]*Session
+var activeGames map[string]*Game
 
 // variation is a short name of a game variation
 type variation string
@@ -110,6 +120,7 @@ func StartController(_ map[string]string, requestChan chan Db_request, doneChan 
 func handleCommands(commandChan chan Command, requestChan chan Db_request) {
 	beehives = make(map[string]*Beehive)
 	sessions = make(map[string]*Session)
+	activeGames = make(map[string]*Game)
 
 	// fill available beehives into beehive map
 	dataChan := make(chan []Cmd_data)
@@ -136,14 +147,14 @@ func handleCommands(commandChan chan Command, requestChan chan Db_request) {
 		fmt.Printf("Adding beehive %s\n", shortname)
 	}
 
-	sessionTicker := time.NewTicker(sessionExpire)
+	//sessionTicker := time.NewTicker(sessionExpire)
 	invitationTicker := time.NewTicker(invitationInterval)
 	for {
 		select {
 		case cmd := <-commandChan:
 			go commandInterpreter(cmd, requestChan)
-		case <-sessionTicker.C:
-			go expireSession()
+		//case <-sessionTicker.C:
+		//	go expireSession()
 		case <-invitationTicker.C:
 			go sendInvitations()
 		}
@@ -214,6 +225,8 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 				beehive:    beehive,
 				sha1Sid:    GetHash([]byte(sid)),
 				lastAccess: time.Now(),
+				inviting:   nil,
+				activeGame: nil,
 			}
 			sessions[sid] = session
 			// tell beehive that session is active
@@ -242,6 +255,7 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 		}
 
 		cmd.dataChan <- []Cmd_data{}
+	// acceptInvitations
 	case "acceptInvitations":
 		if session.variation != "" {
 			fmt.Println("acceptInvitations:")
@@ -260,31 +274,86 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 		}
 		fmt.Printf("acceptInvitations: true.\n")
 		cmd.dataChan <- []Cmd_data{}
+
+	//---
+	// GAME COMMAND invite
+	//---
 	case "invite":
 		sha1Sid, ok := cmd.parameter["invitee"]
-		if ok {
-			found := false
+		if !ok {
+			cmd.dataChan <- []Cmd_data{{
+				"error": "Parameter 'invitee' missing.",
+			}}
+			return
+		}
+
+		if session.activeGame == nil {
+			sid := ""
 			ss := session.beehive.sessions
-			for sid := range ss {
+			found := false
+			for sid = range ss {
 				if ss[sid].sha1Sid == sha1Sid {
-					session.inviting = ss[sid]
 					found = true
 					break
 				}
 			}
 			if found {
-				fmt.Println("Player sid",sha1Sid,"invited!")
+				session.inviting = ss[sid]
+				// check if the other side also wants to connect
+				if session.inviting.inviting == session {
+					// start a new game
+					newGame := Game{
+						variation: session.variation,
+						players: map[string]*Session{
+							session.sha1Sid: session,
+							session.inviting.sha1Sid: session.inviting,
+						},
+						spectators: map[string]*Session{},
+					}
+
+					session.activeGame = &newGame
+					session.inviting.activeGame = &newGame
+
+					// create game id
+					gid := GetHash(nil)
+					activeGames[gid] = &newGame
+
+					// send note to both players ... 1 ...
+					data := []Cmd_data{{
+						"sid": session.sha1Sid,
+						"name": session.playerName,
+						"first": "no",
+					}}
+					sendNote(session.inviting, "connectPlayer", data)
+					// ... 2 ...
+					data = []Cmd_data{{
+						"sid": session.inviting.sha1Sid,
+						"name": session.inviting.playerName,
+						"first": "yes",
+					}}
+					sendNote(session, "connectPlayer", data)
+
+					fmt.Println("Player",session.playerName,"and",session.inviting.playerName,"connected!")
+					// disinvite both
+					session.inviting.inviting = nil
+					session.inviting = nil
+				}
 			} else {
 				cmd.dataChan <- []Cmd_data{{
-					"error": "Invited player sid not found?",
+					"error": "Invited player sid not found. It should be there.",
 				}}
 			}
 		} else {
 			cmd.dataChan <- []Cmd_data{{
-				"error": "Parameter 'invitee' missing.",
+				"info": "Player is already connected. Can't connect twice.",
 			}}
 		}
+
 		cmd.dataChan <- []Cmd_data{}
+
+	//---
+	// GAME COMMAND disinvite
+	//---
 	case "disinvite":
 		_, ok := cmd.parameter["invitee"] // parameter sha1Sid is only needed when multiple players can be invited
 		if ok {
@@ -295,9 +364,65 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 			}}
 		}
 		cmd.dataChan <- []Cmd_data{}
+
+	//---
+	// GAME COMMAND updateGame
+	//---
+	case "updateGame":
+		data, ok := cmd.parameter["data"]
+		if !ok {
+			cmd.dataChan <- []Cmd_data{{
+				"error": "Parameter 'data' missing.",
+			}}
+			return
+		}
+
+		// look if the player is allowed to send updates
+		ag := session.activeGame
+		found := false
+		for s := range ag.players {
+			if s == session.sha1Sid {
+				found = true
+				break;
+			}
+		}
+		if !found {
+			cmd.dataChan <- []Cmd_data{{
+				"error": "Player can't send updates to this game.",
+			}}
+			return
+		}
+
+		// send the update to all players but the current
+		for s := range ag.players {
+			if s != session.sha1Sid {
+
+				sendNote( ag.players[s], "gameUpdate", data)
+			}
+		}
+		// ... and to all spectators
+		for s := range ag.spectators {
+			sendNote( ag.spectators[s], "gameUpdate", data)
+		}
+
+		cmd.dataChan <- []Cmd_data{}
+
+	//---
+	// GAME COMMAND getGameState
+	//---
+	case "getGameState":
+		// get 
+
+	//---
+	// GAME COMMAND stopInvitations
+	//---
 	case "stopInvitations":
 		stopInvitations(&(cmd.sid))
 		cmd.dataChan <- []Cmd_data{}
+
+	//---
+	// Command not found 
+	//---
 	default:
 		cmd.dataChan <- []Cmd_data{{
 			"error": "Command not available.",
@@ -311,10 +436,14 @@ func setNotificationChan(notificationChan chan notification, sid string) {
 
 func logout(sid *string) {
 
+	if _, ok := sessions[*sid]; !ok {
+		panic("Session not found while logging out.")
+	}
+
 	stopInvitations(sid)
 	delete(sessions, *sid)
 
-	fmt.Println("Logging out", *sid)
+	fmt.Println("Logging out:", *sid)
 }
 
 func stopInvitations(sid *string) {
@@ -331,15 +460,15 @@ func stopInvitations(sid *string) {
 }
 
 // expireSession deletes all sessinos that are not used anymore. Relogin required after ...
-func expireSession() {
-	now := time.Now()
-	for sid := range sessions {
-		if now.After(sessions[sid].lastAccess.Add(sessionExpire)) {
-			delete(sessions, sid)
-			fmt.Println("Deleting", sid, "from sessions.")
-		}
-	}
-}
+//func expireSession() {
+//	now := time.Now()
+//	for sid := range sessions {
+//		if now.After(sessions[sid].lastAccess.Add(sessionExpire)) {
+//			fmt.Println("Expire Session:",sid)
+//			logout(&sid)
+//		}
+//	}
+//}
 
 // sendInvitations sends invitation list to all accepting players
 func sendInvitations() {
@@ -352,30 +481,47 @@ func sendInvitations() {
 				for sid := range varSessions {
 					data := make([]Cmd_data, 0)
 					for s := range varSessions {
-						var inviting, invited string = "no", "no"
+						var inviting, invited, connected string = "no", "no", "no"
 						if varSessions[s].inviting == varSessions[sid] {
 							inviting = "yes"
 						}
 						if varSessions[sid].inviting == varSessions[s] {
 							invited = "yes"
 						}
-
+						if varSessions[s].activeGame != nil {
+							connected = "yes"
+						}
 						if sid != s {
 							data = append(data, Cmd_data{
 								"sid":      varSessions[s].sha1Sid,
 								"name":     varSessions[s].playerName,
 								"inviting": inviting,
 								"invited":  invited,
+								"connected": connected,
 							})
 						}
 					}
-					note := notification{
-						command: "playerlist",
-						data: data,
-					}
-					*(varSessions[sid].notificationChan) <- note
+					sendNote(varSessions[sid], "playerlist", data)
 				}
 			}
 		}
 	}
+}
+
+func sendNote(session *Session, command string, idata interface{}) {
+	var data []Cmd_data
+
+	switch idata.(type) {
+	case string:
+		data = []Cmd_data{{
+			"data": idata.(string),
+		}}
+	case []Cmd_data:
+		data = idata.([]Cmd_data)
+	}
+
+	*(session.notificationChan) <- notification{
+        command: command,
+        data: data,
+    }
 }
