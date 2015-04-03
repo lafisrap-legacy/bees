@@ -37,6 +37,8 @@ var WebLayer = cc.Class.extend({
 	_playerlistCb: null,
 	_connectPlayerCb: null,
 	_updateGameCb: null,
+	_messageCbs: [],
+	_messageStorage: [],
 	
     ctor:function () {
     	var self = this;
@@ -95,6 +97,7 @@ var WebLayer = cc.Class.extend({
     registerVariation: function( variation ) {
     	var self = this;
     	self.whenReady(function() {
+ 		   	cc.log("registerVariation: My sid is "+self.sid);
 	    	self.ws.send('{"command":"registerVariation", "sid":"'+self.sid+'", "variation":"'+variation+'"}');		
 	    });
     },
@@ -141,6 +144,22 @@ var WebLayer = cc.Class.extend({
 	    });		
 	},
  
+	sendMessage: function(data) {
+		var self = this;
+    	self.whenReady(function() {
+	    	self.ws.send('{"command":"sendMessage", "sid":"'+self.sid+'", "data":"'+JSON.stringifyWithEscapes(data)+'"}');		
+	    });
+	},
+
+	receiveMessage: function(cb) {
+		var self = this;
+		if( self._messageStorage.length === 0 ) {
+			self._messageCbs.push(cb);
+		} else {
+			cb(self._messageStorage.splice(0,1));
+		}
+	},
+ 
     saveState: function(state) {
     	self = this;
     	self.whenReady(function() {
@@ -153,7 +172,7 @@ var WebLayer = cc.Class.extend({
     },
 
 	onMessage : function(evt) {
-		
+		var self = this;
 		try {
 			var data = JSON.parse(evt.data);
 		} catch (e) {
@@ -170,6 +189,7 @@ var WebLayer = cc.Class.extend({
 		switch( data.command ) {
 		case "login":
 			this.sid = ret.sid;
+			cc.log("Login: Setting sid to "+this.sid);
 			cc.assert(this.sid != null && typeof this.sid === "string","onmessage 'login': Received bad sid.");
 
 			// We are logged in, so we call the waiting commands
@@ -203,6 +223,18 @@ var WebLayer = cc.Class.extend({
 			cc.assert(self._connectPlayerCb != null, "No callback available for notification from server.");
 
 			self._updateGameCb(data.data);
+			break;			
+		case "message":	
+			if( self._messageCbs.length === 0 ) {
+				self._messageStorage.push(data.data[0].data);
+			} else {
+				try {
+					self._messageCbs[0](JSON.parse(data.data[0].data));
+					self._messageCbs.splice(0,1);
+				} catch(e) {
+					cc.log("Couldn't parse JSON data: "+e.message);
+				}
+			}
 			break;			
 		default:
 			if( data.data[0] && data.data[0].error ) {

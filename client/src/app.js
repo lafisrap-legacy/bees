@@ -114,6 +114,7 @@ var BeesScene = cc.Scene.extend({
     onEnter:function () {
         this._super();
         
+        cc.log("Starting main scene ...");
         this.weblayer = new WebLayer();
         var title = new TitleLayer();
         this.addChild(title);
@@ -125,12 +126,16 @@ var BeesScene = cc.Scene.extend({
         cc.width = cc.winSize.width;
         cc.height = cc.winSize.height;	
         
+        cc.log("Loading word battle scene ...");
         cc.LoaderScene.preload(_b_getResources("wordbattle","Das Eselein"), function () {
+	        cc.log("Running word battle scene ...");
 			cc.director.runScene(new WordBattleScene("Das Eselein"));
 		}, this);	
     },
     
     onExit: function() {
+        this._super();
+
     	_b_release(this.menuLayer);
     	_b_release(this.selectPlayerLayer);
     },
@@ -157,6 +162,8 @@ var BeesScene = cc.Scene.extend({
     acceptInvitations: 	function(cb) 		 	  { return this.weblayer.acceptInvitations(cb); },
     invitePlayer:		function(invitee,cb1,cb2) { return this.weblayer.invitePlayer(invitee, cb1, cb2); },
     sendUpdate:			function(data) 			  { return this.weblayer.sendUpdate(data); },    
+    sendMessage:		function(data) 			  { return this.weblayer.sendMessage(data); },    
+    receiveMessage:		function(cb) 			  { return this.weblayer.receiveMessage(cb); },    
     disinvitePlayer:	function(invitee)	 	  { return this.weblayer.disinvitePlayer(invitee); },
 });
 
@@ -174,14 +181,20 @@ var _b_retained = []
 
 var _b_retain = function(obj,name) {
 	obj.retain();
-    _b_retained[obj.__instanceId] = name;
+	
+	obj.__retainId = _b_getId();
+	
+    _b_retained[obj.__retainId] = name;
+	cc.log("Retaining "+obj.__retainId+": '"+_b_retained[obj.__retainId]+"'");
 }
 
 var _b_release = function(obj) {
 
-	cc.assert(obj && _b_retained[obj.__instanceId], "_b_release: Object not valid or not in retained array.");
+	cc.assert(obj && _b_retained[obj.__retainId], "_b_release: Object not valid or not in retained array...");
 	obj.release();		
-	delete _b_retained[obj.__instanceId];
+	cc.log("Releasing "+obj.__retainId+": '"+_b_retained[obj.__retainId]+"'");
+
+	delete _b_retained[obj.__retainId];
 }
 
 var _b_getResources = function(game, variation) {
@@ -194,6 +207,15 @@ var _b_getResources = function(game, variation) {
 	}
 	return g_resources;
 }
+
+var _b_IdFactory = function() {
+	var id = 1000;
+
+	return function() {
+		return ++id;
+	}
+}
+var _b_getId = _b_IdFactory();
 
 
 

@@ -5,14 +5,14 @@
 
 // ListviewLayer Constants
 //
-// _B_MAX_LISTVIEW_ENTRIES: maximum number of menu entries (depends on available pngs)
-// _B_MAX_LISTVIEW_PADDING: standard padding of menu pngs
-// _B_LISTVIEW_Y_OFFSETS: modifications of standard padding
+// _B_MAX_LISTVIEW_ENTRIES: 
+// _B_MAX_LISTVIEW_PADDING:
+// _B_LISTVIEW_Y_OFFSETS: 
 //
-var _B_MAX_LISTVIEW_ENTRIES = 6,
-	_B_MAX_LISTVIEW_PADDING = -10,
-	_B_LISTVIEW_Y_OFFSETS = [-4, -5, 2, 4, 8, 15],
-	_B_BEESFONT_Y_OFFSET = -20;
+var _B_MAX_LISTVIEW_ENTRIES = 6, // maximum number of menu entries (depends on available pngs)
+	_B_MAX_LISTVIEW_PADDING = -10, //  standard padding of menu pngs
+	_B_LISTVIEW_Y_OFFSETS = [-4, -5, 2, 4, 8, 15], // modifications of standard padding
+	_B_BEESFONT_Y_OFFSET = -20; // y correction of beesfont (should be done in beest cf someday)
 	
 cc.assert(_B_LISTVIEW_Y_OFFSETS.length === _B_MAX_LISTVIEW_ENTRIES, "ListviewLayer: Array size of _B_MENU_Y_OFFSETS must match _B_MAX_MENU_ENTRIES.") 
 
@@ -52,19 +52,27 @@ var SelectPlayerLayer = cc.Layer.extend({
 	
 	// show displays bar and player list
 	//
-	// selectPlayerCb is called when a player pair is found or on abort
+	// Parameter:
+	//
 	// players is a list with the currently available players in current game variation
+	// selectPlayerCb is a callback that is called when a player pair is found or on abort
+	// updateGameCb is a callback over which the game communication will happen
 	//
 	show: function(players, selectPlayerCb, updateGameCb) {
 		var self = this;
 		
+        //////////////////////////////
+        // Set the callback functions
 		this._selectPlayerCb = selectPlayerCb;
 		this._updateGameCb = updateGameCb;
 	    cc.assert( this._selectPlayerCb && typeof this._selectPlayerCb == "function", "this._selectPlayerCb should be a function.")
 	    cc.assert( this._updateGameCb && typeof this._updateGameCb == "function", "this._updateGameCb should be a function.")
 
+        //////////////////////////////
+        // Start event handling
 	    this.initListeners();
 		
+        //////////////////////////////
 		// Create, adjust and animate main bar
 		var bar = this._bar = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bar"),cc.rect(0,0,550,115));
 		bar.setPosition(cc.p(cc.width/2,cc.height+50));
@@ -84,6 +92,7 @@ var SelectPlayerLayer = cc.Layer.extend({
 		_b_retain(this._BarLabel,"SelectPlayerLayer, show, _BarLabel");
 		_b_retain(this._bar,"SelectPlayerLayer, show, _bar");
 		
+        //////////////////////////////
 		// Create menu items from object and animate them
 		this.drawListview(players);
 		var lv = this._listview;

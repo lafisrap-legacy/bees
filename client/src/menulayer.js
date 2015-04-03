@@ -1,12 +1,8 @@
 // MenuLayer Constants
 //
-// _B_MAX_MENU_ENTRIES: maximum number of menu entries (depends on available pngs)
-// _B_MAX_MENU_PADDING: standard padding of menu pngs
-// _B_MENU_Y_OFFSETS: modifications of standard padding
-//
-var _B_MAX_MENU_ENTRIES = 6,
-	_B_MAX_MENU_PADDING = -10,
-	_B_MENU_Y_OFFSETS = [-4, -5, 2, 4, 8, 15];
+var _B_MAX_MENU_ENTRIES = 6,					// maximum number of menu entries (depends on available pngs)
+	_B_MAX_MENU_PADDING = -10,					// standard padding of menu pngs
+	_B_MENU_Y_OFFSETS = [-4, -5, 2, 4, 8, 15];	// modifications of standard padding
 	
 cc.assert(_B_MENU_Y_OFFSETS.length === _B_MAX_MENU_ENTRIES, "MenuLayer: Array size of _B_MENU_Y_OFFSETS must match _B_MAX_MENU_ENTRIES.") 
 
