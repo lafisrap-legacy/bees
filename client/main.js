@@ -54,6 +54,8 @@ cc.game.onStart = function(){
     cc.view.resizeWithBrowserSize(true);
     //load resources
 	$b = new BeesScene()
+	_b_retain($b,"BeesScene, new BeesScene()");
+	
     cc.LoaderScene.preload(g_resources, function () {
         cc.director.runScene($b);
     }, this);

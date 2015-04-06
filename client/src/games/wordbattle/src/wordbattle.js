@@ -37,6 +37,8 @@ _b_WordsWithPunctuation = /\s*„?\b[\wäöüÄÖÜß]{2,}[^\wäöüÄÖÜß\„
 var WordBattleLayer = cc.Layer.extend({
 	_ownSea: [],
 	_otherSea: [],
+	_ownShips: [],
+	_otherShips: [],
 	_text: null,
 	_sphinx: null,
 	_pureWords: null,
@@ -99,26 +101,6 @@ var WordBattleLayer = cc.Layer.extend({
 		this._text = json.text;
 		this._sphinx = json.sphinx;
 
-        cc.log("Showing ships ...");
-
-		text = ["Hello","World!","here","ist","battleship"];	
-		for( var i=0 ; i<text.length ; i++ ) {
-		
-			ship = this.buildShip(text[i]);
-		
-			ship.node.setPosition(200+200*i,cc.height/2);
-		
-			this.addChild(ship.node,5);
-			_b_retain(ship.node,"SelectPlayerLayer, show, ship"+i);
-		
-			ship.node.runAction(
-				cc.spawn(
-					cc.scaleTo(1,0.5),
-					cc.rotateBy(2,360)
-				)
-			);
-		}		
-
         return true;
     },
     
@@ -149,7 +131,7 @@ var WordBattleLayer = cc.Layer.extend({
 		cc.assert(this._pureWords.length === this._fullWords.length, "Number of words doesn't match between _pureWords and _fullWords.");
 
         //////////////////////////////
-        // Divide the words on different rounds, or wait for the words from the other player
+        // Divide the words on different rounds and send it, or wait for the words from the other player
         if( this._first ) {
 			var lotteryWheel = [],
 				rounds = [],
@@ -161,32 +143,56 @@ var WordBattleLayer = cc.Layer.extend({
 			cc.assert(lotteryWheel.length == 0, "Lottery wheel is not empty.");
 			
 			this._rounds = rounds;
+			this.startRound();
 
 			$b.sendMessage(this._rounds);
 		} else {
 			$b.receiveMessage(function(data) {
 				self._rounds = data;
+				this.startRound();
 			});
 		}
 
         //////////////////////////////
         // Start the first round
 		this._round = 0;
-		this.startRound();
-		
-		debugger;		
 	},
 	
 	startRound: function() {
 	
-		// clear own sea
+        //////////////////////////////
+        // Clear own sea
 		for( var i=0 ; i<_B_MAX_SHIP_LENGTH ; i++ ) {
 			this._ownSea[i] = [];
 			for( var j=0 ; j<_B_MAX_SHIP_LENGTH ; j++ ) {
 				this._ownSea[i][j] = _B_UNKNOWN_WATER;
 			}
 		}
+
+        //////////////////////////////
+        // Build ships
+		var r = this._rounds[this._round];  
+		for( var i=0 ; i<r.length ; i++ ) {
 		
+			var ship = this._ownShips[i] = this.buildShip(this._pureWords[r[i]]);
+
+			// Ships are sprite classes! ...
+
+			ship.pos = this.findPosition(i, {row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),dir:Math.floor(Math.random()*4)*90});
+			// draw sprite 
+			ship.node.setPosition(ship.pos);
+		
+			this.addChild(ship.node,5);
+			_b_retain(ship.node,"SelectPlayerLayer, show, ship"+i);
+		
+			ship.node.runAction(
+				cc.spawn(
+					cc.scaleTo(1,0.5)
+				)
+			);
+		}		
+
+
 		
 	},
 

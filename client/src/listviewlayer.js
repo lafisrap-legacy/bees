@@ -61,6 +61,8 @@ var SelectPlayerLayer = cc.Layer.extend({
 	show: function(players, selectPlayerCb, updateGameCb) {
 		var self = this;
 		
+		cc.log("SelectPlayerLayer show ..........");
+
         //////////////////////////////
         // Set the callback functions
 		this._selectPlayerCb = selectPlayerCb;
@@ -68,9 +70,13 @@ var SelectPlayerLayer = cc.Layer.extend({
 	    cc.assert( this._selectPlayerCb && typeof this._selectPlayerCb == "function", "this._selectPlayerCb should be a function.")
 	    cc.assert( this._updateGameCb && typeof this._updateGameCb == "function", "this._updateGameCb should be a function.")
 
+		cc.log("before init listeners ..........");
+
         //////////////////////////////
         // Start event handling
 	    this.initListeners();
+
+		cc.log("after init listeners ..........");
 		
         //////////////////////////////
 		// Create, adjust and animate main bar
@@ -237,10 +243,10 @@ var SelectPlayerLayer = cc.Layer.extend({
 
 		// set the bar label
     	if( players.length == 0 ) {
-    		this._BarLabel.setCString(_b_t.playerlist.noplayers);
+    		this._BarLabel.setString(_b_t.playerlist.noplayers);
     		return
     	} else {
-    		this._BarLabel.setCString(_b_t.playerlist.choose);
+    		this._BarLabel.setString(_b_t.playerlist.choose);
     	}
     	
     	// build up the players list

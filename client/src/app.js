@@ -120,8 +120,6 @@ var BeesScene = cc.Scene.extend({
         this.addChild(title);
         this.menuLayer = new MenuLayer();
         _b_retain(this.menuLayer,"BeesScene, menuLayer");
-        this.selectPlayerLayer = new SelectPlayerLayer();
-        _b_retain(this.selectPlayerLayer,"BeesScene, selectPlayerLayer");
         
         cc.width = cc.winSize.width;
         cc.height = cc.winSize.height;	
@@ -137,7 +135,6 @@ var BeesScene = cc.Scene.extend({
         this._super();
 
     	_b_release(this.menuLayer);
-    	_b_release(this.selectPlayerLayer);
     },
     
     // showMenu parameter
@@ -149,10 +146,32 @@ var BeesScene = cc.Scene.extend({
 		this.addChild(this.menuLayer);
 		this.menuLayer.show(labelsAndCallbacks,fcb);
     },
-    
+
+    // Common Bees Game Interface
+    //
+    /////// General
+ 	// sendCommand
+ 	// getState
+ 	// saveState 
+ 	//
+ 	/////// before the game
+ 	// registerVariation
+    // connectPlayer
+    //
+    /////// in the game
+ 	// sendUpdate
+ 	// sendMessage
+ 	// receiveMessage
+ 	//
+    /////// internally used
+ 	// acceptInvitations 
+ 	// invitePlayer
+ 	// disinvitePlayer
+ 	//    
     connectPlayer: function(connectCb, updateCb, baseLayer) {
-		this.selectPlayerLayer.show([], function(player) { connectCb(player); }, updateCb);		
-        (baseLayer || this).addChild(this.selectPlayerLayer,5);
+    	var layer = new SelectPlayerLayer();
+		layer.show([], function(player) { connectCb(player); }, updateCb);		
+        (baseLayer || this).addChild(layer,5);
     },
     
     getState: 			function() 			 	  { return this.gameState; },
