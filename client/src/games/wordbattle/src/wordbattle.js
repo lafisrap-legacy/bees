@@ -1,12 +1,8 @@
 // WordBattleLayer Constants
 //
 var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
-	_B_SHIP_TILE_SIZE = 112,	// Pixel size of a ship tile, on the ground half: 56
+	_B_SQUARE_SIZE = 56,
 	_B_WORDS_PER_ROUND = 7,		// maximum number of words per round
-	_B_UNKNOWN_WATER = 0,		// Undiscovered area with no ship
-	_B_KNOWN_WATER = 1,			// Discovered area with no ship
-	_B_UNKNOWN_SHIP = 2,		// Undiscovered area with ship
-	_B_KNOWN_SHIP = 3;			// Discovered area with ship
 
 // Regular Expressions
 //
@@ -77,20 +73,20 @@ var WordBattleLayer = cc.Layer.extend({
         cc.log("Creating seas ...");
         //////////////////////////////
         // Create and show seas
-		var seaLeft = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1"),cc.rect(0,0,616,616));
-		seaLeft.setPosition(cc.p(284,cc.height/2));
-		seaLeft.setScale(0.1);
-		seaLeft.runAction(
-			cc.scaleTo(0.33,1)
+		var s1 = this._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1"),cc.rect(0,0,560,560));
+		s1.setPosition(cc.p(284,cc.height/2));
+		s1.setScale(0.1);
+		s1.runAction(
+			cc.scaleTo(0.90,1)
 		);
-		var seaRight = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1"),cc.rect(0,0,616,616));
-		seaRight.setPosition(cc.p(852,cc.height/2));
-		seaRight.setScale(0.1);
-		seaRight.runAction(
-			cc.scaleTo(0.33,1)
+		var s2 = this._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1"),cc.rect(0,0,560,560));
+		s2.setPosition(cc.p(852,cc.height/2));
+		s2.setScale(0.1);
+		s2.runAction(
+			cc.scaleTo(1,1)
 		);
-		this.addChild(seaLeft,0);
-		this.addChild(seaRight,0);
+		this.addChild(s1,0);
+		this.addChild(s2,0);
 
 		var json = cc.loader.getRes(vRes.Fairytale_json);
 		if( !json ) {
@@ -100,6 +96,19 @@ var WordBattleLayer = cc.Layer.extend({
 
 		this._text = json.text;
 		this._sphinx = json.sphinx;
+
+		var ship = new Battleship("ABCDEFG");
+		ship.findPosition(0,0);
+		ship.setRotation(90);
+		s1.addChild(ship,10);
+		
+		var drawNode = cc.DrawNode.create();
+        drawNode.clear();
+        for( var i=1 ; i<_B_MAX_SHIP_LENGTH ; i++ ) {
+	        drawNode.drawSegment(cc.p(i*_B_SQUARE_SIZE,560),cc.p(i*_B_SQUARE_SIZE,0),0.5,new cc.Color(255,0,0,100));
+	        drawNode.drawSegment(cc.p(560,i*_B_SQUARE_SIZE),cc.p(0,i*_B_SQUARE_SIZE),0.5,new cc.Color(255,0,0,100));
+		}
+        s1.addChild(drawNode,20);
 
         return true;
     },
@@ -161,15 +170,6 @@ var WordBattleLayer = cc.Layer.extend({
 	startRound: function() {
 	
         //////////////////////////////
-        // Clear own sea
-		for( var i=0 ; i<_B_MAX_SHIP_LENGTH ; i++ ) {
-			this._ownSea[i] = [];
-			for( var j=0 ; j<_B_MAX_SHIP_LENGTH ; j++ ) {
-				this._ownSea[i][j] = _B_UNKNOWN_WATER;
-			}
-		}
-
-        //////////////////////////////
         // Build ships
 		var r = this._rounds[this._round];  
 		for( var i=0 ; i<r.length ; i++ ) {
@@ -196,40 +196,6 @@ var WordBattleLayer = cc.Layer.extend({
 		
 	},
 
-    // buildShip creates a ship in a certain length
-	//
-	// Parameter
-	// ---------
-	// word is the word associated with the ship
-	//
-    buildShip: function(word) {
-		var wl = word.length;
-
-    	if( wl < 3 || wl > _B_MAX_SHIP_LENGTH ) return null;
-    	
-		var ship = {
-			word: word,
-			node: cc.Node.create()
-		}
-
-		// create the sprites and add them to the node		
-		ship.node.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_front"),cc.rect(0,0,_B_SHIP_TILE_SIZE,_B_SHIP_TILE_SIZE)));
-		for( var i=1 ; i<wl-1 ; i++ ) {
-			ship.node.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_middle"+(parseInt(Math.random()*3+1))),cc.rect(0,0,_B_SHIP_TILE_SIZE,_B_SHIP_TILE_SIZE)));
-		}
-		ship.node.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_back"),cc.rect(0,0,_B_SHIP_TILE_SIZE,_B_SHIP_TILE_SIZE)));
-		
-		for( var i=0 ; i<wl ; i++ ) {
-			ship.node.children[i].setPosition(cc.p(0, (wl/2-i)*_B_SHIP_TILE_SIZE - _B_SHIP_TILE_SIZE/2));
-		}
-		
-		return ship;
-    },
-    
-    destroyShip: function(ship) {
-		_b_release(ship.node);
-    },
-    
     initListeners: function() {
 		var self = this;
 		var start = null;
@@ -262,6 +228,116 @@ var WordBattleLayer = cc.Layer.extend({
     gameUpdate: function(data) {
     	
     	debugger;
+    }
+});
+
+var Battleship = cc.Node.extend({
+	_word: null,
+	_row: null,
+	_col: null,
+	_rotation: 0, // 0 or 90
+	
+	ctor: function(word) {
+	
+	    cc.assert( word && word.length >=2 && word.length <= _B_MAX_SHIP_LENGTH , "I need a word with a length between 2 and "+_B_MAX_SHIP_LENGTH );
+    	
+		this._super();
+		
+		this._word = word;
+		this.buildShip();		
+	},
+	
+	onEnter: function() {
+		this._super();
+	},
+	
+	
+	onExit: function() {
+		this._super();
+		this.destroyShip();
+	},		
+
+    // buildShip creates a ship in a certain length
+	//
+    buildShip: function() {
+		var wl = this._word.length;
+
+		// create the sprites and add them to the node		
+		this.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_front"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2)));
+		for( var i=1 ; i<wl-1 ; i++ ) {
+			this.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_middle"+(parseInt(Math.random()*3+1))),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2)));
+		}
+		this.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_back"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2)));
+
+		// set positions
+		for( var i=0 ; i<wl ; i++ ) {
+			this.children[i].setPosition(cc.p(0, (wl/2-i)*_B_SQUARE_SIZE*2 - _B_SQUARE_SIZE));
+		}
+		this.setScale(0.50);
+
+		_b_retain(this,"Battleship: buildShip");		
+    },
+    
+    setPosition: function(row, col) {
+    	var a = typeof row;
+    	if( typeof row === "object" ) return cc.Node.prototype.setPosition.call(this,row);
+    	
+    	if( row === undefined ) {
+    		row = this._row;
+    		col = this._col;
+    	} else {
+    		this._row = row;
+    		this._col = col;
+    	}
+    	cc.assert(row !== undefined && row>=0 && row<_B_MAX_SHIP_LENGTH && col !== undefined && col>=0 && col<_B_MAX_SHIP_LENGTH, "buildShip: Illegal position of ship." );
+    	
+    	row = parseInt(row);
+    	col = parseInt(col);
+    	
+    	var wl = this._word.length,
+    		xOffset = this._rotation===0?0.5:(wl%2?0.5:0),
+    		yOffset = this._rotation===0?(wl%2?0.5:0):0.5,
+    		x = (col+xOffset) * _B_SQUARE_SIZE,
+    		y = (row+yOffset) * _B_SQUARE_SIZE;
+    		
+    	cc.Node.prototype.setPosition.call(this,cc.p(x,y));
+    },
+    
+    setRotation: function(rotation) {
+    	if( rotation === undefined ) return cc.Node.prototype.setRotation.call(this,this._rotation);
+
+    	if( rotation === 0 || rotation === 90 ) this._rotation = rotation;
+		this.findPosition();    	
+    	return cc.Node.prototype.setRotation.call(this,rotation);
+    },
+    
+    findPosition: function(row, col) {
+    	var wl = this._word.length;
+
+		if( row === undefined ) {
+			row = this._row;
+			col = this._col;
+		}
+		
+		// move it into the sea
+		if( this._rotation === 0 ) {
+			row = Math.max(Math.min(row,Math.floor(_B_MAX_SHIP_LENGTH-wl/2)),Math.floor(wl/2));
+			col = Math.max(Math.min(col,_B_MAX_SHIP_LENGTH-1),0);
+		} else if (this._rotation === 90){
+			row = Math.max(Math.min(row,_B_MAX_SHIP_LENGTH-1),0);
+			col = Math.max(Math.min(col,Math.floor(_B_MAX_SHIP_LENGTH-wl/2)),Math.floor(wl/2));
+		} else {
+			cc.assert(false,"Must be 0 or 90 degree rotation!")
+		}
+		
+		this.setPosition(row, col);
+    },
+    
+    getCollision: function(ship) {
+    },
+    
+    destroyShip: function(ship) {
+		_b_release(this);
     }
 });
 
