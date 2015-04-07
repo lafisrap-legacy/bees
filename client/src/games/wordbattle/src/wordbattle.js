@@ -95,10 +95,10 @@ var WordBattleLayer = cc.Layer.extend({
 		this._text = json.text;
 		this._sphinx = json.sphinx;
 
-		var tmpWords = ["The","quickbrown","foxjumps","over","the","lazy","dog"];
+/*		var tmpWords = ["The","quickbrown","foxjumps","over","the","lazy","dog"];
 		for( var i=0; i<tmpWords.length ; i++ ) {
 			var ship = new Battleship(tmpWords[i]);
-			ship.findPosition(Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),Math.floor(Math.random()*2)*90);
+			ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},Math.floor(Math.random()*2)*90);
 			s1.addChild(ship,10);
 			ship.setOpacity(0);
 			ship.setRotation(ship.getRotation()+180);
@@ -114,9 +114,18 @@ var WordBattleLayer = cc.Layer.extend({
 						)
 					)
 				)
-			)
-		}
+			);
+			cc.log("Pos: "+ship.getPosition().x+"/"+ship.getPosition().y);
+		}*/
 		
+		var ship = new Battleship("Helt");
+		s1.addChild(ship,10);
+		ship.findPosition({row:5,col:5},0);
+
+		var ship = new Battleship("Hif");
+		s1.addChild(ship,10);
+		ship.findPosition({row:3,col:6},90);
+
 		var drawNode = cc.DrawNode.create();
         drawNode.clear();
         for( var i=1 ; i<_B_MAX_SHIP_LENGTH ; i++ ) {
@@ -291,29 +300,34 @@ var Battleship = cc.Node.extend({
 		_b_retain(this,"Battleship: buildShip");		
     },
     
-    setPosition: function(row, col) {
-    	var a = typeof row;
-    	if( typeof row === "object" ) return cc.Node.prototype.setPosition.call(this,row);
+    setPosition: function(pos) {
+    	if( pos !== undefined && (typeof pos !== "object" || pos.col === undefined) ) return cc.Node.prototype.setPosition.call(this,row);
     	
-    	if( row === undefined ) {
-    		row = this._row;
-    		col = this._col;
+    	if( pos === undefined ) {
+    		pos = this._pos;
     	} else {
-    		this._row = row;
-    		this._col = col;
+    		this._pos = pos;
     	}
-    	cc.assert(row !== undefined && row>=0 && row<_B_MAX_SHIP_LENGTH && col !== undefined && col>=0 && col<_B_MAX_SHIP_LENGTH, "buildShip: Illegal position of ship." );
+    	cc.assert(pos.row !== undefined && pos.row>=0 && pos.row<_B_MAX_SHIP_LENGTH && pos.col !== undefined && pos.col>=0 && pos.col<_B_MAX_SHIP_LENGTH, "buildShip: Illegal position of ship." );
     	
-    	row = parseInt(row);
-    	col = parseInt(col);
+    	pos.row = parseInt(pos.row);
+    	pos.col = parseInt(pos.col);
     	
     	var wl = this._word.length,
     		xOffset = this._rotation===0?0.5:(wl%2?0.5:0),
     		yOffset = this._rotation===0?(wl%2?0.5:0):0.5,
-    		x = (col+xOffset) * _B_SQUARE_SIZE,
-    		y = (row+yOffset) * _B_SQUARE_SIZE;
+    		x = (pos.col+xOffset) * _B_SQUARE_SIZE,
+    		y = (pos.row+yOffset) * _B_SQUARE_SIZE;
     		
     	cc.Node.prototype.setPosition.call(this,cc.p(x,y));
+    },
+    
+    getPosition: function() {
+    	return this._pos;
+    },
+    
+    getLength: function() {
+    	return this._word.length;
     },
     
     setRotation: function(rotation) {
@@ -324,12 +338,11 @@ var Battleship = cc.Node.extend({
     	return cc.Node.prototype.setRotation.call(this,rotation);
     },
     
-    findPosition: function(row, col, rotation) {
+    findPosition: function(pos, rotation) {
     	var wl = this._word.length;
 
-		if( row === undefined ) {
-			row = this._row;
-			col = this._col;
+		if( pos === undefined ) {
+			pos = this._pos;
 		}
 		
 		if( rotation && rotation == 0 || rotation == 90 ) {
@@ -339,19 +352,64 @@ var Battleship = cc.Node.extend({
 		
 		// move it into the sea
 		if( this._rotation === 0 ) {
-			row = Math.max(Math.min(row,Math.floor(_B_MAX_SHIP_LENGTH-wl/2)),Math.floor(wl/2));
-			col = Math.max(Math.min(col,_B_MAX_SHIP_LENGTH-1),0);
+			pos.row = Math.max(Math.min(pos.row,Math.floor(_B_MAX_SHIP_LENGTH-wl/2)),Math.floor(wl/2));
+			pos.col = Math.max(Math.min(pos.col,_B_MAX_SHIP_LENGTH-1),0);
 		} else if (this._rotation === 90){
-			row = Math.max(Math.min(row,_B_MAX_SHIP_LENGTH-1),0);
-			col = Math.max(Math.min(col,Math.floor(_B_MAX_SHIP_LENGTH-wl/2)),Math.floor(wl/2));
+			pos.row = Math.max(Math.min(pos.row,_B_MAX_SHIP_LENGTH-1),0);
+			pos.col = Math.max(Math.min(pos.col,Math.floor(_B_MAX_SHIP_LENGTH-wl/2)),Math.floor(wl/2));
 		} else {
 			cc.assert(false,"Must be 0 or 90 degree rotation!")
 		}
 		
-		this.setPosition(row, col);
+		this._pos = pos;
+
+		// look for collisions in all children
+		ships = this.getParent() && this.getParent().getChildren() || [];
+		for( var i=0 ; i<ships.length ; i++ ) {
+			ship = ships[i];
+			if( ship !== this && ship.getCollision ) {
+				if( this.getCollision(ship) ) cc.log("COLLISION!");
+				else cc.log("... no collision ...");
+			}
+		}
+		
+		this.setPosition(pos);
     },
     
     getCollision: function(ship) {
+    	var r1 = this.getRotation(),
+    		r2 = ship.getRotation(),
+    		p1 = this.getPosition(),
+    		p2 = ship.getPosition(),
+    		l1 = this.getLength(),
+    		l2 = ship.getLength();
+    		
+		cc.assert((r1 === 0 || r1 === 90) && (r2 === 0 || r2 === 90),"Collision detection only works with 0 and 90 degree rotation.");
+		// ... if both ships head into the same direction
+		if( r1 === r2 ) {
+			if( r1 === 0 && p1.col === p2.col ) {
+				var distance = Math.abs(p1.row-p2.row),
+					spaceNeeded = (l1+l2)/2;
+				if( distance < spaceNeeded ) return true;
+			} else if(r1 === 90 && p1.row === p2.row ) {
+				var distance = Math.abs(p1.col-p2.col),
+					spaceNeeded = (l1+l2)/2;
+				if( distance < spaceNeeded ) return true;				
+			}
+		// ... if both ships head into different directions
+		} else {
+			p1.rowOffset = p1.row - (l1%2==0&&r1==0? 0.5:0);
+			p2.rowOffset = p2.row - (l2%2==0&&r2==0? 0.5:0);
+			p1.colOffset = p1.col - (l1%2==0&&r1==90? 0.5:0);
+			p2.colOffset = p2.col - (l2%2==0&&r2==90? 0.5:0);
+			var rowDistance = Math.abs(p1.rowOffset-p2.rowOffset),
+				colDistance = Math.abs(p1.colOffset-p2.colOffset),
+				rowSpace = (r1==0? l1+1:l2+1)/2,
+				colSpace = (r1==0? l2+1:l1+1)/2;
+				
+			if( rowDistance < rowSpace && colDistance < colSpace ) return true;
+		}
+		return false;    		
     },
     
     destroyShip: function(ship) {
