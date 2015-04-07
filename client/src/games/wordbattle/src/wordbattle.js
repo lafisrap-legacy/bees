@@ -14,8 +14,6 @@ _b_WordsWithPunctuation = /\s*„?\b[\wäöüÄÖÜß]{2,}[^\wäöüÄÖÜß\„
 // Methods
 // -------
 // ctor 
-// buildShip 
-// destroyShip
 // initListener starts touch events of the title layer
 // stopListener stops touch events 
 //
@@ -70,7 +68,6 @@ var WordBattleLayer = cc.Layer.extend({
 			self.startGame();
 		}, this.gameUpdate, this);
 
-        cc.log("Creating seas ...");
         //////////////////////////////
         // Create and show seas
 		var s1 = this._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1"),cc.rect(0,0,560,560));
@@ -88,19 +85,37 @@ var WordBattleLayer = cc.Layer.extend({
 		this.addChild(s1,0);
 		this.addChild(s2,0);
 
+        //////////////////////////////
+        // Reading the fairytale and related data
 		var json = cc.loader.getRes(vRes.Fairytale_json);
 		if( !json ) {
 			cc.log("ERROR: Can't open resource file for "+this.parent().game+"/"+this.parent().variation);
 			cc.director.runScene($b);
 		}
-
 		this._text = json.text;
 		this._sphinx = json.sphinx;
 
-		var ship = new Battleship("ABCDEFG");
-		ship.findPosition(0,0);
-		ship.setRotation(90);
-		s1.addChild(ship,10);
+		var tmpWords = ["The","quickbrown","foxjumps","over","the","lazy","dog"];
+		for( var i=0; i<tmpWords.length ; i++ ) {
+			var ship = new Battleship(tmpWords[i]);
+			ship.findPosition(Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),Math.floor(Math.random()*2)*90);
+			s1.addChild(ship,10);
+			ship.setOpacity(0);
+			ship.setRotation(ship.getRotation()+180);
+			ship.setScale(1);
+			ship.runAction(
+				cc.sequence(
+					cc.delayTime(2),
+					cc.EaseSineOut.create(
+						cc.spawn(
+							cc.scaleTo(1.4,0.5),
+							cc.rotateBy(1.4,180),
+							cc.fadeIn(1.4)
+						)
+					)
+				)
+			)
+		}
 		
 		var drawNode = cc.DrawNode.create();
         drawNode.clear();
@@ -172,24 +187,10 @@ var WordBattleLayer = cc.Layer.extend({
         //////////////////////////////
         // Build ships
 		var r = this._rounds[this._round];  
+		
 		for( var i=0 ; i<r.length ; i++ ) {
 		
-			var ship = this._ownShips[i] = this.buildShip(this._pureWords[r[i]]);
 
-			// Ships are sprite classes! ...
-
-			ship.pos = this.findPosition(i, {row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),dir:Math.floor(Math.random()*4)*90});
-			// draw sprite 
-			ship.node.setPosition(ship.pos);
-		
-			this.addChild(ship.node,5);
-			_b_retain(ship.node,"SelectPlayerLayer, show, ship"+i);
-		
-			ship.node.runAction(
-				cc.spawn(
-					cc.scaleTo(1,0.5)
-				)
-			);
 		}		
 
 
@@ -231,6 +232,17 @@ var WordBattleLayer = cc.Layer.extend({
     }
 });
 
+
+// Battleship is the base class for all ships 
+//
+// Methods
+// -------
+// ctor 
+//
+// Properties
+// buildShip 
+// destroyShip
+
 var Battleship = cc.Node.extend({
 	_word: null,
 	_row: null,
@@ -244,13 +256,14 @@ var Battleship = cc.Node.extend({
 		this._super();
 		
 		this._word = word;
-		this.buildShip();		
+		this.buildShip();	
+		
+		this.setCascadeOpacityEnabled(true);
 	},
 	
 	onEnter: function() {
 		this._super();
 	},
-	
 	
 	onExit: function() {
 		this._super();
@@ -311,12 +324,17 @@ var Battleship = cc.Node.extend({
     	return cc.Node.prototype.setRotation.call(this,rotation);
     },
     
-    findPosition: function(row, col) {
+    findPosition: function(row, col, rotation) {
     	var wl = this._word.length;
 
 		if( row === undefined ) {
 			row = this._row;
 			col = this._col;
+		}
+		
+		if( rotation && rotation == 0 || rotation == 90 ) {
+			this._rotation = rotation;
+			cc.Node.prototype.setRotation.call(this,rotation);
 		}
 		
 		// move it into the sea
