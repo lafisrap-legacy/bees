@@ -230,7 +230,7 @@ var WebLayer = cc.Class.extend({
 			} else {
 				try {
 					self._messageCbs[0](JSON.parse(data.data[0].data));
-					self._messageCbs.splice(0,1);
+					self._messageCbs[0].splice(0,1);
 				} catch(e) {
 					cc.log("Couldn't parse JSON data: "+e.message);
 				}
