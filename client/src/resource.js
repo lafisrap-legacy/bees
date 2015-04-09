@@ -16,6 +16,10 @@ var res = {
 	listview_png : "res/listview/listview.png",
     listview_plist : "res/listview/listview.plist",
 
+	// fairies
+	fairies_png : "res/fairies/fairies.png",
+    fairies_plist : "res/fairies/fairies.plist",
+
 	// global
 	names_json : "res/global/names.json"
 };

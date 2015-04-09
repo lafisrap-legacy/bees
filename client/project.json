@@ -16,6 +16,7 @@
         "src/weblayer.js",
         "src/menulayer.js",
         "src/listviewlayer.js",
+        "src/fairylayer.js",
         "src/text.js",
         
         "src/games/wordbattle/src/resource.js",

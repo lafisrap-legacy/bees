@@ -106,7 +106,7 @@ var WordBattleLayer = cc.Layer.extend({
 	        drawNode.drawSegment(cc.p(560,i*_B_SQUARE_SIZE),cc.p(0,i*_B_SQUARE_SIZE),0.5,new cc.Color(255,0,0,100));
 		}
         s1.addChild(drawNode,20);*/
-
+        
 		this.initListeners();
         return true;
     },
@@ -219,6 +219,13 @@ var WordBattleLayer = cc.Layer.extend({
 		}		
 		
 		this._mode = _B_MODE_MOVING;
+		
+		var fairy = new GameFairy();
+        this.addChild(fairy,10);
+        fairy.show();
+/*        fairy.say("Hello!", function(result) {
+        	debugger;
+        });*/
 	},
 
     initListeners: function() {
@@ -270,15 +277,42 @@ var WordBattleLayer = cc.Layer.extend({
 
 				if( draggedShip ) {
 					if( time - startTime < _B_TAP_TIME ) {
-						if( !draggedShip.findPosition(undefined, 90-draggedShip.getRotation()) ) {
+						var rotationStart = draggedShip.getRotation(),
+							posStart = draggedShip.getPosition(true);
+							
+						if( !draggedShip.findPosition(undefined, 90-rotationStart) ) {
 							draggedShip.findPosition();
-						} 
+						} else {
+							draggedShip.setRotation(rotationStart);
+							draggedShip.runAction(
+								cc.sequence(
+									cc.rotateTo(0.33, 90-rotationStart),
+									cc.callFunc(function() {
+										draggedShip.setRotation(90-rotationStart)
+									})
+								)
+							);
+						}
 					} else if(self._mode === _B_MODE_MOVING ) {
+						var posStart = draggedShip.getPosition(true);
+
 						draggedShip.findPosition({
 							row: Math.floor((loc.y-offset.y)/_B_SQUARE_SIZE),
 							col: Math.floor((loc.x-offset.x)/_B_SQUARE_SIZE)
 						});
-						draggedShip = null;
+						
+/*						var posEnd = draggedShip.getPosition(true);
+						draggedShip.setPosition(posStart);
+						draggedShip.runAction(
+							cc.sequence(
+								cc.moveTo(0.33, posEnd),
+								cc.callFunc(function() {
+									draggedShip.setPosition(posEnd);
+									draggedShip = null;
+								})
+							)
+						);*/
+						
 					}
 				}
 			}
