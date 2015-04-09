@@ -72,25 +72,28 @@ var WebLayer = cc.Class.extend({
     },
 
     login: function() {
-    	this.sid = null;
+    	if( this.sid === null ) {
 
-    	this.playerId = cc.sys.localStorage.getItem('playerId');
-    	this.playerName = cc.sys.localStorage.getItem('playerName');
+			this.playerId = cc.sys.localStorage.getItem('playerId');
+			this.playerName = cc.sys.localStorage.getItem('playerName');
 		
-		if( !this.playerName ) {
-			n = cc.loader.getRes(res.names_json);
-			this.playerName = n[Math.trunc(Math.random()*n.length)].name;
-	    	cc.sys.localStorage.setItem('playerName',this.playerName);
-		}
+			if( !this.playerName ) {
+				n = cc.loader.getRes(res.names_json);
+				this.playerName = n[Math.trunc(Math.random()*n.length)].name;
+				cc.sys.localStorage.setItem('playerName',this.playerName);
+			}
 
-	    if( this.playerId ) {
-		    this.ws.send('{"command":"login", "playerId":"'+this.playerId+'", "playerName":"'+this.playerName+'"}');
-		    // the server reply is collected in OnMessage / case: "login"
+			if( this.playerId ) {
+				this.ws.send('{"command":"login", "playerId":"'+this.playerId+'", "playerName":"'+this.playerName+'"}');
+				// the server reply is collected in OnMessage / case: "login"
+			} else {
+				// if it is a browser, ask for magic spell, signup with this
+					// if there is no bee server reachable, game cannot start
+				this.ws.send('{"command":"signup"}');
+				// the server reply is collected in OnMessage / case: "signup"
+			}
 		} else {
-			// if it is a browser, ask for magic spell, signup with this
-				// if there is no bee server reachable, game cannot start
-		    this.ws.send('{"command":"signup"}');
-		    // the server reply is collected in OnMessage / case: "signup"
+			cc.log("Didn't login. You are already logged in.");
 		}
     },
     
@@ -104,9 +107,10 @@ var WebLayer = cc.Class.extend({
     
 	sendCommand: function(command) {
     	var self = this;
-		command["sid"] = self.sid
 		
     	self.whenReady(function() {
+			command["sid"] = self.sid
+ 		   	cc.log("Sending "+JSON.stringify(command));
 	    	self.ws.send(JSON.stringify(command));		
 	    });
 	},
@@ -156,7 +160,8 @@ var WebLayer = cc.Class.extend({
 		if( self._messageStorage.length === 0 ) {
 			self._messageCbs.push(cb);
 		} else {
-			cb(self._messageStorage.splice(0,1));
+			var msg = JSON.parse(self._messageStorage.splice(0,1));
+			cb(msg);
 		}
 	},
  
@@ -194,6 +199,7 @@ var WebLayer = cc.Class.extend({
 
 			// We are logged in, so we call the waiting commands
 			for( var i=0 ; i<this.sidCbs.length ; i++ ) {
+				cc.log("Login: Calling waiting message functions."+this.sid);
 				cc.assert(typeof this.sidCbs[i] === "function", "onmessage 'login': Bad sid callback.");
 				this.sidCbs[i]();
 			}
@@ -230,7 +236,7 @@ var WebLayer = cc.Class.extend({
 			} else {
 				try {
 					self._messageCbs[0](JSON.parse(data.data[0].data));
-					self._messageCbs[0].splice(0,1);
+					self._messageCbs.splice(0,1);
 				} catch(e) {
 					cc.log("Couldn't parse JSON data: "+e.message);
 				}

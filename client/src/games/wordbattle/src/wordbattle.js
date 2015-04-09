@@ -3,6 +3,8 @@
 var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_SQUARE_SIZE = 56,
 	_B_WORDS_PER_ROUND = 7,		// maximum number of words per round
+	_B_MODE_MOVING = 1,
+	_B_MODE_BOMBING = 2,
 
 // Regular Expressions
 //
@@ -40,6 +42,7 @@ var WordBattleLayer = cc.Layer.extend({
 	_rounds: null,
 	_round: null,
 	_first: null,
+	_mode: null,
 	
     ctor:function () {
     	var self = this;
@@ -103,11 +106,18 @@ var WordBattleLayer = cc.Layer.extend({
 		}
         s1.addChild(drawNode,20);*/
 
+		this.initListeners();
         return true;
     },
     
+    onExit: function() {
+        this._super();
+
+    	this.stopListeners();
+    },
+    
     // startGame starts the game, selecting the start paragraph, selecting a priority list from the collectors book, looking through suggestions of other player
-    startGame: function(first) {
+    startGame: function() {
         //////////////////////////////
         // Look into the collectors book, which paragraphs are next, and prioritize them
         // to be done ...
@@ -165,15 +175,18 @@ var WordBattleLayer = cc.Layer.extend({
 			ownSea = this._ownSea;  
 		
 		for( var i=0; i<r.length ; i++ ) {
-			var word = this._pureWords[r[i]],
-				ship = new Battleship(word);
+
+			var word = this._pureWords[r[i]];
+			if( word.length > _B_MAX_SHIP_LENGTH ) continue; // don't take words that don't fit ...
+			cc.log("Creating ship with '"+word+"' r: "+JSON.stringify(r)+", this._round: "+this._round+", this._rounds: "+JSON.stringify(this._rounds));
+			var ship = new Battleship(word);
 				
-			cc.log("Creating ship with '"+word+"'.");
 			ownSea.addChild(ship,10);
 			if( !ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},Math.floor(Math.random()*2)*90) ) {
 				for( j=0 ; j<r.length ; j++ ) {
 					if( j>i ) {
 						word = this._pureWords[r[j]];
+						if( word.length > _B_MAX_SHIP_LENGTH ) continue; // don't take words that don't fit ...
 						ship = new Battleship(word);
 						ownSea.addChild(ship,10);
 					}
@@ -183,8 +196,6 @@ var WordBattleLayer = cc.Layer.extend({
 				}
 				break;
 			}
-			
-			cc.log("Pos: "+ship.getPosition().x+"/"+ship.getPosition().y);
 		}
 
 		for( var i=0; i<ownSea.children.length ; i++ ) {
@@ -205,27 +216,61 @@ var WordBattleLayer = cc.Layer.extend({
 				)
 			);
 		}		
+		
+		this._mode = _B_MODE_MOVING;
 	},
 
     initListeners: function() {
-		var self = this;
-		var start = null;
+		var self = this,
+			start = null,
+			offset = null,
+			draggedShip = null;
 	
 		this._touchListener = cc.EventListener.create({
 			event: cc.EventListener.TOUCH_ALL_AT_ONCE,
 			onTouchesBegan: function(touches, event) {
 				var touch = touches[0],
-				start = touch.getLocation();	       		
+				start = touch.getLocation();	
+				
+				// Player taps on a ship in his own see?
+				if(self._mode === _B_MODE_MOVING) {
+					var ships = self._ownSea.getChildren();
+					for( var i=0 ; i<ships.length ; i++ ) {
+						var rect = ships[i].getRect && ships[i].getRect() || cc.rect(0,0,0,0),
+							pos = ships[i].getPosition(true),
+							tp = cc.p(start.x - rect.x, start.y - rect.y);
+
+						if( tp.x >= 0 && tp.x< rect.width && tp.y >=0 && tp.y< rect.height ) {
+							draggedShip = ships[i];
+							offset = {
+								x: start.x - pos.x,
+								y: start.y - pos.y
+							};
+							return
+						} 
+					}		
+				}
 			},
 			onTouchesMoved: function(touches, event) {
 				var touch = touches[0],
-				loc = touch.getLocation();	            		
-
+				loc = touch.getLocation();
+				
+				if(self._mode === _B_MODE_MOVING && draggedShip ) {
+					draggedShip.setPosition(cc.p(loc.x-offset.x,loc.y-offset.y));
+				}
 			},
 			onTouchesEnded: function(touches, event){
 
 				var touch = touches[0],
 					loc = touch.getLocation();	
+
+				if(self._mode === _B_MODE_MOVING && draggedShip ) {
+					draggedShip.findPosition({
+						row: Math.floor((loc.y-offset.y)/_B_SQUARE_SIZE),
+						col: Math.floor((loc.x-offset.x)/_B_SQUARE_SIZE)
+					});
+					draggedShip = null;
+				}
 			}
 		});
 			
@@ -257,11 +302,12 @@ var Battleship = cc.Node.extend({
 	_word: null,
 	_row: null,
 	_col: null,
+	_rect: null,
 	_rotation: 0, // 0 or 90
 	
 	ctor: function(word) {
 	
-	    cc.assert( word && word.length >=2 && word.length <= _B_MAX_SHIP_LENGTH , "I need a word with a length between 2 and "+_B_MAX_SHIP_LENGTH );
+	    cc.assert( word && word.length >=2 && word.length <= _B_MAX_SHIP_LENGTH , word+" is too short or too long. I need a word with a length between 2 and "+_B_MAX_SHIP_LENGTH );
     	
 		this._super();
 		
@@ -302,7 +348,7 @@ var Battleship = cc.Node.extend({
     },
     
     setPosition: function(pos) {
-    	if( pos !== undefined && (typeof pos !== "object" || pos.col === undefined) ) return cc.Node.prototype.setPosition.call(this,row);
+    	if( pos !== undefined && (typeof pos !== "object" || pos.col === undefined) ) return cc.Node.prototype.setPosition.call(this,pos);
     	
     	if( pos === undefined ) {
     		pos = this._pos;
@@ -321,10 +367,22 @@ var Battleship = cc.Node.extend({
     		y = (pos.row+yOffset) * _B_SQUARE_SIZE;
     		
     	cc.Node.prototype.setPosition.call(this,cc.p(x,y));
+    	
+    	// computing the bounding rectangle in world coordinates. It is assumed, that the first children are the sprites!
+    	var cl = this._word.length,
+    		pos1 = this.convertToWorldSpace(this.children[0].getPosition()),
+    		pos2 = this.convertToWorldSpace(this.children[cl-1].getPosition()),
+    		minX = Math.min(pos1.x, pos2.x)-_B_SQUARE_SIZE/2,
+    		maxX = Math.max(pos1.x, pos2.x)+_B_SQUARE_SIZE/2,
+    		minY = Math.min(pos1.y, pos2.y)-_B_SQUARE_SIZE/2,
+    		maxY = Math.max(pos1.y, pos2.y)+_B_SQUARE_SIZE/2;
+    		
+    	this._rect = cc.rect(minX, minY, maxX-minX, maxY-minY);
     },
     
-    getPosition: function() {
-    	return this._pos;
+    getPosition: function(xy) {
+    	if( xy ) return cc.Node.prototype.getPosition.call(this);
+	    else return this._pos;
     },
     
     getLength: function() {
@@ -339,6 +397,11 @@ var Battleship = cc.Node.extend({
 			this.findPosition();
 		}
     	return cc.Node.prototype.setRotation.call(this,rotation);
+    },
+
+    getRotation: function(degree) {
+    	if( degree ) return cc.Node.prototype.getRotation.call(this);
+	    else return this._rotation;
     },
     
     findPosition: function(pos, rotation, collisionBase) {
@@ -438,6 +501,10 @@ var Battleship = cc.Node.extend({
 			if( rowDistance < rowSpace && colDistance < colSpace ) return true;
 		}
 		return false;    		
+    },
+    
+    getRect: function() {
+    	return this._rect;
     },
     
     destroyShip: function(ship) {
