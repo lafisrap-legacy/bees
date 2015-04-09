@@ -5,6 +5,7 @@ var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_WORDS_PER_ROUND = 7,		// maximum number of words per round
 	_B_MODE_MOVING = 1,
 	_B_MODE_BOMBING = 2,
+	_B_TAP_TIME = 200,
 
 // Regular Expressions
 //
@@ -223,6 +224,7 @@ var WordBattleLayer = cc.Layer.extend({
     initListeners: function() {
 		var self = this,
 			start = null,
+			startTime = null,
 			offset = null,
 			draggedShip = null;
 	
@@ -230,7 +232,8 @@ var WordBattleLayer = cc.Layer.extend({
 			event: cc.EventListener.TOUCH_ALL_AT_ONCE,
 			onTouchesBegan: function(touches, event) {
 				var touch = touches[0],
-				start = touch.getLocation();	
+				start = touch.getLocation();
+				startTime = new Date().getTime();
 				
 				// Player taps on a ship in his own see?
 				if(self._mode === _B_MODE_MOVING) {
@@ -240,7 +243,7 @@ var WordBattleLayer = cc.Layer.extend({
 							pos = ships[i].getPosition(true),
 							tp = cc.p(start.x - rect.x, start.y - rect.y);
 
-						if( tp.x >= 0 && tp.x< rect.width && tp.y >=0 && tp.y< rect.height ) {
+						if( tp.x >= 0 && tp.x< rect.width && tp.y >=0 && tp.y<rect.height ) {
 							draggedShip = ships[i];
 							offset = {
 								x: start.x - pos.x,
@@ -262,14 +265,21 @@ var WordBattleLayer = cc.Layer.extend({
 			onTouchesEnded: function(touches, event){
 
 				var touch = touches[0],
-					loc = touch.getLocation();	
+					loc = touch.getLocation(),
+					time = new Date().getTime();	
 
-				if(self._mode === _B_MODE_MOVING && draggedShip ) {
-					draggedShip.findPosition({
-						row: Math.floor((loc.y-offset.y)/_B_SQUARE_SIZE),
-						col: Math.floor((loc.x-offset.x)/_B_SQUARE_SIZE)
-					});
-					draggedShip = null;
+				if( draggedShip ) {
+					if( time - startTime < _B_TAP_TIME ) {
+						if( !draggedShip.findPosition(undefined, 90-draggedShip.getRotation()) ) {
+							draggedShip.findPosition();
+						} 
+					} else if(self._mode === _B_MODE_MOVING ) {
+						draggedShip.findPosition({
+							row: Math.floor((loc.y-offset.y)/_B_SQUARE_SIZE),
+							col: Math.floor((loc.x-offset.x)/_B_SQUARE_SIZE)
+						});
+						draggedShip = null;
+					}
 				}
 			}
 		});
@@ -411,7 +421,7 @@ var Battleship = cc.Node.extend({
 			pos = this._pos;
 		}
 		
-		if( rotation && rotation == 0 || rotation == 90 ) {
+		if( rotation !== undefined && rotation == 0 || rotation == 90 ) {
 			this._rotation = rotation;
 			cc.Node.prototype.setRotation.call(this,rotation);
 		}
