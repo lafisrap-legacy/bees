@@ -38,6 +38,23 @@
 
 			</array>
 		</dict>
+		<key>bubble2</key>
+		<dict>
+			<key>frame</key>
+			<string>{{0, 400}, {480, 386}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{5, 0}, {475, 386}}</string>
+			<key>sourceSize</key>
+			<string>{480, 386}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
 		</dict>
 		<key>metadata</key>
 		<dict>

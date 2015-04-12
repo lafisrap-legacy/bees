@@ -48,9 +48,7 @@ var WordBattleLayer = cc.Layer.extend({
     ctor:function () {
     	var self = this;
     
-        cc.log("Entering word battle layer ...");
         this._super();
-        cc.log("Parents ok ...");
 
         //////////////////////////////
         // Get the sprite sheet
@@ -106,6 +104,17 @@ var WordBattleLayer = cc.Layer.extend({
 	        drawNode.drawSegment(cc.p(560,i*_B_SQUARE_SIZE),cc.p(0,i*_B_SQUARE_SIZE),0.5,new cc.Color(255,0,0,100));
 		}
         s1.addChild(drawNode,20);*/
+        
+/*		var fairy = new GameFairy();
+        this.addChild(fairy,10);
+        fairy.show();
+        setTimeout(function() {
+			fairy.say(2.5, "Bewege und drehe die Schiffe!", function(result) {
+				fairy.say(10.5, "Drück mich, wenn du fertig bist.", function(result) {
+					debugger;
+				});				
+			});
+		}, 2500);*/
         
 		this.initListeners();
         return true;
@@ -183,7 +192,9 @@ var WordBattleLayer = cc.Layer.extend({
 			var ship = new Battleship(word);
 				
 			ownSea.addChild(ship,10);
-			if( !ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},Math.floor(Math.random()*2)*90) ) {
+			var rotation = Math.floor(Math.random()*2)*90;
+			var pos = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},rotation);
+			if( !pos ) {
 				for( j=0 ; j<r.length ; j++ ) {
 					if( j>i ) {
 						word = this._pureWords[r[j]];
@@ -193,10 +204,14 @@ var WordBattleLayer = cc.Layer.extend({
 					}
 					else ship = ownSea.children[j];
 					
-					ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},0);
+					var pos = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},0);
+					ship.setRCPosition(pos);
+					ship.setRotation(0);
 				}
 				break;
 			}
+			ship.setRCPosition(pos);
+			ship.setRotation(rotation);
 		}
 
 		for( var i=0; i<ownSea.children.length ; i++ ) {
@@ -218,14 +233,18 @@ var WordBattleLayer = cc.Layer.extend({
 			);
 		}		
 		
-		this._mode = _B_MODE_MOVING;
+		this._mode = _B_MODE_MOVING;	
 		
 		var fairy = new GameFairy();
         this.addChild(fairy,10);
         fairy.show();
-/*        fairy.say("Hello!", function(result) {
-        	debugger;
-        });*/
+        setTimeout(function() {
+			fairy.say(2.5, "Bewege und drehe die Schiffe!", function(result) {
+				fairy.say(10.5, "Drück mich, wenn du fertig bist.", function(result) {
+					debugger;
+				});				
+			});
+		}, 2500);
 	},
 
     initListeners: function() {
@@ -247,7 +266,7 @@ var WordBattleLayer = cc.Layer.extend({
 					var ships = self._ownSea.getChildren();
 					for( var i=0 ; i<ships.length ; i++ ) {
 						var rect = ships[i].getRect && ships[i].getRect() || cc.rect(0,0,0,0),
-							pos = ships[i].getPosition(true),
+							pos = ships[i].getPosition(),
 							tp = cc.p(start.x - rect.x, start.y - rect.y);
 
 						if( tp.x >= 0 && tp.x< rect.width && tp.y >=0 && tp.y<rect.height ) {
@@ -277,42 +296,58 @@ var WordBattleLayer = cc.Layer.extend({
 
 				if( draggedShip ) {
 					if( time - startTime < _B_TAP_TIME ) {
-						var rotationStart = draggedShip.getRotation(),
-							posStart = draggedShip.getPosition(true);
+						var rotation = draggedShip.getRotation();
 							
-						if( !draggedShip.findPosition(undefined, 90-rotationStart) ) {
-							draggedShip.findPosition();
-						} else {
-							draggedShip.setRotation(rotationStart);
+						var pos = draggedShip.findPosition(undefined, 90-rotation);
+						if( !pos ) {
 							draggedShip.runAction(
 								cc.sequence(
-									cc.rotateTo(0.33, 90-rotationStart),
+									cc.EaseSineOut.create(
+										cc.rotateBy(0.11, 30)
+									),
+									cc.EaseSineIn.create(
+										cc.rotateBy(0.11, -30)
+									),
 									cc.callFunc(function() {
-										draggedShip.setRotation(90-rotationStart)
+										draggedShip.setRCPosition();
+										draggedShip = null;
+									})
+								)
+							);
+						} else {
+							var endPos = draggedShip.getXYPosition(pos, 90-rotation);
+							draggedShip.runAction(
+								cc.sequence(
+									cc.EaseSineOut.create(
+										cc.spawn(
+											cc.rotateTo(0.33, 90-rotation),
+											cc.moveTo(0.33, endPos)
+										)
+									),
+									cc.callFunc(function() {
+										draggedShip.setRotation(90-rotation);
+										draggedShip.setRCPosition(pos);
+										draggedShip = null;
 									})
 								)
 							);
 						}
 					} else if(self._mode === _B_MODE_MOVING ) {
-						var posStart = draggedShip.getPosition(true);
+						var posStart = draggedShip.getPosition(),
+							posEnd = draggedShip.findPosition({
+								row: Math.floor((loc.y-offset.y)/_B_SQUARE_SIZE),
+								col: Math.floor((loc.x-offset.x)/_B_SQUARE_SIZE)
+							});
 
-						draggedShip.findPosition({
-							row: Math.floor((loc.y-offset.y)/_B_SQUARE_SIZE),
-							col: Math.floor((loc.x-offset.x)/_B_SQUARE_SIZE)
-						});
-						
-/*						var posEnd = draggedShip.getPosition(true);
-						draggedShip.setPosition(posStart);
 						draggedShip.runAction(
 							cc.sequence(
-								cc.moveTo(0.33, posEnd),
+								cc.moveTo(0.11, draggedShip.getXYPosition(posEnd)),
 								cc.callFunc(function() {
-									draggedShip.setPosition(posEnd);
+									draggedShip.setRCPosition(posEnd);
 									draggedShip = null;
 								})
 							)
-						);*/
-						
+						)
 					}
 				}
 			}
@@ -391,9 +426,7 @@ var Battleship = cc.Node.extend({
 		_b_retain(this,"Battleship: buildShip");		
     },
     
-    setPosition: function(pos) {
-    	if( pos !== undefined && (typeof pos !== "object" || pos.col === undefined) ) return cc.Node.prototype.setPosition.call(this,pos);
-    	
+    setRCPosition: function(pos) {
     	if( pos === undefined ) {
     		pos = this._pos;
     	} else {
@@ -404,13 +437,7 @@ var Battleship = cc.Node.extend({
     	pos.row = parseInt(pos.row);
     	pos.col = parseInt(pos.col);
     	
-    	var wl = this._word.length,
-    		xOffset = this._rotation===0?0.5:(wl%2?0.5:0),
-    		yOffset = this._rotation===0?(wl%2?0.5:0):0.5,
-    		x = (pos.col+xOffset) * _B_SQUARE_SIZE,
-    		y = (pos.row+yOffset) * _B_SQUARE_SIZE;
-    		
-    	cc.Node.prototype.setPosition.call(this,cc.p(x,y));
+    	cc.Node.prototype.setPosition.call(this,this.getXYPosition(pos));
     	
     	// computing the bounding rectangle in world coordinates. It is assumed, that the first children are the sprites!
     	var cl = this._word.length,
@@ -424,9 +451,19 @@ var Battleship = cc.Node.extend({
     	this._rect = cc.rect(minX, minY, maxX-minX, maxY-minY);
     },
     
-    getPosition: function(xy) {
-    	if( xy ) return cc.Node.prototype.getPosition.call(this);
-	    else return this._pos;
+    getXYPosition: function(pos, rotation) {
+    	var wl = this._word.length,
+    		rotation = rotation!==undefined? rotation : this._rotation,
+    		xOffset = rotation===0?0.5:(wl%2?0.5:0),
+    		yOffset = rotation===0?(wl%2?0.5:0):0.5,
+    		x = (pos.col+xOffset) * _B_SQUARE_SIZE,
+    		y = (pos.row+yOffset) * _B_SQUARE_SIZE;
+    		
+    		return cc.p(x,y);    		
+    },
+    
+    getRCPosition: function() {
+	    return this._pos;
     },
     
     getLength: function() {
@@ -438,7 +475,9 @@ var Battleship = cc.Node.extend({
 
     	if( rotation === 0 || rotation === 90 ) { 
     		this._rotation = rotation;
-			this.findPosition();
+			var pos = this.findPosition();
+			if( pos ) this.setRCPosition(pos);
+			else return false;
 		}
     	return cc.Node.prototype.setRotation.call(this,rotation);
     },
@@ -451,45 +490,33 @@ var Battleship = cc.Node.extend({
     findPosition: function(pos, rotation, collisionBase) {
     	var wl = this._word.length;
 
-		if( pos === undefined ) {
-			pos = this._pos;
-		}
-		
-		if( rotation !== undefined && rotation == 0 || rotation == 90 ) {
-			this._rotation = rotation;
-			cc.Node.prototype.setRotation.call(this,rotation);
-		}
-		
-		// move it into the sea
-		if( this._rotation === 0 ) {
+		if( pos === undefined ) pos = this._pos;		
+		if( rotation === undefined ) rotation = this._rotation;
+
+		// moving the ship into the sea		
+		if( rotation === 0 ) {
 			pos.row = Math.max(Math.min(pos.row,Math.floor(_B_MAX_SHIP_LENGTH-wl/2)),Math.floor(wl/2));
 			pos.col = Math.max(Math.min(pos.col,_B_MAX_SHIP_LENGTH-1),0);
-		} else if (this._rotation === 90){
+		} else if( rotation === 90 ){
 			pos.row = Math.max(Math.min(pos.row,_B_MAX_SHIP_LENGTH-1),0);
 			pos.col = Math.max(Math.min(pos.col,Math.floor(_B_MAX_SHIP_LENGTH-wl/2)),Math.floor(wl/2));
 		} else {
 			cc.assert(false,"Must be 0 or 90 degree rotation!")
 		}
 		
-		this._pos = pos;
-
-		// look for collisions in all children
-		ships = this.getParent() && this.getParent().getChildren() || [];
+		// look for collisions with all siblings
+		ships = this.getParent && this.getParent().getChildren() || [];
 		for( var i=0 ; i<ships.length ; i++ ) {
 			ship = ships[i];
 			if( ship !== this && ship.getCollision ) {
-				if( this.getCollision(ship) ) {
-					if( !collisionBase ) {
-						var c = {
+				if( this.getCollision(ship, pos, rotation) ) {
+					var c = collisionBase || {
 							pos: pos,
 							offset: [0,0,0,0,0,0,0,0],
 							index: 0,
 							directions: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]]
-						}
-					} else {
-						c = collisionBase;
-					}
-					
+						};
+						
 					for( var i=0 ; i<c.offset.length ; i++ ) {
 						c.offset[c.index]++;
 						var newPos = {
@@ -500,26 +527,25 @@ var Battleship = cc.Node.extend({
 						if(newPos.row>=0 && newPos.row<_B_MAX_SHIP_LENGTH && newPos.col>=0 && newPos.col<_B_MAX_SHIP_LENGTH ) break;
 					}
 					
-					if( i<c.offset.length )	return this.findPosition(newPos, this._rotation, c);
-					return false;
+					if( i<c.offset.length )	return this.findPosition(newPos, rotation, c);
+					else return false;
 				}
 			}
 		}
 		
-		this.setPosition(pos);
-		
-		return true;
+		return pos;
     },
     
-    getCollision: function(ship) {
-    	var r1 = this.getRotation(),
+    getCollision: function(ship, pos, rotation) {
+    	var r1 = rotation!==undefined?rotation : this.getRotation(),
     		r2 = ship.getRotation(),
-    		p1 = this.getPosition(),
-    		p2 = ship.getPosition(),
+    		p1 = pos || this.getRCPosition(),
+    		p2 = ship.getRCPosition(),
     		l1 = this.getLength(),
     		l2 = ship.getLength();
     		
 		cc.assert((r1 === 0 || r1 === 90) && (r2 === 0 || r2 === 90),"Collision detection only works with 0 and 90 degree rotation.");
+
 		// ... if both ships head into the same direction
 		if( r1 === r2 ) {
 			if( r1 === 0 && p1.col === p2.col ) {
@@ -531,6 +557,7 @@ var Battleship = cc.Node.extend({
 					spaceNeeded = (l1+l2)/2;
 				if( distance < spaceNeeded ) return true;				
 			}
+
 		// ... if both ships head into different directions
 		} else {
 			p1.rowOffset = p1.row - (l1%2==0&&r1==0? 0.5:0);
@@ -566,7 +593,6 @@ var WordBattleScene = cc.Scene.extend({
 		cc.assert(gameRes[this.game][variation],"No resources for "+variation+" in resource object gameRes");
     	this.variation = variation;
     	
-        cc.log("Initializing word battle scene ...");
 		gRes = gameRes[this.game]["All"];
 		vRes = gameRes[this.game][variation];
 
@@ -583,7 +609,6 @@ var WordBattleScene = cc.Scene.extend({
     onEnter: function () {
         this._super();
 
-        cc.log("Adding word battle layer ...");
         this.addChild(new WordBattleLayer());
     },
     

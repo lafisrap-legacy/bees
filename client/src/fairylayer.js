@@ -60,27 +60,32 @@ var FairyLayer = cc.Layer.extend({
 
         //////////////////////////////
         // Create fairy and set her to position 1
-		var fairy = this._fairy = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(this._fairyName),cc.rect(0,0,g.width,g.height));
+		var fairy = this._fairy = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(this._fairyName));
 		fairy.setPosition(cc.p(g.x,g.y));
-		fairy.setOpacity(0);
 
 		this.addChild(fairy,0);
 		_b_retain(this._fairy,"FairyLayer, show, _fairy");
+		
+		this.appear();
 
-		fairy.runAction(
-			cc.fadeIn(2)
-		);
 		this.initListeners();
 	},
 	
-	say: function(text, cb) {
+	appear: function() {
+		this._fairy.setOpacity(0);
+		this._fairy.runAction(
+			cc.fadeIn(2)
+		);
+	},
+	
+	say: function(time, text, cb) {
 
 		var self = this,
 			g = this._gestures[this._currentGesture];
 		
-		var bubble = new SpeechBubble(text, 1, g.bubblePoint, cb);
+		var bubble = new SpeechBubble(time, text, g.bubble, cb);
 
-		this.addChild(bubble,10);
+		this._fairy.addChild(bubble,10);
 	},
 	
 	// hide hides the list and stops the invitation episode
@@ -127,19 +132,88 @@ var FairyLayer = cc.Layer.extend({
 //
 var SpeechBubble = cc.Sprite.extend({
 	_finalCallback: null,
+	_bubbles: {
+		"angry": {
+			sprite: "bubble1",
+			ax: 0.6,
+			ay: 0.0,
+			padding: {
+				top: 0,
+				left: 30,
+				right: 30,
+				bottom: 60
+			},
+			color: cc.color(64,0,0,255)
+		},
+		"nice": {
+			sprite: "bubble2",
+			ax: 0.5,
+			ay: 0.0,
+			padding: {
+				top: 50,
+				left: 30,
+				right: 30,
+				bottom: 50
+			},
+			color: cc.color(0,0,0,255)
+		},
+	},
 
 	// ctor calls the parent class with appropriate parameter
 	//
-    ctor: function(text, id, point, cb) {
-    	cc.assert( id, "I need a sprite id.");
+    ctor: function(time, text, bubble, cb) {
+    	var self = this;
+    
     	cc.assert(cb && typeof cb === "function", "I need a callback function.");
     
-        this._super(cc.spriteFrameCache.getSpriteFrame("bubble"+id),cc.rect(0,0,493,400));    
-        
+    	var b = this._bubbles[bubble.type];
+        cc.Sprite.prototype.ctor.call(this);
+        this.initWithSpriteFrame(cc.spriteFrameCache.getSpriteFrame(b.sprite));
+
         this._finalCallback = cb;
+        this.setAnchorPoint(b.ax, b.ay);
+        this.setPosition(cc.p(bubble.x, bubble.y));
+        this.setCascadeOpacityEnabled(true);
         
-        this.setAnchorPoint(1,0);
-	}
+        var text = cc.LabelTTF.create(text, "IndieFlower", bubble.fontsize, cc.size(bubble.width-b.padding.left-b.padding.right,0),cc.TEXT_ALIGNMENT_LEFT, cc.VERTICAL_TEXT_ALIGNMENT_TOP);
+        text.setColor(b.color);
+        text.setPosition(cc.p(this.width/2,this.height/2+(b.padding.bottom-b.padding.top)/2));
+        var size = text.getContentSize();
+
+		this.addChild(text);
+
+        var scaleX = bubble.width && bubble.width/this.width || 1;
+        var scaleY = bubble.height && (bubble.height+text.getContentSize().height/2)/this.height || 1;
+        this.setScale(scaleX,scaleY);
+        
+		this.appear();
+		
+		if( time ) {
+			setTimeout(function() {
+				self.disappear();
+			}, time*1000);
+		}
+	},
+	
+	appear: function() {
+		this.setOpacity(0);
+		this.runAction(
+			cc.fadeIn(0.66)
+		);
+	},
+
+	disappear: function() {
+		var self = this;
+		this.runAction(
+			cc.sequence(
+				cc.fadeOut(0.66),
+				cc.callFunc(function() {
+					self._finalCallback();
+				})
+			)
+		);
+	},
+	
 });
 
 // GameFairyLayer is the class for game fairies
@@ -152,7 +226,7 @@ var SpeechBubble = cc.Sprite.extend({
 //
 var GameFairy = FairyLayer.extend({
 
-	// ctor calls the parent class with appropriate parameter
+	// ctor 
 	//
     ctor: function() {
         this._super("sphinx",[{
@@ -161,11 +235,22 @@ var GameFairy = FairyLayer.extend({
         	width: 383,
         	height: 320,
         	orientation: _B_FAIRY_LEFT,
-        	bubblePoint: {
-        		x: -100,
-        		y: 100
-        	}
+        	bubble: {
+        		type: "angry",
+        		x: 100,
+        		y: 280,
+        		width: 500,
+        		height: 200,
+        		fontsize: 48,
+        	},
         }]);
+	},
+	
+	appear: function() {
+		this._fairy.setOpacity(0);
+		this._fairy.runAction(
+			cc.fadeIn(2)
+		);	
 	}
 });
 
