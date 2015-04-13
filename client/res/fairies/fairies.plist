@@ -4,18 +4,52 @@
 <dict>
 	<key>frames</key>
 	<dict>
-		<key>sphinx</key>
+		<key>gamefairy1</key>
 		<dict>
 			<key>frame</key>
-			<string>{{0, 0}, {383, 320}}</string>
+			<string>{{0, 0}, {251, 320}}</string>
 			<key>offset</key>
 			<string>{0, 0}</string>
 			<key>rotated</key>
 			<false/>
 			<key>sourceColorRect</key>
-			<string>{{0, 0}, {383, 320}}</string>
+			<string>{{16, 0}, {220, 318}}</string>
 			<key>sourceSize</key>
-			<string>{383, 320}</string>
+			<string>{251, 320}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>gamefairy3</key>
+		<dict>
+			<key>frame</key>
+			<string>{{251, 0}, {283, 320}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {283, 320}}</string>
+			<key>sourceSize</key>
+			<string>{283, 320}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>bubble2</key>
+		<dict>
+			<key>frame</key>
+			<string>{{534, 0}, {480, 386}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {475, 386}}</string>
+			<key>sourceSize</key>
+			<string>{480, 386}</string>
 			<key>aliases</key>
 			<array>
 
@@ -24,7 +58,7 @@
 		<key>bubble1</key>
 		<dict>
 			<key>frame</key>
-			<string>{{383, 0}, {493, 400}}</string>
+			<string>{{1014, 0}, {493, 400}}</string>
 			<key>offset</key>
 			<string>{0, 0}</string>
 			<key>rotated</key>
@@ -38,18 +72,35 @@
 
 			</array>
 		</dict>
-		<key>bubble2</key>
+		<key>gamefairy2</key>
 		<dict>
 			<key>frame</key>
-			<string>{{0, 400}, {480, 386}}</string>
+			<string>{{1507, 0}, {283, 320}}</string>
 			<key>offset</key>
 			<string>{0, 0}</string>
 			<key>rotated</key>
 			<false/>
 			<key>sourceColorRect</key>
-			<string>{{5, 0}, {475, 386}}</string>
+			<string>{{5, 0}, {253, 308}}</string>
 			<key>sourceSize</key>
-			<string>{480, 386}</string>
+			<string>{283, 320}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>gamefairy4</key>
+		<dict>
+			<key>frame</key>
+			<string>{{1790, 0}, {251, 320}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {251, 320}}</string>
+			<key>sourceSize</key>
+			<string>{251, 320}</string>
 			<key>aliases</key>
 			<array>
 
@@ -63,5 +114,5 @@
 		<key>textureFileName</key>
 		<string>fairies.png</string>
 		<key>size</key>
-		<string>{1024, 1024}</string>
+		<string>{2048, 2048}</string>
 	</dict></dict></plist>

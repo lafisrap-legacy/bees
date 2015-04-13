@@ -246,7 +246,10 @@ var SelectPlayerLayer = cc.Layer.extend({
     		this._BarLabel.setString(_b_t.playerlist.noplayers);
     		return
     	} else {
-    		this._BarLabel.setString(_b_t.playerlist.choose);
+    		this._BarLabel.set
+    		
+    		
+    		String(_b_t.playerlist.choose);
     	}
     	
     	// build up the players list

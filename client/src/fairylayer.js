@@ -5,8 +5,8 @@
 
 // GameFairyLayer Constants
 //
-var _B_FAIRY_LEFT = 0,
-	_B_FAIRY_RIGHT = 1;
+var _B_FAIRY_LEFT = 1,
+	_B_FAIRY_RIGHT = -1;
 
 // FairyLayer is the base class for all fairies
 //
@@ -52,7 +52,8 @@ var FairyLayer = cc.Layer.extend({
 	show: function() {
 	
 		var self = this,
-			g = this._gestures[this._currentGesture];
+			cg = this._currentGesture;
+			g = this._gestures[cg];
 		
         //////////////////////////////
         // Start event handling
@@ -60,8 +61,9 @@ var FairyLayer = cc.Layer.extend({
 
         //////////////////////////////
         // Create fairy and set her to position 1
-		var fairy = this._fairy = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(this._fairyName));
+		var fairy = this._fairy = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(g.sprite));
 		fairy.setPosition(cc.p(g.x,g.y));
+		fairy.setScale(g.orientation,1);
 
 		this.addChild(fairy,0);
 		_b_retain(this._fairy,"FairyLayer, show, _fairy");
@@ -83,7 +85,7 @@ var FairyLayer = cc.Layer.extend({
 		var self = this,
 			g = this._gestures[this._currentGesture];
 		
-		var bubble = new SpeechBubble(time, text, g.bubble, cb);
+		var bubble = new SpeechBubble(time, text, g, cb);
 
 		this._fairy.addChild(bubble,10);
 	},
@@ -139,7 +141,7 @@ var SpeechBubble = cc.Sprite.extend({
 			ay: 0.0,
 			padding: {
 				top: 0,
-				left: 30,
+				left: 50,
 				right: 30,
 				bottom: 60
 			},
@@ -161,29 +163,31 @@ var SpeechBubble = cc.Sprite.extend({
 
 	// ctor calls the parent class with appropriate parameter
 	//
-    ctor: function(time, text, bubble, cb) {
-    	var self = this;
+    ctor: function(time, text, gesture, cb) {
+    	var self = this,
+    		gb = gesture.bubble,			// gb is how the gesture would like to have the bubble (variables)
+    		bb = this._bubbles[gb.type];	// bb is how the bubble itself is defined (constants)
     
     	cc.assert(cb && typeof cb === "function", "I need a callback function.");
     
-    	var b = this._bubbles[bubble.type];
         cc.Sprite.prototype.ctor.call(this);
-        this.initWithSpriteFrame(cc.spriteFrameCache.getSpriteFrame(b.sprite));
+        this.initWithSpriteFrame(cc.spriteFrameCache.getSpriteFrame(bb.sprite));
 
         this._finalCallback = cb;
-        this.setAnchorPoint(b.ax, b.ay);
-        this.setPosition(cc.p(bubble.x, bubble.y));
+        this.setAnchorPoint(bb.ax, bb.ay);
+        this.setPosition(cc.p(gb.x, gb.y));
         this.setCascadeOpacityEnabled(true);
         
-        var text = cc.LabelTTF.create(text, "IndieFlower", bubble.fontsize, cc.size(bubble.width-b.padding.left-b.padding.right,0),cc.TEXT_ALIGNMENT_LEFT, cc.VERTICAL_TEXT_ALIGNMENT_TOP);
-        text.setColor(b.color);
-        text.setPosition(cc.p(this.width/2,this.height/2+(b.padding.bottom-b.padding.top)/2));
+        var text = cc.LabelTTF.create(text, "IndieFlower", gb.fontsize, cc.size(gb.width-bb.padding.left-bb.padding.right,0),cc.TEXT_ALIGNMENT_LEFT, cc.VERTICAL_TEXT_ALIGNMENT_TOP);
+        text.setColor(bb.color);
+        text.setPosition(cc.p(this.width/2,this.height/2+(bb.padding.bottom-bb.padding.top)/2));
+        text.setScale(gesture.orientation, 1);
         var size = text.getContentSize();
 
 		this.addChild(text);
 
-        var scaleX = bubble.width && bubble.width/this.width || 1;
-        var scaleY = bubble.height && (bubble.height+text.getContentSize().height/2)/this.height || 1;
+        var scaleX = gb.width && gb.width/this.width || 1;
+        var scaleY = gb.height && (gb.height+text.getContentSize().height/2)/this.height || 1;
         this.setScale(scaleX,scaleY);
         
 		this.appear();
@@ -229,15 +233,16 @@ var GameFairy = FairyLayer.extend({
 	// ctor 
 	//
     ctor: function() {
-        this._super("sphinx",[{
-        	x: 970,
+        this._super("gamefairy",[{
+        	sprite: "gamefairy1",
+        	x: 120,
         	y: 160,
-        	width: 383,
+        	width: 251,
         	height: 320,
         	orientation: _B_FAIRY_LEFT,
         	bubble: {
         		type: "angry",
-        		x: 100,
+        		x: 340,
         		y: 280,
         		width: 500,
         		height: 200,

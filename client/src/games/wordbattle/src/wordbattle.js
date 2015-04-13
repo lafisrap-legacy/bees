@@ -105,16 +105,16 @@ var WordBattleLayer = cc.Layer.extend({
 		}
         s1.addChild(drawNode,20);*/
         
-/*		var fairy = new GameFairy();
+		var fairy = new GameFairy();
         this.addChild(fairy,10);
         fairy.show();
         setTimeout(function() {
 			fairy.say(2.5, "Bewege und drehe die Schiffe!", function(result) {
-				fairy.say(10.5, "Drück mich, wenn du fertig bist.", function(result) {
+				fairy.say(100.5, "Drück mich, wenn du fertig bist.", function(result) {
 					debugger;
 				});				
 			});
-		}, 2500);*/
+		}, 2500);
         
 		this.initListeners();
         return true;
@@ -196,6 +196,7 @@ var WordBattleLayer = cc.Layer.extend({
 			var pos = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},rotation);
 			if( !pos ) {
 				for( j=0 ; j<r.length ; j++ ) {
+					cc.log("Didn't find room for the ship. Setting all ships strait...");
 					if( j>i ) {
 						word = this._pureWords[r[j]];
 						if( word.length > _B_MAX_SHIP_LENGTH ) continue; // don't take words that don't fit ...
@@ -210,6 +211,7 @@ var WordBattleLayer = cc.Layer.extend({
 				}
 				break;
 			}
+			cc.log("Placing ship at "+JSON.stringify(pos));
 			ship.setRCPosition(pos);
 			ship.setRotation(rotation);
 		}
@@ -490,7 +492,12 @@ var Battleship = cc.Node.extend({
     findPosition: function(pos, rotation, collisionBase) {
     	var wl = this._word.length;
 
-		if( pos === undefined ) pos = this._pos;		
+		if( pos === undefined ) {
+			pos = {
+				x: this._pos.x,
+				y: this._pos.y
+			};	
+		}	
 		if( rotation === undefined ) rotation = this._rotation;
 
 		// moving the ship into the sea		

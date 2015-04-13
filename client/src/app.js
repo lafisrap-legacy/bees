@@ -124,11 +124,11 @@ var BeesScene = cc.Scene.extend({
         cc.width = cc.winSize.width;
         cc.height = cc.winSize.height;	
         
-/*        cc.log("Loading word battle scene ...");
+        cc.log("Loading word battle scene ...");
         cc.LoaderScene.preload(_b_getResources("wordbattle","Das Eselein"), function () {
 	        cc.log("Running word battle scene ...");
 			cc.director.runScene(new WordBattleScene("Das Eselein"));
-		}, this);	*/
+		}, this);
     },
     
     onExit: function() {
