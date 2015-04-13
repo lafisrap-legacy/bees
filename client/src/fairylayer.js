@@ -38,7 +38,7 @@ var FairyLayer = cc.Layer.extend({
 		this._gestures = gestures;
 		this._currentGesture = 0;
 		        
-	    cc.spriteFrameCache.addSpriteFrames(res.fairies_plist);	    
+	    cc.spriteFrameCache.addSpriteFrames(res.fairies_plist);
 	},
 	
 	// show displays a fairy
@@ -49,15 +49,17 @@ var FairyLayer = cc.Layer.extend({
 	// fairy: sprite name of a fairy
 	// gestures: the different gestures of the fairy, with x,y,width,height,orientation 
 	//
-	show: function() {
+	show: function(gesture) {
 	
 		var self = this,
-			cg = this._currentGesture;
+			cg = gesture !== undefined? gesture : this._currentGesture || 0;
 			g = this._gestures[cg];
 		
         //////////////////////////////
         // Start event handling
 	    this.initListeners();
+	    
+	    // if it shows a fairy, let her disappear ...
 
         //////////////////////////////
         // Create fairy and set her to position 1
@@ -80,6 +82,12 @@ var FairyLayer = cc.Layer.extend({
 		);
 	},
 	
+	disappear: function() {
+		this._fairy.runAction(
+			cc.fadeOut(1)
+		);
+	},
+	
 	say: function(time, text, cb) {
 
 		var self = this,
@@ -88,6 +96,10 @@ var FairyLayer = cc.Layer.extend({
 		var bubble = new SpeechBubble(time, text, g, cb);
 
 		this._fairy.addChild(bubble,10);
+					    
+	    return function() {
+	    	bubble.disappear();
+	    };
 	},
 	
 	// hide hides the list and stops the invitation episode
@@ -149,13 +161,13 @@ var SpeechBubble = cc.Sprite.extend({
 		},
 		"nice": {
 			sprite: "bubble2",
-			ax: 0.5,
+			ax: 0.6,
 			ay: 0.0,
 			padding: {
-				top: 50,
-				left: 30,
+				top: 20,
+				left: 50,
 				right: 30,
-				bottom: 50
+				bottom: 20
 			},
 			color: cc.color(0,0,0,255)
 		},
@@ -178,10 +190,9 @@ var SpeechBubble = cc.Sprite.extend({
         this.setPosition(cc.p(gb.x, gb.y));
         this.setCascadeOpacityEnabled(true);
         
-        var text = cc.LabelTTF.create(text, "IndieFlower", gb.fontsize, cc.size(gb.width-bb.padding.left-bb.padding.right,0),cc.TEXT_ALIGNMENT_LEFT, cc.VERTICAL_TEXT_ALIGNMENT_TOP);
+        var text = cc.LabelTTF.create(text, "IndieFlower", gb.fontsize, cc.size(gb.width-bb.padding.left-bb.padding.right,0),cc.TEXT_ALIGNMENT_CENTER, cc.VERTICAL_TEXT_ALIGNMENT_TOP);
         text.setColor(bb.color);
         text.setPosition(cc.p(this.width/2,this.height/2+(bb.padding.bottom-bb.padding.top)/2));
-        text.setScale(gesture.orientation, 1);
         var size = text.getContentSize();
 
 		this.addChild(text);
@@ -189,6 +200,7 @@ var SpeechBubble = cc.Sprite.extend({
         var scaleX = gb.width && gb.width/this.width || 1;
         var scaleY = gb.height && (gb.height+text.getContentSize().height/2)/this.height || 1;
         this.setScale(scaleX,scaleY);
+        text.setScale(gesture.orientation / scaleX, 1 / scaleY);
         
 		this.appear();
 		
@@ -234,18 +246,33 @@ var GameFairy = FairyLayer.extend({
 	//
     ctor: function() {
         this._super("gamefairy",[{
-        	sprite: "gamefairy1",
-        	x: 120,
+        	sprite: "gamefairy2",
+        	x: 1020,
         	y: 160,
         	width: 251,
         	height: 320,
-        	orientation: _B_FAIRY_LEFT,
+        	orientation: _B_FAIRY_RIGHT,
+        	bubble: {
+        		type: "nice",
+        		x: 360,
+        		y: 260,
+        		width: 500,
+        		height: 300,
+        		fontsize: 48,
+        	},
+        },{
+        	sprite: "gamefairy1",
+        	x: 1020,
+        	y: 160,
+        	width: 251,
+        	height: 320,
+        	orientation: _B_FAIRY_RIGHT,
         	bubble: {
         		type: "angry",
         		x: 340,
-        		y: 280,
+        		y: 260,
         		width: 500,
-        		height: 200,
+        		height: 300,
         		fontsize: 48,
         	},
         }]);

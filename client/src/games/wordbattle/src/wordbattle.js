@@ -45,6 +45,10 @@ var WordBattleLayer = cc.Layer.extend({
 	_first: null,
 	_mode: null,
 	
+	// event callbacks
+	_onShipMovementCb: null,  // called if a ship is dragged or turned
+
+	
     ctor:function () {
     	var self = this;
     
@@ -105,17 +109,16 @@ var WordBattleLayer = cc.Layer.extend({
 		}
         s1.addChild(drawNode,20);*/
         
-		var fairy = new GameFairy();
+/*		var fairy = new GameFairy();
         this.addChild(fairy,10);
         fairy.show();
         setTimeout(function() {
-			fairy.say(2.5, "Bewege und drehe die Schiffe!", function(result) {
-				fairy.say(100.5, "Drück mich, wenn du fertig bist.", function(result) {
+			self._onShipMovementCb = fairy.say(10, "Bewege und drehe die Schiffe!", function(result) {
+				fairy.say(20, "Drück mich, wenn du fertig bist.", function(result) {
 					debugger;
 				});				
 			});
-		}, 2500);
-        
+		}, 1200);*/        
 		this.initListeners();
         return true;
     },
@@ -178,6 +181,7 @@ var WordBattleLayer = cc.Layer.extend({
 	},
 	
 	startRound: function() {
+		var self = this;
 	
         //////////////////////////////
         // Build ships
@@ -188,7 +192,7 @@ var WordBattleLayer = cc.Layer.extend({
 
 			var word = this._pureWords[r[i]];
 			if( word.length > _B_MAX_SHIP_LENGTH ) continue; // don't take words that don't fit ...
-			cc.log("Creating ship with '"+word+"' r: "+JSON.stringify(r)+", this._round: "+this._round+", this._rounds: "+JSON.stringify(this._rounds));
+			cc.log("Creating ship with '"+word+"', this._round: "+this._round);
 			var ship = new Battleship(word);
 				
 			ownSea.addChild(ship,10);
@@ -211,7 +215,7 @@ var WordBattleLayer = cc.Layer.extend({
 				}
 				break;
 			}
-			cc.log("Placing ship at "+JSON.stringify(pos));
+			cc.log("Placing ship at "+JSON.stringify(pos)+" with rotation "+rotation);
 			ship.setRCPosition(pos);
 			ship.setRotation(rotation);
 		}
@@ -241,9 +245,9 @@ var WordBattleLayer = cc.Layer.extend({
         this.addChild(fairy,10);
         fairy.show();
         setTimeout(function() {
-			fairy.say(2.5, "Bewege und drehe die Schiffe!", function(result) {
-				fairy.say(10.5, "Drück mich, wenn du fertig bist.", function(result) {
-					debugger;
+			self._onShipMovementCb = fairy.say(100, "Bewege und drehe die Schiffe, so wie du willst!", function(result) {
+				fairy.say(20, "Drück mich, wenn du fertig bist.", function(result) {
+					fairy.show(1);
 				});				
 			});
 		}, 2500);
@@ -277,6 +281,11 @@ var WordBattleLayer = cc.Layer.extend({
 								x: start.x - pos.x,
 								y: start.y - pos.y
 							};
+							
+							if( self._onShipMovementCb ) {
+								self._onShipMovementCb();
+								self._onShipMovementCb = null; // to be called once only
+							}
 							return
 						} 
 					}		
@@ -420,9 +429,13 @@ var Battleship = cc.Node.extend({
 		this.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_back"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2)));
 
 		// set positions
+		tmp = "";
 		for( var i=0 ; i<wl ; i++ ) {
 			this.children[i].setPosition(cc.p(0, (wl/2-i)*_B_SQUARE_SIZE*2 - _B_SQUARE_SIZE));
+			tmp += "("+((wl/2-i)*_B_SQUARE_SIZE*2 - _B_SQUARE_SIZE)+"),";
 		}
+		cc.log("BuildShip: "+tmp);
+		
 		this.setScale(0.50);
 
 		_b_retain(this,"Battleship: buildShip");		
@@ -451,6 +464,8 @@ var Battleship = cc.Node.extend({
     		maxY = Math.max(pos1.y, pos2.y)+_B_SQUARE_SIZE/2;
     		
     	this._rect = cc.rect(minX, minY, maxX-minX, maxY-minY);
+    	cc.log("setRCPosition: rect: "+JSON.stringify(this._rect)+", row/col: "+JSON.stringify(pos));
+    	
     },
     
     getXYPosition: function(pos, rotation) {
@@ -478,10 +493,13 @@ var Battleship = cc.Node.extend({
     	if( rotation === 0 || rotation === 90 ) { 
     		this._rotation = rotation;
 			var pos = this.findPosition();
-			if( pos ) this.setRCPosition(pos);
+			if( pos ) {
+				var ret = cc.Node.prototype.setRotation.call(this,rotation);
+				this.setRCPosition(pos);
+				return ret;
+			}
 			else return false;
 		}
-    	return cc.Node.prototype.setRotation.call(this,rotation);
     },
 
     getRotation: function(degree) {
@@ -494,8 +512,8 @@ var Battleship = cc.Node.extend({
 
 		if( pos === undefined ) {
 			pos = {
-				x: this._pos.x,
-				y: this._pos.y
+				row: this._pos.row,
+				col: this._pos.col
 			};	
 		}	
 		if( rotation === undefined ) rotation = this._rotation;
