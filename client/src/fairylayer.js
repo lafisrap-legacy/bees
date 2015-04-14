@@ -55,11 +55,8 @@ var FairyLayer = cc.Layer.extend({
 			cg = gesture !== undefined? gesture : this._currentGesture || 0;
 			g = this._gestures[cg];
 		
-        //////////////////////////////
-        // Start event handling
-	    this.initListeners();
-	    
 	    // if it shows a fairy, let her disappear ...
+	    if( this._fairy ) this.hide();
 
         //////////////////////////////
         // Create fairy and set her to position 1
@@ -75,16 +72,34 @@ var FairyLayer = cc.Layer.extend({
 		this.initListeners();
 	},
 	
+	hide: function() {
+		var self = this,
+			fairy = this._fairy;
+		
+		this.disappear(function() {
+			self.removeChild(fairy);		
+			_b_release(fairy);
+		});
+
+		this._fairy = null;    			    	
+	    this.stopListeners();	    
+	},
+	
 	appear: function() {
 		this._fairy.setOpacity(0);
 		this._fairy.runAction(
-			cc.fadeIn(2)
+			cc.fadeIn(0.66)
 		);
 	},
 	
-	disappear: function() {
+	disappear: function(cb) {
 		this._fairy.runAction(
-			cc.fadeOut(1)
+			cc.sequence(
+				cc.fadeOut(1.5),
+				cc.callFunc(function() {
+					if(cb) cb();
+				})
+			)
 		);
 	},
 	
@@ -100,14 +115,6 @@ var FairyLayer = cc.Layer.extend({
 	    return function() {
 	    	bubble.disappear();
 	    };
-	},
-	
-	// hide hides the list and stops the invitation episode
-	hide: function(player) {
-		_b_release(this._fairy);
-		this.addChild(this._fairy);
-    			    	
-	    this.stopListeners();	    
 	},
 	
 	// initListeners start the event handling

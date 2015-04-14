@@ -114,11 +114,12 @@ var WordBattleLayer = cc.Layer.extend({
         fairy.show();
         setTimeout(function() {
 			self._onShipMovementCb = fairy.say(10, "Bewege und drehe die Schiffe!", function(result) {
+				fairy.show(1);
 				fairy.say(20, "Drück mich, wenn du fertig bist.", function(result) {
-					debugger;
+					fairy.show(0);
 				});				
 			});
-		}, 1200);*/        
+		}, 1200);      */
 		this.initListeners();
         return true;
     },
@@ -245,12 +246,13 @@ var WordBattleLayer = cc.Layer.extend({
         this.addChild(fairy,10);
         fairy.show();
         setTimeout(function() {
-			self._onShipMovementCb = fairy.say(100, "Bewege und drehe die Schiffe, so wie du willst!", function(result) {
+			self._onShipMovementCb = fairy.say(10, "Bewege und drehe die Schiffe!", function(result) {
+				fairy.show(1);
 				fairy.say(20, "Drück mich, wenn du fertig bist.", function(result) {
-					fairy.show(1);
+					fairy.show(0);
 				});				
 			});
-		}, 2500);
+		}, 1200);      
 	},
 
     initListeners: function() {
@@ -488,8 +490,6 @@ var Battleship = cc.Node.extend({
     },
     
     setRotation: function(rotation) {
-    	if( rotation === undefined ) return cc.Node.prototype.setRotation.call(this,this._rotation);
-
     	if( rotation === 0 || rotation === 90 ) { 
     		this._rotation = rotation;
 			var pos = this.findPosition();
@@ -499,6 +499,8 @@ var Battleship = cc.Node.extend({
 				return ret;
 			}
 			else return false;
+		} else {
+			cc.Node.prototype.setRotation.call(this,rotation!==undefined?rotation:this._rotation);
 		}
     },
 
