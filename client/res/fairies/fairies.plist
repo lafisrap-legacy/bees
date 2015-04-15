@@ -4,61 +4,10 @@
 <dict>
 	<key>frames</key>
 	<dict>
-		<key>gamefairy1</key>
-		<dict>
-			<key>frame</key>
-			<string>{{0, 0}, {251, 320}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{16, 0}, {220, 318}}</string>
-			<key>sourceSize</key>
-			<string>{251, 320}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>gamefairy3</key>
-		<dict>
-			<key>frame</key>
-			<string>{{251, 0}, {283, 320}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 0}, {283, 320}}</string>
-			<key>sourceSize</key>
-			<string>{283, 320}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>bubble2</key>
-		<dict>
-			<key>frame</key>
-			<string>{{534, 0}, {480, 386}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 0}, {475, 386}}</string>
-			<key>sourceSize</key>
-			<string>{480, 386}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
 		<key>bubble1</key>
 		<dict>
 			<key>frame</key>
-			<string>{{1014, 0}, {493, 400}}</string>
+			<string>{{0, 0}, {493, 400}}</string>
 			<key>offset</key>
 			<string>{0, 0}</string>
 			<key>rotated</key>
@@ -72,7 +21,58 @@
 
 			</array>
 		</dict>
+		<key>bubble2</key>
+		<dict>
+			<key>frame</key>
+			<string>{{493, 0}, {480, 386}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {475, 386}}</string>
+			<key>sourceSize</key>
+			<string>{480, 386}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>gamefairy1</key>
+		<dict>
+			<key>frame</key>
+			<string>{{973, 0}, {251, 320}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{16, 0}, {220, 318}}</string>
+			<key>sourceSize</key>
+			<string>{251, 320}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
 		<key>gamefairy2</key>
+		<dict>
+			<key>frame</key>
+			<string>{{1224, 0}, {283, 320}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{5, 0}, {253, 308}}</string>
+			<key>sourceSize</key>
+			<string>{283, 320}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>gamefairy3</key>
 		<dict>
 			<key>frame</key>
 			<string>{{1507, 0}, {283, 320}}</string>
@@ -81,7 +81,7 @@
 			<key>rotated</key>
 			<false/>
 			<key>sourceColorRect</key>
-			<string>{{5, 0}, {253, 308}}</string>
+			<string>{{0, 0}, {283, 320}}</string>
 			<key>sourceSize</key>
 			<string>{283, 320}</string>
 			<key>aliases</key>
@@ -101,6 +101,40 @@
 			<string>{{0, 0}, {251, 320}}</string>
 			<key>sourceSize</key>
 			<string>{251, 320}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>hourglass</key>
+		<dict>
+			<key>frame</key>
+			<string>{{973, 320}, {129, 230}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 2}, {129, 226}}</string>
+			<key>sourceSize</key>
+			<string>{129, 230}</string>
+			<key>aliases</key>
+			<array>
+
+			</array>
+		</dict>
+		<key>sphinx</key>
+		<dict>
+			<key>frame</key>
+			<string>{{493, 386}, {383, 320}}</string>
+			<key>offset</key>
+			<string>{0, 0}</string>
+			<key>rotated</key>
+			<false/>
+			<key>sourceColorRect</key>
+			<string>{{0, 0}, {383, 320}}</string>
+			<key>sourceSize</key>
+			<string>{383, 320}</string>
 			<key>aliases</key>
 			<array>
 

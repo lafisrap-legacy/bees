@@ -5,6 +5,7 @@ var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_WORDS_PER_ROUND = 7,		// maximum number of words per round
 	_B_MODE_MOVING = 1,
 	_B_MODE_BOMBING = 2,
+	_B_MODE_WATCHING = 3,
 	_B_TAP_TIME = 200,
 
 // Regular Expressions
@@ -172,10 +173,11 @@ var WordBattleLayer = cc.Layer.extend({
 			this._rounds = rounds;
 			this.startRound();
 
-			$b.sendMessage(this._rounds);
+			$b.sendMessage({ message: "initRounds", rounds: this._rounds });
 		} else {
 			$b.receiveMessage(function(data) {
-				self._rounds = data;
+				cc.assert(data.message === "initRounds", "Received wrong message ('"+data.message+"' instead of 'initRounds') while starting episode.");
+				self._rounds = data.rounds;
 				self.startRound();
 			});
 		}
@@ -246,10 +248,39 @@ var WordBattleLayer = cc.Layer.extend({
         this.addChild(fairy,10);
         fairy.show();
         setTimeout(function() {
-			self._onShipMovementCb = fairy.say(10, "Bewege und drehe die Schiffe!", function(result) {
+			self._onShipMovementCb = fairy.say(10, _b_t.fairies.move_ships , function(result) {
 				fairy.show(1);
-				fairy.say(20, "Drück mich, wenn du fertig bist.", function(result) {
-					fairy.show(0);
+				cc.log("Fairy is saying, you should click ...");
+				fairy._onFairyIsClicked = fairy.say(20, _b_t.fairies.press_me , function(result) {
+					this._mode = self.first? _B_MODE_BOMBING: _B_MODE_WATCHING;	
+
+					cc.log("Fairy is clicked on ...");
+					var tiles = [];
+					for( var i=0 ; i<ownSea.children.length ; i++ ) {
+						var tile = ownSea.children[i];
+						
+						if( tile.isTile ) {
+							tiles.push({
+								pos: tile.getRCPosition(),
+								rotation: tile.getRotation()
+							});
+						}
+					}
+				
+					$b.sendMessage({ message: "initBoard", tiles: tiles });
+					cc.log("Showing hourglass ...");
+					fairy.showHourglass(cc.p(750,120));
+					$b.receiveMessage(function(other) {
+						cc.log("Starting countdown ...");
+						fairy.getHourglass().countdown(30);
+						cc.assert(other.message === "initBoard", "Received wrong message ('"+other.message+"' instead of 'initBoard') while starting round.");
+						cc.assert(other.tiles.length === tiles.length, "I got "+other.tiles.length+" ships, but I have "+tiles.length+" while starting round.");
+						
+						for( var i=0 ; i<other.tiles.length ; i++ ) {
+							//new Battleships for other sea (show them) ...
+							//debugger;
+						}
+					});
 				});				
 			});
 		}, 1200);      
@@ -260,7 +291,8 @@ var WordBattleLayer = cc.Layer.extend({
 			start = null,
 			startTime = null,
 			offset = null,
-			draggedShip = null;
+			draggedShip = null,
+			shipMoves = false;
 	
 		this._touchListener = cc.EventListener.create({
 			event: cc.EventListener.TOUCH_ALL_AT_ONCE,
@@ -270,7 +302,8 @@ var WordBattleLayer = cc.Layer.extend({
 				startTime = new Date().getTime();
 				
 				// Player taps on a ship in his own see?
-				if(self._mode === _B_MODE_MOVING) {
+				if(self._mode === _B_MODE_MOVING && !draggedShip ) {
+					cc.log("Looking for ship to drag or turn ...");
 					var ships = self._ownSea.getChildren();
 					for( var i=0 ; i<ships.length ; i++ ) {
 						var rect = ships[i].getRect && ships[i].getRect() || cc.rect(0,0,0,0),
@@ -283,11 +316,7 @@ var WordBattleLayer = cc.Layer.extend({
 								x: start.x - pos.x,
 								y: start.y - pos.y
 							};
-							
-							if( self._onShipMovementCb ) {
-								self._onShipMovementCb();
-								self._onShipMovementCb = null; // to be called once only
-							}
+							cc.log("Found it on position "+JSON.stringify(draggedShip._pos));
 							return
 						} 
 					}		
@@ -295,9 +324,9 @@ var WordBattleLayer = cc.Layer.extend({
 			},
 			onTouchesMoved: function(touches, event) {
 				var touch = touches[0],
-				loc = touch.getLocation();
+					loc = touch.getLocation();
 				
-				if(self._mode === _B_MODE_MOVING && draggedShip ) {
+				if(self._mode === _B_MODE_MOVING && draggedShip) {
 					draggedShip.setPosition(cc.p(loc.x-offset.x,loc.y-offset.y));
 				}
 			},
@@ -305,10 +334,12 @@ var WordBattleLayer = cc.Layer.extend({
 
 				var touch = touches[0],
 					loc = touch.getLocation(),
-					time = new Date().getTime();	
+					time = new Date().getTime() - startTime;	
 
-				if( draggedShip ) {
-					if( time - startTime < _B_TAP_TIME ) {
+				if( self._mode === _B_MODE_MOVING && draggedShip && !shipMoves ) {
+					shipMoves = true;
+					if( time < _B_TAP_TIME ) {
+						cc.log("Rotating it! draggedShip = "+draggedShip);
 						var rotation = draggedShip.getRotation();
 							
 						var pos = draggedShip.findPosition(undefined, 90-rotation);
@@ -324,6 +355,7 @@ var WordBattleLayer = cc.Layer.extend({
 									cc.callFunc(function() {
 										draggedShip.setRCPosition();
 										draggedShip = null;
+										shipMoves = false;
 									})
 								)
 							);
@@ -341,11 +373,14 @@ var WordBattleLayer = cc.Layer.extend({
 										draggedShip.setRotation(90-rotation);
 										draggedShip.setRCPosition(pos);
 										draggedShip = null;
+										shipMoves = false;
 									})
 								)
 							);
 						}
-					} else if(self._mode === _B_MODE_MOVING ) {
+					} else {
+						cc.log("Moving it! draggedShip = "+draggedShip);
+
 						var posStart = draggedShip.getPosition(),
 							posEnd = draggedShip.findPosition({
 								row: Math.floor((loc.y-offset.y)/_B_SQUARE_SIZE),
@@ -358,9 +393,15 @@ var WordBattleLayer = cc.Layer.extend({
 								cc.callFunc(function() {
 									draggedShip.setRCPosition(posEnd);
 									draggedShip = null;
+									shipMoves = false;
 								})
 							)
 						)
+					}
+					
+					if( self._onShipMovementCb ) {
+						self._onShipMovementCb();
+						self._onShipMovementCb = null; // to be called once only
 					}
 				}
 			}
@@ -405,6 +446,7 @@ var Battleship = cc.Node.extend({
 		
 		this._word = word;
 		this.buildShip();	
+		this.isTile = true;
 		
 		this.setCascadeOpacityEnabled(true);
 	},

@@ -236,5 +236,13 @@ var _b_IdFactory = function() {
 }
 var _b_getId = _b_IdFactory();
 
+var _b_getFontName = function(resource) {
+    if (cc.sys.isNative) {
+        return resource.srcs[0];
+    } else {
+        return resource.name;
+    }
+}
+
 
 

@@ -3,6 +3,10 @@ _b_text = {
         "playerlist": {
             "noplayers": "Keine Spieler hier ...",
             "choose": "Wähle einen Spieler!"
+        },
+        "fairies": {
+        	"move_ships": "Bewege und drehe die Schiffe!",
+        	"press_me":	"Drück mich, wenn du fertig bist."
         }
     }
 }
