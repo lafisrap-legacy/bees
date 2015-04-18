@@ -229,7 +229,7 @@ var WordBattleLayer = cc.Layer.extend({
 		}
 	},
 	
-	startRound: function() {
+	startRound: function(allStrait) {
 		var self = this;
 	
         //////////////////////////////
@@ -239,30 +239,18 @@ var WordBattleLayer = cc.Layer.extend({
 		
 		for( var i=0; i<r.length ; i++ ) {
 
-			var word = this._pureWords[r[i]];
+			var word = this._pureWords[r[i]]+"...";
 			if( word.length > _B_MAX_SHIP_LENGTH ) continue; // don't take words that don't fit ...
 			cc.log("Creating ship with '"+word+"', this._round: "+this._round);
 			var ship = new Battleship(word);
 				
 			os.addChild(ship,10);
-			var rotation = Math.floor(Math.random()*2)*90;
+			var rotation = allStrait!==undefined? allStrait : Math.floor(Math.random()*2)*90;
 			var pos = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},rotation);
 			if( !pos ) {
-				for( j=0 ; j<r.length ; j++ ) {
-					cc.log("Didn't find room for the ship. Setting all ships strait...");
-					if( j>i ) {
-						word = this._pureWords[r[j]];
-						if( word.length > _B_MAX_SHIP_LENGTH ) continue; // don't take words that don't fit ...
-						ship = new Battleship(word);
-						os.addChild(ship,10);
-					}
-					else ship = os.children[j];
-					
-					var pos = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},0);
-					ship.setRCPosition(pos);
-					ship.setRotation(0);
-				}
-				break;
+				cc.log("Didn't find room for the ship. Setting all ships strait...");
+				os.removeAllChildren();
+				return this.startRound(Math.floor(Math.random()*2)*90);
 			}
 			cc.log("Placing ship at "+JSON.stringify(pos)+" with rotation "+rotation);
 			ship.setRCPosition(pos);
