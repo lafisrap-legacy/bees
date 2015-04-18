@@ -6,7 +6,8 @@ _b_text = {
         },
         "fairies": {
         	"move_ships": "Bewege und drehe die Schiffe!",
-        	"press_me":	"Drück mich, wenn du fertig bist."
+        	"press_it":	"Drücke die Sanduhr, wenn du fertig bist.",
+        	"lets_go":	"Und los geht's!"
         }
     }
 }

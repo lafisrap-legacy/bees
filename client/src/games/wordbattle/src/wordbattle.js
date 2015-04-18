@@ -3,9 +3,10 @@
 var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_SQUARE_SIZE = 56,
 	_B_WORDS_PER_ROUND = 7,		// maximum number of words per round
-	_B_MODE_MOVING = 1,
-	_B_MODE_BOMBING = 2,
-	_B_MODE_WATCHING = 3,
+	_B_MODE_TITLE = 1,
+	_B_MODE_MOVING = 2,
+	_B_MODE_BOMBING = 3,
+	_B_MODE_WATCHING = 4,
 	_B_TAP_TIME = 200,
 
 // Regular Expressions
@@ -39,6 +40,7 @@ var WordBattleLayer = cc.Layer.extend({
 	_otherShips: [],
 	_text: null,
 	_sphinx: null,
+	_fairy: null,
 	_pureWords: null,
 	_fullWords: null,
 	_rounds: null,
@@ -66,31 +68,74 @@ var WordBattleLayer = cc.Layer.extend({
         //////////////////////////////
         // Connect other player
 		$b.connectPlayer(function(player) {
-			if( !player ) cc.director.runScene($b);
+			if( !player ) {
+				cc.director.runScene($b);
+				return;
+			}
 
 			cc.log("Player "+player.name+" connected (sid:"+player.sid+")!");
 			
 			self._first = player.first === "yes";			
 			
-			self.startGame();
+			startscreen.runAction(
+				cc.sequence(
+					cc.fadeOut(0.5),
+					cc.callFunc(function() {
+						self.removeChild(startscreen);
+						_b_release(startscreen);
+					})
+				)
+			);
+			
+			//////////////////////////////
+			// Create and show seas
+			var s1 = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1"),cc.rect(0,0,560,560));
+			s1.setPosition(cc.p(284,cc.height/2));
+			s1.setScale(0.0);
+			s1.setOpacity(0);
+			s1.runAction(
+				cc.EaseSineOut.create(
+					cc.spawn(
+						cc.scaleTo(0.90, 1),
+						cc.fadeIn(0.90)
+					)
+				)
+			);
+			var s2 = self._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1"),cc.rect(0,0,560,560));
+			s2.setPosition(cc.p(852,cc.height/2));
+			s2.setScale(0.0);
+			s2.setOpacity(0);
+			s2.runAction(
+				cc.sequence(
+					cc.EaseSineOut.create(
+						cc.spawn(
+							cc.scaleTo(1.00,1),
+							cc.fadeIn(1.00)
+						)
+					),
+					cc.callFunc(function() {
+						self.startGame();
+					})
+				)
+			);
+			self.addChild(s1,0);
+			self.addChild(s2,0);
 		}, this.gameUpdate, this);
 
-        //////////////////////////////
-        // Create and show seas
-		var s1 = this._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1"),cc.rect(0,0,560,560));
-		s1.setPosition(cc.p(284,cc.height/2));
-		s1.setScale(0.1);
-		s1.runAction(
-			cc.scaleTo(0.90,1)
+		//////////////////////////////
+		// Create and show title screen
+		var startscreen = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("startscreen"),cc.rect(0,0,1136,640));
+		startscreen.setPosition(cc.p(cc.width/2, cc.height/2));
+		startscreen.setScale(0.9);
+		startscreen.setOpacity(0);
+		startscreen.runAction(
+			cc.spawn(
+				cc.fadeIn(0.5),
+				cc.scaleTo(0.5,1)
+			)
 		);
-		var s2 = this._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1"),cc.rect(0,0,560,560));
-		s2.setPosition(cc.p(852,cc.height/2));
-		s2.setScale(0.1);
-		s2.runAction(
-			cc.scaleTo(1,1)
-		);
-		this.addChild(s1,0);
-		this.addChild(s2,0);
+		this.addChild(startscreen,0);
+		_b_retain(startscreen, "startscreen");
 
         //////////////////////////////
         // Reading the fairytale and related data
@@ -110,23 +155,24 @@ var WordBattleLayer = cc.Layer.extend({
 		}
         s1.addChild(drawNode,20);*/
         
-/*		var fairy = new GameFairy();
-        this.addChild(fairy,10);
-        fairy.show();
-        setTimeout(function() {
-			self._onShipMovementCb = fairy.say(10, "Bewege und drehe die Schiffe!", function(result) {
-				fairy.show(1);
-				fairy.say(20, "Drück mich, wenn du fertig bist.", function(result) {
-					fairy.show(0);
-				});				
-			});
-		}, 1200);      */
+		this._mode = _B_MODE_TITLE;	
 		this.initListeners();
+		
+		this._fairy = new GameFairy();
+		this._hourglass = new Hourglass(cc.p(750,120));
+        this.addChild(this._fairy,10);
+        this.addChild(this._hourglass,10);
+		_b_retain(this._fairy, "Fairy");
+		_b_retain(this._hourglass, "Hourglass");
+
         return true;
     },
     
     onExit: function() {
         this._super();
+        
+		_b_release(this._fairy);
+		_b_release(this._hourglass);
 
     	this.stopListeners();
     },
@@ -189,7 +235,7 @@ var WordBattleLayer = cc.Layer.extend({
         //////////////////////////////
         // Build ships
 		var r = this._rounds[this._round],
-			ownSea = this._ownSea;  
+			os = this._ownSea;  
 		
 		for( var i=0; i<r.length ; i++ ) {
 
@@ -198,7 +244,7 @@ var WordBattleLayer = cc.Layer.extend({
 			cc.log("Creating ship with '"+word+"', this._round: "+this._round);
 			var ship = new Battleship(word);
 				
-			ownSea.addChild(ship,10);
+			os.addChild(ship,10);
 			var rotation = Math.floor(Math.random()*2)*90;
 			var pos = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},rotation);
 			if( !pos ) {
@@ -208,9 +254,9 @@ var WordBattleLayer = cc.Layer.extend({
 						word = this._pureWords[r[j]];
 						if( word.length > _B_MAX_SHIP_LENGTH ) continue; // don't take words that don't fit ...
 						ship = new Battleship(word);
-						ownSea.addChild(ship,10);
+						os.addChild(ship,10);
 					}
-					else ship = ownSea.children[j];
+					else ship = os.children[j];
 					
 					var pos = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},0);
 					ship.setRCPosition(pos);
@@ -223,8 +269,8 @@ var WordBattleLayer = cc.Layer.extend({
 			ship.setRotation(rotation);
 		}
 
-		for( var i=0; i<ownSea.children.length ; i++ ) {
-			var ship = ownSea.children[i];
+		for( var i=0; i<os.children.length ; i++ ) {
+			var ship = os.children[i];
 		
 			ship.setOpacity(0);
 			ship.setRotation(ship.getRotation()+180);
@@ -244,46 +290,69 @@ var WordBattleLayer = cc.Layer.extend({
 		
 		this._mode = _B_MODE_MOVING;	
 		
-		var fairy = new GameFairy();
-        this.addChild(fairy,10);
-        fairy.show();
-        setTimeout(function() {
-			self._onShipMovementCb = fairy.say(10, _b_t.fairies.move_ships , function(result) {
-				fairy.show(1);
-				cc.log("Fairy is saying, you should click ...");
-				fairy._onFairyIsClicked = fairy.say(20, _b_t.fairies.press_me , function(result) {
-					this._mode = self.first? _B_MODE_BOMBING: _B_MODE_WATCHING;	
+		var fairy = this._fairy,
+			hg = this._hourglass;
+		
+        fairy.show(0);
+		fairy.say(_b_remember("fairies.move_ships")?10:2, 5, _b_t.fairies.move_ships);
+		_b_one(["in_20_seconds", "a_ship_was_moved"], function(data) {
+			fairy.silent();
+			fairy.show(1);
+			fairy.say(0, 5, _b_t.fairies.press_it );
+			hg.show();
+			hg.countdown(10);
 
-					cc.log("Fairy is clicked on ...");
-					var tiles = [];
-					for( var i=0 ; i<ownSea.children.length ; i++ ) {
-						var tile = ownSea.children[i];
-						
-						if( tile.isTile ) {
-							tiles.push({
-								pos: tile.getRCPosition(),
-								rotation: tile.getRotation()
-							});
-						}
-					}
-				
-					$b.sendMessage({ message: "initBoard", tiles: tiles });
-					cc.log("Showing hourglass ...");
-					fairy.showHourglass(cc.p(750,120));
-					$b.receiveMessage(function(other) {
-						cc.log("Starting countdown ...");
-						fairy.getHourglass().countdown(30);
-						cc.assert(other.message === "initBoard", "Received wrong message ('"+other.message+"' instead of 'initBoard') while starting round.");
-						cc.assert(other.tiles.length === tiles.length, "I got "+other.tiles.length+" ships, but I have "+tiles.length+" while starting round.");
-						
-						for( var i=0 ; i<other.tiles.length ; i++ ) {
-							//new Battleships for other sea (show them) ...
-							//debugger;
-						}
-					});
-				});				
+			_b_one(["countdown_finished", "hourglass_is_clicked"], function() {
+				hg.clearCountdown();
+				self.sendInitialBoard();
 			});
-		}, 1200);      
+		});
+	},
+	
+	// multiple call ins
+	// wait and click function
+	
+	sendInitialBoard: function(result) {
+		var self = this,
+			os = this._ownSea,
+			fairy = this._fairy,
+			hg = this._hourglass;
+			
+		this._mode = this.first? _B_MODE_BOMBING: _B_MODE_WATCHING;	
+
+		var tiles = [];
+		for( var i=0 ; i<os.children.length ; i++ ) {
+			var tile = os.children[i];
+			
+			if( tile.isTile ) {
+				tiles.push({
+					pos: tile.getRCPosition(),
+					rotation: tile.getRotation()
+				});
+			}
+		}
+	
+		hg.show();
+		cc.log("Send message with initBoard!");
+		$b.sendMessage({ message: "initBoard", tiles: tiles });
+		$b.receiveMessage(function(other) {
+			cc.assert(other.message === "initBoard", "Received wrong message ('"+other.message+"' instead of 'initBoard') while starting round.");
+			cc.assert(other.tiles.length === tiles.length, "I got "+other.tiles.length+" ships, but I have "+tiles.length+" while starting round.");
+
+			cc.log("Starting countdown ...");
+			fairy.show(2);
+			fairy.say(0, 4, _b_t.fairies.lets_go);
+			hg.countdown(3);					
+
+			_b_one("countdown_finished" , function() {
+				hg.clearCountdown();
+
+				for( var i=0 ; i<other.tiles.length ; i++ ) {
+					//new Battleships for other sea (show them) ...
+					//debugger;
+				}
+			});
+		});
 	},
 
     initListeners: function() {
@@ -399,10 +468,7 @@ var WordBattleLayer = cc.Layer.extend({
 						)
 					}
 					
-					if( self._onShipMovementCb ) {
-						self._onShipMovementCb();
-						self._onShipMovementCb = null; // to be called once only
-					}
+					cc.eventManager.dispatchCustomEvent("a_ship_was_moved", draggedShip);					
 				}
 			}
 		});

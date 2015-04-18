@@ -24,8 +24,7 @@ var FairyLayer = cc.Layer.extend({
 	_fairy: null,
 	_gestures: null,
 	_currentGesture: null,
-	_speechbubble: null,
-	_hourglass: null,
+	_bubble: null,
 	
 	// event callbacks
 	_onFairyIsClicked: null,
@@ -109,40 +108,37 @@ var FairyLayer = cc.Layer.extend({
 		);
 	},
 	
-	say: function(time, text, cb) {
+	say: function(waitTime, stayTime, text) {
 
 		var self = this,
 			g = this._gestures[this._currentGesture];
 		
-		var bubble = new SpeechBubble(time, text, g, cb);
+		this._timeout = setTimeout(function() {
 
-		this._fairy.addChild(bubble,10);
-					    
-	    return function() {
-	    	bubble.disappear();
-	    };
+			if(self._bubble) {
+				self._fairy.removeChild(self._bubble);
+				_b_release(self._bubble);
+			}
+				
+			self._bubble = new SpeechBubble(stayTime, text, g);
+
+			self._fairy.addChild(self._bubble,10);	
+			_b_retain(self._bubble, "FairyLayer, bubble");					
+		}, (waitTime||0)*1000);
 	},
 	
-	showHourglass: function(pos) {
-	   	cc.assert(pos, "I need a position for the hourglass.")
-
+	silent: function() {
 		var self = this;
-		
-		this._hourglass = new Hourglass(pos);
-
-		this.addChild(this._hourglass,10);
-					    
-		return function() {
-			self._hourglass.disappear();
-		}
-	},
 	
-	getHourglass: function() {
-		return this._hourglass;
-	},
-	
-	hideHourglass: function() {
-		this._hourglass.disappear();
+		if( this._bubble ) {
+			this._bubble.disappear(function() {
+				self._fairy.removeChild(self._bubble);
+				_b_release(self._bubble);				
+			});
+		} else if( this._timeout ) {
+			clearTimeout(this._timeout);
+			this._timeout = null;
+		}		
 	},
 	
 	// initListeners start the event handling
@@ -157,15 +153,11 @@ var FairyLayer = cc.Layer.extend({
 
 				var touch = touches[0],
 					loc = touch.getLocation(),
-					rect = self._fairy.getBoundingBox();
+					fairyRect = self._fairy.getBoundingBox(),
+					bubbleRect = self._bubble && self._bubble.getBoundingBox();
 				
-				if( cc.rectContainsPoint(rect, loc) ) {
-					if( self._onFairyIsClicked ) {
-						self._onFairyIsClicked();
-						self._onFairyIsClicked = null; // to be called once only
-					}
-					
-				}
+				if( cc.rectContainsPoint(fairyRect, loc) ) cc.eventManager.dispatchCustomEvent("fairy_is_clicked", this);					
+				if( bubbleRect && cc.rectContainsPoint(bubbleRect, loc) ) cc.eventManager.dispatchCustomEvent("bubble_is_clicked", this);		
 			}
 		});
 			
@@ -187,9 +179,10 @@ var FairyLayer = cc.Layer.extend({
 // ----------
 //
 var SpeechBubble = cc.Sprite.extend({
-	_finalCallback: null,
+	_timeout: null,
+	
 	_bubbles: {
-		"angry": {
+		"strong": {
 			sprite: "bubble1",
 			ax: 0.6,
 			ay: 0.0,
@@ -217,17 +210,14 @@ var SpeechBubble = cc.Sprite.extend({
 
 	// ctor calls the parent class with appropriate parameter
 	//
-    ctor: function(time, text, gesture, cb) {
+    ctor: function(time, text, gesture) {
     	var self = this,
     		gb = gesture.bubble,			// gb is how the gesture would like to have the bubble (variables)
     		bb = this._bubbles[gb.type];	// bb is how the bubble itself is defined (constants)
     
-    	cc.assert(cb && typeof cb === "function", "I need a callback function.");
-    
         cc.Sprite.prototype.ctor.call(this);
         this.initWithSpriteFrame(cc.spriteFrameCache.getSpriteFrame(bb.sprite));
 
-        this._finalCallback = cb;
         this.setAnchorPoint(bb.ax, bb.ay);
         this.setPosition(cc.p(gb.x, gb.y));
         this.setCascadeOpacityEnabled(true);
@@ -247,8 +237,9 @@ var SpeechBubble = cc.Sprite.extend({
 		this.appear();
 		
 		if( time && time > 0 ) {
-			setTimeout(function() {
+			this._timeout = setTimeout(function() {
 				self.disappear();
+				self._timeout = null;
 			}, time*1000);
 		}
 	},
@@ -262,13 +253,14 @@ var SpeechBubble = cc.Sprite.extend({
 
 	disappear: function() {
 		var self = this;
+
+		if( this._timeout ) {
+			clearTimeout(self._timeout);
+			this._timeout = null;
+		}
+
 		this.runAction(
-			cc.sequence(
-				cc.fadeOut(0.66),
-				cc.callFunc(function() {
-					self._finalCallback();
-				})
-			)
+			cc.fadeOut(0.66)
 		);
 	},
 	
@@ -283,65 +275,94 @@ var SpeechBubble = cc.Sprite.extend({
 // ----------
 //
 var Hourglass = cc.Sprite.extend({
-	_label : [],
+	_b_label: [],
+	_b_pos: null,
 
 	// ctor calls the parent class with appropriate parameter
 	//
     ctor: function(pos) {
     	cc.assert(pos, "I need a position for the hourglass.")
-    
+    	
         cc.Sprite.prototype.ctor.call(this);
 
         this.initWithSpriteFrame(cc.spriteFrameCache.getSpriteFrame("hourglass"));
-
+        
         this.setPosition(pos);
         this.setCascadeOpacityEnabled(true);
 
-		var label1 = this._label[0] = cc.LabelBMFont.create( "." , "res/fonts/hourglass140.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
-		var label2 = this._label[1] = cc.LabelBMFont.create( "" , "res/fonts/hourglass140.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
+		var label1 = this._b_label[0] = cc.LabelBMFont.create( "." , "res/fonts/hourglass140.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
+		var label2 = this._b_label[1] = cc.LabelBMFont.create( "" , "res/fonts/hourglass140.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
 		label1.setPosition(cc.p(this.width/2, 50));
 		label2.setPosition(cc.p(this.width/2, 50));
-		label1.runAction(cc.blink(30,60));
 		this.addChild(label1);
 		this.addChild(label2);
 		_b_retain(label1,"Hourglass: label1");		
 		_b_retain(label2,"Hourglass: label2");		
 
-		this.appear();				
+		this.setOpacity(0);
 	},
 	
 	onExit: function() {
-		_b_release(this._label);		
+		_b_release(this._b_label[0]);		
+		_b_release(this._b_label[1]);
+	},
+	
+	show: function() {
+
+		var label = this._b_label;
+
+		this.stopAllActions();
+		label[0].stopAllActions();
+		label[0].setString(".");
+		label[0].setOpacity(255);
+		label[0].runAction(cc.blink(30,60));
+
+		label[1].stopAllActions();
+		label[1].setString("");
+		label[1].setOpacity(0);
+		
+		this.appear();	
+		this.initListeners();	
+	},
+	
+	hide: function() {
+		this.disappear();
+		this.stopListeners();	
 	},
 	
 	appear: function() {
-		this.setOpacity(0);
 		this.runAction(
 			cc.fadeIn(0.66)
 		);
 	},
 
-	disappear: function() {
+	disappear: function(cb) {
 		this.runAction(
-			cc.fadeOut(0.66)
+			cc.sequence(
+				cc.fadeOut(0.66),
+				cc.callFunc(function() {
+					if(cb) cb();
+				})
+			)
 		);
 	},
 	
 	countdown: function(seconds) {
 		var self = this,
-			label = this._label,
+			label = this._b_label,
 			cl = 0;
 			
-		seconds = Math.floor(seconds);
+		seconds = Math.floor(seconds)+1;
 		
 		label[0].stopAllActions();
 		label[1].stopAllActions();
-		cc.log("Before countdown ...");
-		var interval = setInterval(function() {
+		label[0].setOpacity(255);
+		label[1].setOpacity(0);
+		this._countdownInterval = setInterval(function() {
 			--seconds;
 			if( seconds >= 0 ) {
 				label[cl].setString(seconds);
-				cc.log("String set ...");
+				cc.log("Setting hourglass to "+seconds+" in slot "+cl);
 				label[cl].setOpacity(0);
 				label[1-cl].runAction(
 					cc.EaseSineOut.create(
@@ -350,16 +371,54 @@ var Hourglass = cc.Sprite.extend({
 				);
 				label[cl].runAction(
 					cc.EaseSineIn.create(
-						cc.fadeIn(0.33)
+						cc.fadeIn(0.66)
 					)
 				);
 				cl = 1-cl;
 			} else {
-				clearInterval(interval);
-				self.disappear();
+				clearInterval(self._countdownInterval);
+				this._countdownInterval = null;
+				self.hide();
+				cc.eventManager.dispatchCustomEvent("countdown_finished", this);					
 			}
 		},1000);
-	}
+	},
+	
+	clearCountdown: function() {
+		if( this._countdownInterval ) {
+			clearInterval(this._countdownInterval);
+			this._countdownInterval = null;
+			this.disappear();
+		}
+	},
+	
+	// initListeners start the event handling
+	initListeners: function() {
+		var self = this;
+	
+		this._touchListener = cc.EventListener.create({
+			event: cc.EventListener.TOUCH_ALL_AT_ONCE,
+			onTouchesBegan: function(touches, event) {},
+			onTouchesMoved: function(touches, event) {},
+			onTouchesEnded: function(touches, event){
+
+				var touch = touches[0],
+					loc = touch.getLocation(),
+					rect = self.getBoundingBox();
+					
+				if( cc.rectContainsPoint(rect, loc) ) {
+					cc.eventManager.dispatchCustomEvent("hourglass_is_clicked", this);		
+				}							
+			}
+		});
+			
+		cc.eventManager.addListener(this._touchListener, this);
+	},
+	
+	// stopListeners stops the event handling
+	stopListeners: function() {
+        if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
+    }  
 });
 // GameFairyLayer is the class for game fairies
 //
@@ -397,7 +456,37 @@ var GameFairy = FairyLayer.extend({
         	height: 320,
         	orientation: _B_FAIRY_RIGHT,
         	bubble: {
-        		type: "angry",
+        		type: "strong",
+        		x: 340,
+        		y: 260,
+        		width: 500,
+        		height: 300,
+        		fontsize: 48,
+        	},
+        },{
+        	sprite: "gamefairy3",
+        	x: 1020,
+        	y: 160,
+        	width: 251,
+        	height: 320,
+        	orientation: _B_FAIRY_RIGHT,
+        	bubble: {
+        		type: "strong",
+        		x: 340,
+        		y: 260,
+        		width: 500,
+        		height: 300,
+        		fontsize: 48,
+        	},
+        },{
+        	sprite: "gamefairy4",
+        	x: 1020,
+        	y: 160,
+        	width: 251,
+        	height: 320,
+        	orientation: _B_FAIRY_RIGHT,
+        	bubble: {
+        		type: "strong",
         		x: 340,
         		y: 260,
         		width: 500,
