@@ -6,7 +6,10 @@
 // GameFairyLayer Constants
 //
 var _B_FAIRY_LEFT = 1,
-	_B_FAIRY_RIGHT = -1;
+	_B_FAIRY_RIGHT = -1,
+	_B_GRABABLE_MASK_BIT = 1<<31,
+	_B_NOT_GRABABLE_MASK = ~_B_GRABABLE_MASK_BIT;
+
 
 // FairyLayer is the base class for all fairies
 //
@@ -22,6 +25,7 @@ var _B_FAIRY_LEFT = 1,
 //
 var FairyLayer = cc.Layer.extend({
 	_fairy: null,
+	_space: null,
 	_gestures: null,
 	_currentGesture: null,
 	_bubble: null,
@@ -42,7 +46,27 @@ var FairyLayer = cc.Layer.extend({
 		this._currentGesture = 0;
 		        
 	    cc.spriteFrameCache.addSpriteFrames(res.fairies_plist);
+	    
+		// Create the initial chipmonk space
+        var space = this._space = new cp.Space();
+		space.iterations = 60;
+        space.gravity = cp.v(0, -500);
+        space.sleepTimeThreshold = 0.5;
+        space.collisionSlop = 0.5;
+
+        this._debugNode = new cc.PhysicsDebugNode(this._space );
+        this._debugNode.visible = true ;
+        this.addChild( this._debugNode );
+        // debug
+                
+        this.scheduleUpdate();
+        
+		this.cp_addWorldObjects();
 	},
+	
+    update : function(dt) {
+        this._space.step(dt);
+    },
 	
 	// show displays a fairy
 	//
@@ -75,6 +99,13 @@ var FairyLayer = cc.Layer.extend({
 		this._currentGesture = cg;
 
 		this.initListeners();
+		
+		bomb1 = new Bomb(this._space, cc.p(200,600));
+		bomb2 = new Bomb(this._space, cc.p(200,600));
+		bomb3 = new Bomb(this._space, cc.p(200,600));
+		this.addChild(bomb1);
+		this.addChild(bomb2);
+		this.addChild(bomb3);
 		
 		return this;
 	},
@@ -180,6 +211,21 @@ var FairyLayer = cc.Layer.extend({
 	stopListeners: function() {
         if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
     },    
+    
+    // chipmonk addons
+	cp_addWorldObjects: function() {
+        var space = this._space;
+        var floor = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(0, 30), cp.v(1136, -30), 0));
+        floor.setElasticity(0.4);
+        floor.setFriction(0.2);
+        floor.setLayers(_B_NOT_GRABABLE_MASK);
+        
+        var stopper = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(568, 30), cp.v(568, 100), 0));        
+        stopper.setFriction(0.1);
+        stopper.setElasticity(0.3);
+        stopper.setLayers(_B_NOT_GRABABLE_MASK);
+    },
+
 });
 
 // SpeechBubble is the class for speech bubbles for fairies
@@ -432,6 +478,43 @@ var Hourglass = cc.Sprite.extend({
         if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
     }  
 });
+
+
+// Bomb is the class for bombs
+//
+// Methods
+// -------
+//
+// Properties
+// ----------
+//
+var Bomb = cc.PhysicsSprite.extend({
+
+	// ctor calls the parent class with appropriate parameter
+	//
+    ctor: function(space, pos) {
+        cc.PhysicsSprite.prototype.ctor.call(this);
+
+        this.initWithSpriteFrame(cc.spriteFrameCache.getSpriteFrame("bomb"));
+		this.setAnchorPoint(0.50,0.42);
+		var radius = 50;
+		mass = 30;
+		var bomb = space.addBody(new cp.Body(mass, cp.momentForCircle(mass, 0, radius, cp.v(0, 0)))),
+			circle = space.addShape(new cp.CircleShape(bomb, radius, cp.v(0, 0)));
+		circle.setElasticity(0.5);
+		circle.setFriction(10);
+		
+		this.setBody(bomb);
+        this.setPosition(pos);
+        this.setCascadeOpacityEnabled(true);
+	},
+	
+	onExit: function() {
+	},
+});
+
+
+
 // GameFairyLayer is the class for game fairies
 //
 // Methods
@@ -513,6 +596,6 @@ var GameFairy = FairyLayer.extend({
 		this._fairy.runAction(
 			cc.fadeIn(2)
 		);	
-	}
+	}	
 });
 
