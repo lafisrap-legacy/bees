@@ -75,6 +75,8 @@ var FairyLayer = cc.Layer.extend({
 		this._currentGesture = cg;
 
 		this.initListeners();
+		
+		return this;
 	},
 	
 	hide: function() {
@@ -88,6 +90,8 @@ var FairyLayer = cc.Layer.extend({
 
 		this._fairy = null;    			    	
 	    this.stopListeners();	    
+		
+		return this;
 	},
 	
 	appear: function() {
@@ -95,6 +99,8 @@ var FairyLayer = cc.Layer.extend({
 		this._fairy.runAction(
 			cc.fadeIn(0.66)
 		);
+		
+		return this;
 	},
 	
 	disappear: function(cb) {
@@ -106,6 +112,8 @@ var FairyLayer = cc.Layer.extend({
 				})
 			)
 		);
+		
+		return this;
 	},
 	
 	say: function(waitTime, stayTime, text) {
@@ -125,6 +133,8 @@ var FairyLayer = cc.Layer.extend({
 			self._fairy.addChild(self._bubble,10);	
 			_b_retain(self._bubble, "FairyLayer, bubble");					
 		}, (waitTime||0)*1000);
+		
+		return this;
 	},
 	
 	silent: function() {
@@ -138,7 +148,9 @@ var FairyLayer = cc.Layer.extend({
 		} else if( this._timeout ) {
 			clearTimeout(this._timeout);
 			this._timeout = null;
-		}		
+		}
+		
+		return this;
 	},
 	
 	// initListeners start the event handling
