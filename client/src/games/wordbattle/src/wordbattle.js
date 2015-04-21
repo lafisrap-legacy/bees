@@ -3,11 +3,13 @@
 var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_SQUARE_SIZE = 56,
 	_B_WORDS_PER_ROUND = 7,		// maximum number of words per round
+	_B_HOURGLASS_POS = cc.p(668,140),
+	_B_TAP_TIME = 200,
+
 	_B_MODE_TITLE = 1,
 	_B_MODE_MOVING = 2,
 	_B_MODE_BOMBING = 3,
 	_B_MODE_WATCHING = 4,
-	_B_TAP_TIME = 200,
 
 // Regular Expressions
 //
@@ -126,7 +128,7 @@ var WordBattleLayer = cc.Layer.extend({
 
 		//////////////////////////////
 		// Create and show title screen
-		var startscreen = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("startscreen"),cc.rect(0,0,1136,640));
+		var startscreen = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("start"),cc.rect(0,0,1136,640));
 		startscreen.setPosition(cc.p(cc.width/2, cc.height/2));
 		startscreen.setScale(0.9);
 		startscreen.setOpacity(0);
@@ -161,11 +163,8 @@ var WordBattleLayer = cc.Layer.extend({
 		//this.initListeners();
 		
 		this._fairy = new GameFairy();
-		this._hourglass = new Hourglass(cc.p(750,120));
         this.addChild(this._fairy,10);
-        this.addChild(this._hourglass,10);
 		_b_retain(this._fairy, "Fairy");
-		_b_retain(this._hourglass, "Hourglass");
 
         return true;
     },
@@ -280,8 +279,7 @@ var WordBattleLayer = cc.Layer.extend({
 		
 		this.letShipsBeMoved();
 		
-		var fairy = this._fairy,
-			hg = this._hourglass;
+		var fairy = this._fairy;
 		
 		_b_one(["seas_have_moved_in"], function() {
 			// first set the right rects, after first they were set while the ships were moving (yes, that's a hack ...)
@@ -289,7 +287,16 @@ var WordBattleLayer = cc.Layer.extend({
 					
 			fairy.show(0);
 			fairy.say(_b_remember("fairies.move_ships")?10:2, 5, _b_t.fairies.move_ships);
-			_b_one(["in_20_seconds", "a_ship_was_moved"], function(data) {
+			_b_one(["in_20_seconds"], function(data) {
+				fairy.silent().show(2).say(0, 5, _b_t.fairies.move_ships );
+			});
+			_b_one(["a_ship_was_moved"], function(data) {
+				_b_clear("in_20_seconds");
+				
+				var hg = self._hourglass = new Hourglass(self._fairy._space, _B_HOURGLASS_POS);
+    		    self.addChild(self._hourglass,10);
+				_b_retain(self._hourglass, "Hourglass");
+				
 				fairy.silent().show(1).say(0, 5, _b_t.fairies.press_it );
 				hg.show();
 				hg.countdown(10);
@@ -339,15 +346,27 @@ var WordBattleLayer = cc.Layer.extend({
 				fairy.say(0, 4, _b_t.fairies.lets_go);
 				hg.countdown(3);					
 
+				// start always with three bombs
+				fairy.addObject(new Bomb(fairy._space, cc.p(140,700)));
+				fairy.addObject(new Bomb(fairy._space, cc.p(200,770)));
+				fairy.addObject(new Bomb(fairy._space, cc.p(260,730)));
+
 				_b_one("countdown_finished" , function() {
 					hg.clearCountdown();
+					hg.hide(function() {
+						hg.exit();
+		    		    self.removeChild(hg);
+						_b_release(hg);
+						self._hourglass = null;
+					});
+					fairy.hide();
 
 					for( var other=self._otherSea, i=0 ; i<otherBoard.tiles.length ; i++ ) {
 						var tile = otherBoard.tiles[i];
 						var ship = new Battleship(tile.word);
 						other.addChild(ship,10);
 						ship.setRCPosition(tile.pos);
-						ship.setRotation(tile.rotation);					
+						ship.setRotation(tile.rotation);							
 					}
 				});
 			});
@@ -730,6 +749,56 @@ var Battleship = cc.Node.extend({
 		_b_release(this);
     }
 });
+
+// Bomb is the class for bombs
+//
+// Methods
+// -------
+//
+// Properties
+// ----------
+//
+var Bomb = cc.PhysicsSprite.extend({
+
+	_space: null,
+	_clickable: true,
+	_dragable: true,
+	_body: true,
+
+	// ctor calls the parent class with appropriate parameter
+	//
+    ctor: function(space, pos) {
+        cc.PhysicsSprite.prototype.ctor.call(this);
+        
+        this._space = space;
+
+        this.initWithSpriteFrame(cc.spriteFrameCache.getSpriteFrame("bomb"));
+		this.setAnchorPoint(0.50,0.42);
+		var radius = 50,
+			mass = 30,
+			bomb = this._bomb = space.addBody(new cp.Body(mass, cp.momentForCircle(mass, 0, radius, cp.v(0, 0)))),
+			circle = space.addShape(new cp.CircleShape(bomb, radius, cp.v(0, 0)));
+		circle.setElasticity(0.5);
+		circle.setFriction(3);
+		
+		this.setBody(bomb);
+        this.setPosition(pos);
+        //this.setCascadeOpacityEnabled(true);
+	},
+	
+	exit: function() {
+		this.onExit();
+		
+		if( this._bomb ) {
+			this._space.removeBody(this._bomb);
+		}
+	},
+	
+	onExit: function() {
+		debugger;
+	},
+});
+
 
 var WordBattleScene = cc.Scene.extend({
 	gameState: null,

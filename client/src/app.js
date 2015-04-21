@@ -257,11 +257,10 @@ var _b_recall = function() {
 		return false;
 	}
 }
-
 var _b_remember = _b_recall();
 
-
 var _b_in_seconds = /^in_([\d\.]+)_seconds$/g;
+
 var _b_one = function(events, cb) {
 	_b_on(events, cb, true);
 };
@@ -272,10 +271,9 @@ var _b_on = function(events, cb, justOne) {
 	
 	for( var i=0, listeners=[] ; i<events.length ; i++ ) {
 		var event = events[i],
-			res;
-		if( res = _b_in_seconds.exec(event) ) {
-			event += "_"+_b_getId();
-
+			res = _b_in_seconds.exec(event);
+			
+		if( res ) {
 			var seconds = parseFloat(res[1]),
 				e = event;
 
@@ -298,5 +296,10 @@ var _b_off = function(listeners) {
 	for( var i=0 ; i<listeners.length ; i++ ) cc.eventManager.removeListener(listeners[i]);
 };
 
+var _b_clear = function(events) {
+	if( typeof events === "string" ) events = [events];
+
+	for( var i=0 ; i<events.length ; i++ ) cc.eventManager.removeCustomListeners(events[i]);
+}
 
 

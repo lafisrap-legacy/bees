@@ -91,7 +91,7 @@ var SelectPlayerLayer = cc.Layer.extend({
 				cc.scaleTo(0.33,1)
 			)
 		);
-		var bl = this._BarLabel = cc.LabelBMFont.create( _b_t.playerlist.noplayers , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
+		var bl = this._BarLabel = cc.LabelBMFont.create( _b_t.playerlist.noplayers , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
 		bl.setPosition(cc.p(275,75+_B_BEESFONT_Y_OFFSET));
 		bar.addChild(bl, 5);	
         this.addChild(bar,0);

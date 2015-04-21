@@ -123,23 +123,6 @@
 
 			</array>
 		</dict>
-		<key>bomb</key>
-		<dict>
-			<key>frame</key>
-			<string>{{0, 1910}, {120, 120}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{8, 1}, {105, 119}}</string>
-			<key>sourceSize</key>
-			<string>{120, 120}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
 		</dict>
 		<key>metadata</key>
 		<dict>

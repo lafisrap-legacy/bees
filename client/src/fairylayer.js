@@ -29,6 +29,7 @@ var FairyLayer = cc.Layer.extend({
 	_gestures: null,
 	_currentGesture: null,
 	_bubble: null,
+	_objects: [],
 	
 	// event callbacks
 	_onFairyIsClicked: null,
@@ -99,14 +100,7 @@ var FairyLayer = cc.Layer.extend({
 		this._currentGesture = cg;
 
 		this.initListeners();
-		
-		bomb1 = new Bomb(this._space, cc.p(200,600));
-		bomb2 = new Bomb(this._space, cc.p(200,600));
-		bomb3 = new Bomb(this._space, cc.p(200,600));
-		this.addChild(bomb1);
-		this.addChild(bomb2);
-		this.addChild(bomb3);
-		
+				
 		return this;
 	},
 	
@@ -184,6 +178,23 @@ var FairyLayer = cc.Layer.extend({
 		return this;
 	},
 	
+	addObject: function(obj) {		
+		this._objects.push(obj);
+		this.addChild(obj);
+		_b_retain(obj,"Fairy object");
+	},
+	
+	removeObject: function(obj) {
+		var index = this._objects.indexOf(obj);
+		
+		if( index > -1 ) {
+			this._objects.splice(index, 1);
+			this.removeChild(obj);
+			_b_release(obj);
+		}
+		else cc.assert(false, "Couldn't find fairy object in list.");
+	},
+	
 	// initListeners start the event handling
 	initListeners: function() {
 		var self = this;
@@ -215,15 +226,25 @@ var FairyLayer = cc.Layer.extend({
     // chipmonk addons
 	cp_addWorldObjects: function() {
         var space = this._space;
-        var floor = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(0, 30), cp.v(1136, -30), 0));
-        floor.setElasticity(0.4);
-        floor.setFriction(0.2);
-        floor.setLayers(_B_NOT_GRABABLE_MASK);
+        var floorLeft = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(0, 40), cp.v(668, 0), 0));
+        floorLeft.setElasticity(0.4);
+        floorLeft.setFriction(0.2);
+        floorLeft.setLayers(_B_NOT_GRABABLE_MASK);
         
-        var stopper = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(568, 30), cp.v(568, 100), 0));        
-        stopper.setFriction(0.1);
-        stopper.setElasticity(0.3);
-        stopper.setLayers(_B_NOT_GRABABLE_MASK);
+        var floorRight = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(668, 0), cp.v(1136, 0), 0));        
+        floorRight.setFriction(0.1);
+        floorRight.setElasticity(0.3);
+        floorRight.setLayers(_B_NOT_GRABABLE_MASK);
+
+        var stopperLeft = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(0, 0), cp.v(0, 640), 0));        
+        stopperLeft.setFriction(0.1);
+        stopperLeft.setElasticity(0.3);
+        stopperLeft.setLayers(_B_NOT_GRABABLE_MASK);
+
+        var stopperRight = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(1136, 0), cp.v(1136, 640), 0));        
+        stopperRight.setFriction(0.1);
+        stopperRight.setElasticity(0.3);
+        stopperRight.setLayers(_B_NOT_GRABABLE_MASK);
     },
 
 });
@@ -332,18 +353,34 @@ var SpeechBubble = cc.Sprite.extend({
 // Properties
 // ----------
 //
-var Hourglass = cc.Sprite.extend({
+var Hourglass = cc.PhysicsSprite.extend({
+	_space: null,
+	_hourglass: null,
+	_shape: null,
 	_b_label: [],
 	_b_pos: null,
+	
 
 	// ctor calls the parent class with appropriate parameter
 	//
-    ctor: function(pos) {
-    	cc.assert(pos, "I need a position for the hourglass.")
+    ctor: function(space, pos) {
+    	cc.assert(pos, "I need a position for the hourglass.");
     	
-        cc.Sprite.prototype.ctor.call(this);
+    	this._space = space;
+    	
+        cc.PhysicsSprite.prototype.ctor.call(this);
 
         this.initWithSpriteFrame(cc.spriteFrameCache.getSpriteFrame("hourglass"));
+		this.setAnchorPoint(0.50,0.5);
+		var width = 120,
+			height = 220,
+			mass = 300,
+			hourglass = this._hourglass = space.addBody(new cp.Body(mass, cp.momentForBox(mass, width, height))),
+			box = this._shape = space.addShape(new cp.BoxShape(hourglass, width, height));
+		box.setElasticity(0.1);
+		box.setFriction(3);
+		
+		this.setBody(hourglass);
         
         this.setPosition(pos);
         this.setCascadeOpacityEnabled(true);
@@ -360,6 +397,13 @@ var Hourglass = cc.Sprite.extend({
 		this.setOpacity(0);
 	},
 	
+	exit: function() {
+		if( this._hourglass ) {
+			this._space.removeBody(this._hourglass);
+			this._space.removeShape(this._shape);
+		}
+	},
+
 	onExit: function() {
 		_b_release(this._b_label[0]);		
 		_b_release(this._b_label[1]);
@@ -383,8 +427,8 @@ var Hourglass = cc.Sprite.extend({
 		this.initListeners();	
 	},
 	
-	hide: function() {
-		this.disappear();
+	hide: function(cb) {
+		this.disappear(cb);
 		this.stopListeners();	
 	},
 	
@@ -397,7 +441,7 @@ var Hourglass = cc.Sprite.extend({
 	disappear: function(cb) {
 		this.runAction(
 			cc.sequence(
-				cc.fadeOut(0.66),
+				cc.fadeOut(0.33),
 				cc.callFunc(function() {
 					if(cb) cb();
 				})
@@ -434,10 +478,8 @@ var Hourglass = cc.Sprite.extend({
 				);
 				cl = 1-cl;
 			} else {
-				clearInterval(self._countdownInterval);
-				this._countdownInterval = null;
-				self.hide();
 				cc.eventManager.dispatchCustomEvent("countdown_finished", this);					
+				self.clearCountdown();
 			}
 		},1000);
 	},
@@ -446,7 +488,12 @@ var Hourglass = cc.Sprite.extend({
 		if( this._countdownInterval ) {
 			clearInterval(this._countdownInterval);
 			this._countdownInterval = null;
-			this.disappear();
+			
+			var label = this._b_label;		
+			label[0].stopAllActions();
+			label[1].stopAllActions();
+			label[0].setOpacity(0);
+			label[1].setOpacity(0);
 		}
 	},
 	
@@ -478,41 +525,6 @@ var Hourglass = cc.Sprite.extend({
         if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
     }  
 });
-
-
-// Bomb is the class for bombs
-//
-// Methods
-// -------
-//
-// Properties
-// ----------
-//
-var Bomb = cc.PhysicsSprite.extend({
-
-	// ctor calls the parent class with appropriate parameter
-	//
-    ctor: function(space, pos) {
-        cc.PhysicsSprite.prototype.ctor.call(this);
-
-        this.initWithSpriteFrame(cc.spriteFrameCache.getSpriteFrame("bomb"));
-		this.setAnchorPoint(0.50,0.42);
-		var radius = 50;
-		mass = 30;
-		var bomb = space.addBody(new cp.Body(mass, cp.momentForCircle(mass, 0, radius, cp.v(0, 0)))),
-			circle = space.addShape(new cp.CircleShape(bomb, radius, cp.v(0, 0)));
-		circle.setElasticity(0.5);
-		circle.setFriction(10);
-		
-		this.setBody(bomb);
-        this.setPosition(pos);
-        this.setCascadeOpacityEnabled(true);
-	},
-	
-	onExit: function() {
-	},
-});
-
 
 
 // GameFairyLayer is the class for game fairies
