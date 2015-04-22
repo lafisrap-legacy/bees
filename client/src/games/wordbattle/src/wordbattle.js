@@ -223,14 +223,18 @@ var WordBattleLayer = cc.Layer.extend({
 			cc.assert(lotteryWheel.length == 0, "Lottery wheel is not empty.");
 			
 			this._rounds = rounds;
-			this.startRound();
+			_b_one(["seas_have_moved_in"], function() {
+				self.startRound();
+			});
 
 			$b.sendMessage({ message: "initRounds", rounds: this._rounds });
 		} else {
 			$b.receiveMessage(function(data) {
 				cc.assert(data.message === "initRounds", "Received wrong message ('"+data.message+"' instead of 'initRounds') while starting episode.");
 				self._rounds = data.rounds;
-				self.startRound();
+				_b_one(["seas_have_moved_in"], function() {
+					self.startRound();
+				});
 			});
 		}
 	},
@@ -238,25 +242,25 @@ var WordBattleLayer = cc.Layer.extend({
 	startRound: function(allStrait) {
 		var self = this;
 	
-        //////////////////////////////
-        // Build ships
-		var r = this._rounds[this._round],
-			own = this._ownSea;  
-		
+		//////////////////////////////
+		// Build ships
+		var r = self._rounds[self._round],
+			own = self._ownSea;  
+	
 		for( var i=0; i<r.length ; i++ ) {
 
-			var word = this._pureWords[r[i]];
+			var word = self._pureWords[r[i]]+"abc";
 			if( word.length > _B_MAX_SHIP_LENGTH ) continue; // don't take words that don't fit ...
-			cc.log("Creating ship with '"+word+"', this._round: "+this._round);
+			cc.log("Creating ship with '"+word+"', self._round: "+self._round);
 			var ship = new Battleship(word);
-				
+			
 			own.addChild(ship,10);
 			var rotation = allStrait!==undefined? allStrait : Math.floor(Math.random()*2)*90;
 			var pos = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},rotation);
 			if( !pos ) {
 				cc.log("Didn't find room for the ship. Setting all ships strait...");
 				own.removeAllChildren();
-				return this.startRound(Math.floor(Math.random()*2)*90);
+				return self.startRound(Math.floor(Math.random()*2)*90);
 			}
 			cc.log("Placing ship at "+JSON.stringify(pos)+" with rotation "+rotation);
 			ship.setRCPosition(pos);
@@ -265,7 +269,7 @@ var WordBattleLayer = cc.Layer.extend({
 
 		for( var i=0; i<own.children.length ; i++ ) {
 			var ship = own.children[i];
-		
+	
 			ship.setOpacity(0);
 			ship.setRotation(ship.getRotation()+180);
 			ship.setScale(0.6);
@@ -281,35 +285,33 @@ var WordBattleLayer = cc.Layer.extend({
 				)
 			);
 		}		
-		
-		this.letShipsBeMoved();
-		
-		var fairy = this._fairy;
-		
-		_b_one(["seas_have_moved_in"], function() {
-			// first set the right rects, after first they were set while the ships were moving (yes, that's a hack ...)
-			for( var i=0; i<own.children.length ; i++ ) own.children[i].setRCPosition();	
-					
-			fairy.show(0);
-			fairy.say(_b_remember("fairies.move_ships")?10:2, 5, _b_t.fairies.move_ships);
-			_b_one(["in_20_seconds"], function(data) {
-				fairy.silent().show(2).say(0, 5, _b_t.fairies.move_ships );
-			});
-			_b_one(["a_ship_was_moved"], function(data) {
-				_b_clear("in_20_seconds");
+	
+		self.letShipsBeMoved();
+	
+		var fairy = self._fairy;
+	
+		// first set the right rects, after first they were set while the ships were moving (yes, that's a hack ...)
+		for( var i=0; i<own.children.length ; i++ ) own.children[i].setRCPosition();	
 				
-				var hg = self._hourglass = new Hourglass(self._fairy._space, _B_HOURGLASS_POS);
-    		    self.addChild(self._hourglass,10);
-				_b_retain(self._hourglass, "Hourglass");
-				
-				fairy.silent().show(1).say(0, 5, _b_t.fairies.press_it );
-				hg.show();
-				hg.countdown(10);
+		fairy.show(0);
+		fairy.say(_b_remember("fairies.move_ships")?10:2, 5, _b_t.fairies.move_ships);
+		_b_one(["in_20_seconds"], function(data) {
+			fairy.silent().show(2).say(0, 5, _b_t.fairies.move_ships );
+		});
+		_b_one(["a_ship_was_moved"], function(data) {
+			_b_clear("in_20_seconds");
+			
+			var hg = self._hourglass = new Hourglass(self._fairy._space, _B_HOURGLASS_POS);
+			self.addChild(self._hourglass,10);
+			_b_retain(self._hourglass, "Hourglass");
+			
+			fairy.silent().show(1).say(0, 5, _b_t.fairies.press_it );
+			hg.show();
+			hg.countdown(10);
 
-				_b_one(["countdown_finished", "hourglass_is_clicked"], function() {
-					hg.clearCountdown();
-					self.sendInitialBoard();
-				});
+			_b_one(["countdown_finished", "hourglass_is_clicked"], function() {
+				hg.clearCountdown();
+				self.sendInitialBoard();
 			});
 		});
 	},
@@ -610,10 +612,10 @@ var Battleship = cc.Node.extend({
     		
     	this._rect = cc.rect(minX, minY, maxX-minX, maxY-minY);
     	
- //   	var drawNode = cc.DrawNode.create();
+//    	var drawNode = cc.DrawNode.create();
 //	    drawNode.drawRect({x:minX,y:minY}, {x:maxX,y:maxY}, cc.color(255,0,0,30));
- //       this.getParent().getParent().addChild(drawNode,20);
-// HIER GEHTS WEITER!
+//        this.getParent().getParent().addChild(drawNode,20);
+
     	//cc.log("setRCPosition: rect: "+JSON.stringify(this._rect)+", row/col: "+JSON.stringify(pos));
     	
     },
