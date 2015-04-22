@@ -95,7 +95,7 @@ var MenuLayer = cc.Layer.extend({
 	    		spritesSelected =cc.Sprite.create(frame,cc.rect(0,0,380,100)),
 	    		spritesDisabled =cc.Sprite.create(frame,cc.rect(0,0,380,100));
 
-			var label = cc.LabelBMFont.create( labelsAndCallbacks[i].label , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
+			var label = new cc.LabelBMFont( labelsAndCallbacks[i].label , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
 			label.setPosition(cc.p(190,label.getContentSize().height-20));
 			label.setColor(cc.color(222,160,160));
 			spritesNormal.addChild(label, 5);	

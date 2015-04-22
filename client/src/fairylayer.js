@@ -62,7 +62,15 @@ var FairyLayer = cc.Layer.extend({
                 
         this.scheduleUpdate();
         
+		this.initListeners();
+        
 		this.cp_addWorldObjects();
+	},
+	
+	onExit: function() {
+	    cc.Layer.prototype.onExit.call(this);
+
+		this.stopListeners();	    
 	},
 	
     update : function(dt) {
@@ -99,8 +107,6 @@ var FairyLayer = cc.Layer.extend({
 		
 		this._currentGesture = cg;
 
-		this.initListeners();
-				
 		return this;
 	},
 	
@@ -114,7 +120,6 @@ var FairyLayer = cc.Layer.extend({
 		});
 
 		this._fairy = null;    			    	
-	    this.stopListeners();	    
 		
 		return this;
 	},
@@ -197,21 +202,65 @@ var FairyLayer = cc.Layer.extend({
 	
 	// initListeners start the event handling
 	initListeners: function() {
-		var self = this;
+		var self = this,
+			draggedObject = null,
+			startTime = null,
+			offset = null,
+			lastTouch = null,
+			lastEvent = null,
+			bombFlies = false;
 	
 		this._touchListener = cc.EventListener.create({
 			event: cc.EventListener.TOUCH_ALL_AT_ONCE,
-			onTouchesBegan: function(touches, event) {},
-			onTouchesMoved: function(touches, event) {},
+			onTouchesBegan: function(touches, event) {
+				var touch = touches[0],
+					start = touch.getLocation(),
+					startTime = new Date().getTime();
+
+				cc.log("FairyLayer: onTouchesBegan: "+(self._objects?self._objects.length:"no")+"objects");
+				for( var i=0, objs = self._objects ; objs && i<objs.length ; i++ ) {
+					var o = objs[i],
+						pos = o.getPosition(),
+						rect = o.getBoundingBox();
+						
+					if( cc.rectContainsPoint(rect, start) ) {
+						cc.eventManager.dispatchCustomEvent("object_touches_began", o);
+						draggedObject = o;
+						offset = {
+							x: start.x - pos.x,
+							y: start.y - pos.y
+						};
+						break;
+					}					
+				}
+			},
+			onTouchesMoved: function(touches, event) {
+				var touch = touches[0],
+					loc = touch.getLocation();
+					
+				lastTouch = touches;
+				lastEvent = event;
+				
+				if(draggedObject) {
+					draggedObject.setPosition(cc.p(loc.x-offset.x,loc.y-offset.y));
+				}
+			},
 			onTouchesEnded: function(touches, event){
 
 				var touch = touches[0],
 					loc = touch.getLocation(),
-					fairyRect = self._fairy.getBoundingBox(),
-					bubbleRect = self._bubble && self._bubble.getBoundingBox();
-				
-				if( cc.rectContainsPoint(fairyRect, loc) ) cc.eventManager.dispatchCustomEvent("fairy_is_clicked", this);					
-				if( bubbleRect && cc.rectContainsPoint(bubbleRect, loc) ) cc.eventManager.dispatchCustomEvent("bubble_is_clicked", this);		
+					fairyRect = self._fairy && self._fairy.getBoundingBox() || null,
+					bubbleRect = self._bubble && self._bubble && self._bubble.getBoundingBox() || null;
+
+				if( !draggedObject ) {				
+					if( cc.rectContainsPoint(fairyRect, loc) ) cc.eventManager.dispatchCustomEvent("fairy_is_clicked", this);					
+					if( bubbleRect && cc.rectContainsPoint(bubbleRect, loc) ) cc.eventManager.dispatchCustomEvent("bubble_is_clicked", this);	
+				} else if( !bombFlies ) {
+					bombFlies = true;
+					
+					draggedObject.explode();
+					draggedObject = null;
+				}
 			}
 		});
 			
@@ -221,6 +270,8 @@ var FairyLayer = cc.Layer.extend({
 	// stopListeners stops the event handling
 	stopListeners: function() {
         if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
+        cc.log("FairyLayer: Stop listening!");
+
     },    
     
     // chipmonk addons
@@ -385,8 +436,8 @@ var Hourglass = cc.PhysicsSprite.extend({
         this.setPosition(pos);
         this.setCascadeOpacityEnabled(true);
 
-		var label1 = this._b_label[0] = cc.LabelBMFont.create( "." , "res/fonts/hourglass140.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
-		var label2 = this._b_label[1] = cc.LabelBMFont.create( "" , "res/fonts/hourglass140.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
+		var label1 = this._b_label[0] = new cc.LabelBMFont( "." , "res/fonts/hourglass140.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
+		var label2 = this._b_label[1] = new cc.LabelBMFont( "" , "res/fonts/hourglass140.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
 		label1.setPosition(cc.p(this.width/2, 50));
 		label2.setPosition(cc.p(this.width/2, 50));
 		this.addChild(label1);
@@ -394,7 +445,7 @@ var Hourglass = cc.PhysicsSprite.extend({
 		_b_retain(label1,"Hourglass: label1");		
 		_b_retain(label2,"Hourglass: label2");		
 
-		this.setOpacity(0);
+		//this.setOpacity(0);
 	},
 	
 	exit: function() {
@@ -405,6 +456,8 @@ var Hourglass = cc.PhysicsSprite.extend({
 	},
 
 	onExit: function() {
+        cc.PhysicsSprite.prototype.onExit.call(this);
+	
 		_b_release(this._b_label[0]);		
 		_b_release(this._b_label[1]);
 	},
@@ -464,7 +517,6 @@ var Hourglass = cc.PhysicsSprite.extend({
 			--seconds;
 			if( seconds >= 0 ) {
 				label[cl].setString(seconds);
-				cc.log("Setting hourglass to "+seconds+" in slot "+cl);
 				label[cl].setOpacity(0);
 				label[1-cl].runAction(
 					cc.EaseSineOut.create(

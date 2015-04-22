@@ -40,6 +40,7 @@ var WordBattleLayer = cc.Layer.extend({
 	_otherSea: [],
 	_ownShips: [],
 	_otherShips: [],
+	_bombs: [],
 	_text: null,
 	_sphinx: null,
 	_fairy: null,
@@ -128,7 +129,7 @@ var WordBattleLayer = cc.Layer.extend({
 
 		//////////////////////////////
 		// Create and show title screen
-		var startscreen = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("start"),cc.rect(0,0,1136,640));
+		var startscreen = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("startscreen"),cc.rect(0,0,1136,640));
 		startscreen.setPosition(cc.p(cc.width/2, cc.height/2));
 		startscreen.setScale(0.9);
 		startscreen.setOpacity(0);
@@ -165,7 +166,11 @@ var WordBattleLayer = cc.Layer.extend({
 		this._fairy = new GameFairy();
         this.addChild(this._fairy,10);
 		_b_retain(this._fairy, "Fairy");
-
+		
+//		this._fairy.addObject(new Bomb(this._fairy._space, cc.p(140,700)));
+//		this._fairy.addObject(new Bomb(this._fairy._space, cc.p(200,770)));
+//		this._fairy.addObject(new Bomb(this._fairy._space, cc.p(260,730)));
+		
         return true;
     },
     
@@ -343,16 +348,15 @@ var WordBattleLayer = cc.Layer.extend({
 
 				cc.log("Starting countdown ...");
 				fairy.show(2);
-				fairy.say(0, 4, _b_t.fairies.lets_go);
-				hg.countdown(3);					
+				fairy.say(0, 2, _b_t.fairies.lets_go);
 
 				// start always with three bombs
-				fairy.addObject(new Bomb(fairy._space, cc.p(140,700)));
-				fairy.addObject(new Bomb(fairy._space, cc.p(200,770)));
-				fairy.addObject(new Bomb(fairy._space, cc.p(260,730)));
+				for( var i=0 ; i<3 ; i++ ) {	
+					self._bombs[i] = new Bomb(fairy._space, cc.p(100+80*i,700+(i%2)*100));
+					fairy.addObject(self._bombs[i]);
+				}
 
-				_b_one("countdown_finished" , function() {
-					hg.clearCountdown();
+				_b_one("2.5" , function() {
 					hg.hide(function() {
 						hg.exit();
 		    		    self.removeChild(hg);
@@ -360,6 +364,10 @@ var WordBattleLayer = cc.Layer.extend({
 						self._hourglass = null;
 					});
 					fairy.hide();
+
+					for( var i=0 ; i<3 ; i++ ) {	
+						self._bombs[i].setTimer(5);
+					}
 
 					for( var other=self._otherSea, i=0 ; i<otherBoard.tiles.length ; i++ ) {
 						var tile = otherBoard.tiles[i];
@@ -602,11 +610,11 @@ var Battleship = cc.Node.extend({
     		
     	this._rect = cc.rect(minX, minY, maxX-minX, maxY-minY);
     	
-/*    	var drawNode = cc.DrawNode.create();
-	    drawNode.drawRect({x:minX,y:minY}, {x:maxX,y:maxY}, cc.color(255,0,0,30));
-        this.getParent().getParent().addChild(drawNode,20);*/
-
-    	cc.log("setRCPosition: rect: "+JSON.stringify(this._rect)+", row/col: "+JSON.stringify(pos));
+ //   	var drawNode = cc.DrawNode.create();
+//	    drawNode.drawRect({x:minX,y:minY}, {x:maxX,y:maxY}, cc.color(255,0,0,30));
+ //       this.getParent().getParent().addChild(drawNode,20);
+// HIER GEHTS WEITER!
+    	//cc.log("setRCPosition: rect: "+JSON.stringify(this._rect)+", row/col: "+JSON.stringify(pos));
     	
     },
     
@@ -761,9 +769,13 @@ var Battleship = cc.Node.extend({
 var Bomb = cc.PhysicsSprite.extend({
 
 	_space: null,
+	_text: "",
 	_clickable: true,
 	_dragable: true,
-	_body: true,
+	_bomb: null,
+	_shape: null,
+	_timer: null,
+	_startTime: null,
 
 	// ctor calls the parent class with appropriate parameter
 	//
@@ -772,6 +784,95 @@ var Bomb = cc.PhysicsSprite.extend({
         
         this._space = space;
 
+		var frame = cc.spriteFrameCache.getSpriteFrame("bomb");
+        this.initWithSpriteFrame(frame);
+		this.setAnchorPoint(0.50,0.42);
+		var radius = 50,
+			mass = 30,
+			bomb = this._bomb = space.addBody(new cp.Body(mass, cp.momentForCircle(mass, 0, radius, cp.v(0, 0)))),
+			circle = this._shape = space.addShape(new cp.CircleShape(bomb, radius, cp.v(0, 0)));
+		circle.setElasticity(0.5);
+		circle.setFriction(3);
+		
+		this.setBody(bomb);
+        this.setPosition(pos);
+        //this.setCascadeOpacityEnabled(true);
+
+        var label = this._label = cc.LabelTTF.create(this._text, _b_getFontName(res.indieflower_ttf), 140, cc.size(140,140),cc.TEXT_ALIGNMENT_CENTER, cc.VERTICAL_TEXT_ALIGNMENT_CENTER);
+        label.setColor(cc.color(255,255,255));
+        label.setOpacity(100);
+		label.setPosition(cc.p(60, 46));
+		label.setScale(0.7);	
+		this.addChild(label,20);
+		_b_retain(label,"Bomb: label");	
+		
+		this.scheduleUpdate();
+	},
+	
+	explode: function() {
+		var self = this;
+		
+		this.runAction(
+			cc.sequence(
+				cc.spawn(
+					cc.scale(0.33,40),
+					cc.fadeOut(0.33)
+				),
+				cc.callFunc(function() {
+					self.exit();
+				})
+			)
+		);
+	},
+	
+	update: function() {
+		this._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
+		
+		var now = new Date().getTime(),
+			seconds = Math.floor((now - this._startTime)/1000);
+		
+		var time = this._timer - seconds;
+		this._label.setString(time);
+		if( time === 0 ) {
+			cc.eventManager.dispatchCustomEvent("bomb_time_is_up", this);					
+		}
+	},
+	
+	exit: function() {
+		this.onExit();
+		
+		if( this._bomb ) this._space.removeBody(this._bomb);
+		if( this._shape ) this._space.removeShape(this._shape);
+	},
+	
+	setTimer: function(seconds) {
+		this._timer = seconds;
+		this._startTime = new Date().getTime();
+	}, 
+});
+
+// Bomb is the class for hourglasses
+//
+// Methods
+// -------
+//
+// Properties
+// ----------
+//
+var Bomb2 = cc.PhysicsSprite.extend({
+	_space: null,
+	_bomb: null,
+	_shape: null,
+
+	// ctor calls the parent class with appropriate parameter
+	//
+    ctor: function(space, pos) {
+    	cc.assert(pos, "I need a position for the hourglass.");
+    	
+        cc.PhysicsSprite.prototype.ctor.call(this);
+
+    	this._space = space;
+    	
         this.initWithSpriteFrame(cc.spriteFrameCache.getSpriteFrame("bomb"));
 		this.setAnchorPoint(0.50,0.42);
 		var radius = 50,
@@ -782,22 +883,24 @@ var Bomb = cc.PhysicsSprite.extend({
 		circle.setFriction(3);
 		
 		this.setBody(bomb);
+        
         this.setPosition(pos);
-        //this.setCascadeOpacityEnabled(true);
+        this.setCascadeOpacityEnabled(true);
 	},
 	
 	exit: function() {
-		this.onExit();
-		
 		if( this._bomb ) {
 			this._space.removeBody(this._bomb);
+			this._space.removeShape(this._shape);
 		}
 	},
-	
+
 	onExit: function() {
-		debugger;
-	},
+        cc.PhysicsSprite.prototype.onExit.call(this);
+	}
 });
+
+
 
 
 var WordBattleScene = cc.Scene.extend({

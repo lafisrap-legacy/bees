@@ -272,15 +272,24 @@ var _b_on = function(events, cb, justOne) {
 	for( var i=0, listeners=[] ; i<events.length ; i++ ) {
 		var event = events[i],
 			res = _b_in_seconds.exec(event);
-			
-		if( res ) {
-			var seconds = parseFloat(res[1]),
+
+		var seconds;
+		if( seconds = parseFloat(event)) {
+			var e = event;
+
+			setTimeout(function() {
+				cc.eventManager.dispatchCustomEvent(e, seconds);
+			}, seconds * 1000);		
+		} else if( res ) {
+			seconds = parseFloat(res[1]),
 				e = event;
 
 			setTimeout(function() {
 				cc.eventManager.dispatchCustomEvent(e, seconds);
 			}, seconds * 1000);		
 		}
+		
+		
 		listeners.push(cc.eventManager.addCustomListener(event, function(event) {
 			if( justOne ) for( var i=0 ; i<listeners.length ; i++ ) cc.eventManager.removeListener(listeners[i]);
 			cb(event);
