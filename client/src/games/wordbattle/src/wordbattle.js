@@ -249,20 +249,17 @@ var WordBattleLayer = cc.Layer.extend({
 	
 		for( var i=0; i<r.length ; i++ ) {
 
-			var word = self._pureWords[r[i]]+"abc";
+			var word = self._pureWords[r[i]];
 			if( word.length > _B_MAX_SHIP_LENGTH ) continue; // don't take words that don't fit ...
-			cc.log("Creating ship with '"+word+"', self._round: "+self._round);
 			var ship = new Battleship(word);
 			
 			own.addChild(ship,10);
 			var rotation = allStrait!==undefined? allStrait : Math.floor(Math.random()*2)*90;
 			var pos = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},rotation);
 			if( !pos ) {
-				cc.log("Didn't find room for the ship. Setting all ships strait...");
 				own.removeAllChildren();
 				return self.startRound(Math.floor(Math.random()*2)*90);
 			}
-			cc.log("Placing ship at "+JSON.stringify(pos)+" with rotation "+rotation);
 			ship.setRCPosition(pos);
 			ship.setRotation(rotation);
 		}
@@ -355,10 +352,11 @@ var WordBattleLayer = cc.Layer.extend({
 				// start always with three bombs
 				for( var i=0 ; i<3 ; i++ ) {	
 					self._bombs[i] = new Bomb(fairy._space, cc.p(100+80*i,700+(i%2)*100));
+					//self._bombs[i].getBody().applyImpuls(cp.v(10,10),90);
 					fairy.addObject(self._bombs[i]);
 				}
 
-				_b_one("2.5" , function() {
+				_b_one("in_2_seconds" , function() {
 					hg.hide(function() {
 						hg.exit();
 		    		    self.removeChild(hg);
