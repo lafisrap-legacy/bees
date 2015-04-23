@@ -167,10 +167,16 @@ var WordBattleLayer = cc.Layer.extend({
         this.addChild(this._fairy,10);
 		_b_retain(this._fairy, "Fairy");
 		
-//		this._fairy.addObject(new Bomb(this._fairy._space, cc.p(140,700)));
-//		this._fairy.addObject(new Bomb(this._fairy._space, cc.p(200,770)));
-//		this._fairy.addObject(new Bomb(this._fairy._space, cc.p(260,730)));
+		/*
+		bomb1 = new Bomb(this._fairy._space, cc.p(140,700));
+		bomb2 = new Bomb(this._fairy._space, cc.p(200,770));
+		bomb3 = new Bomb(this._fairy._space, cc.p(260,730));
+		this._fairy.addObject(bomb1);
+		this._fairy.addObject(bomb2);
+		this._fairy.addObject(bomb3);
 		
+		bomb1.applyImpulse(cp.v(20000,-20000), cp.v(0,0));
+		*/
         return true;
     },
     
@@ -352,7 +358,7 @@ var WordBattleLayer = cc.Layer.extend({
 				// start always with three bombs
 				for( var i=0 ; i<3 ; i++ ) {	
 					self._bombs[i] = new Bomb(fairy._space, cc.p(100+80*i,700+(i%2)*100));
-					//self._bombs[i].getBody().applyImpuls(cp.v(10,10),90);
+					self._bombs[i].applyImpulse(cp.v(30,100),cp.v(i*300,0));
 					fairy.addObject(self._bombs[i]);
 				}
 
@@ -366,7 +372,7 @@ var WordBattleLayer = cc.Layer.extend({
 					fairy.hide();
 
 					for( var i=0 ; i<3 ; i++ ) {	
-						self._bombs[i].setTimer(5);
+						self._bombs[i].setTimer(30);
 					}
 
 					for( var other=self._otherSea, i=0 ; i<otherBoard.tiles.length ; i++ ) {
@@ -758,6 +764,15 @@ var Battleship = cc.Node.extend({
     }
 });
 
+
+cc.PhysicsSprite.prototype.applyImpulse = function(j,r) {
+	this._body.applyImpulse(j,r);
+};
+
+cc.PhysicsSprite.prototype.applyForce = function(force, r) {
+	this._body.applyForce(force,r);
+};
+
 // Bomb is the class for bombs
 //
 // Methods
@@ -798,7 +813,7 @@ var Bomb = cc.PhysicsSprite.extend({
         this.setPosition(pos);
         //this.setCascadeOpacityEnabled(true);
 
-        var label = this._label = cc.LabelTTF.create(this._text, _b_getFontName(res.indieflower_ttf), 140, cc.size(140,140),cc.TEXT_ALIGNMENT_CENTER, cc.VERTICAL_TEXT_ALIGNMENT_CENTER);
+        var label = this._label = cc.LabelTTF.create(this._text, _b_getFontName(res.indieflower_ttf), 140, cc.size(300,140),cc.TEXT_ALIGNMENT_CENTER, cc.VERTICAL_TEXT_ALIGNMENT_CENTER);
         label.setColor(cc.color(255,255,255));
         label.setOpacity(100);
 		label.setPosition(cc.p(60, 46));
@@ -809,13 +824,19 @@ var Bomb = cc.PhysicsSprite.extend({
 		this.scheduleUpdate();
 	},
 	
+	setTimer: function(seconds) {
+		this._timer = seconds;
+		this._startTime = new Date().getTime();
+	}, 
+
+	
 	explode: function() {
 		var self = this;
 		
 		this.runAction(
 			cc.sequence(
 				cc.spawn(
-					cc.scale(0.33,40),
+					cc.scaleTo(0.33,40),
 					cc.fadeOut(0.33)
 				),
 				cc.callFunc(function() {
@@ -826,15 +847,21 @@ var Bomb = cc.PhysicsSprite.extend({
 	},
 	
 	update: function() {
+		var self = this;
+		
 		this._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
 		
-		var now = new Date().getTime(),
-			seconds = Math.floor((now - this._startTime)/1000);
+		if( this._timer ) {
+			var now = new Date().getTime(),
+				seconds = Math.floor((now - this._startTime)/1000);
 		
-		var time = this._timer - seconds;
-		this._label.setString(time);
-		if( time === 0 ) {
-			cc.eventManager.dispatchCustomEvent("bomb_time_is_up", this);					
+			var time = this._timer - seconds;
+			this._label.setString(time);
+			if( time === 0 ) {
+				cc.eventManager.dispatchCustomEvent("bomb_time_is_up", this);
+				self._timer = null;		
+				this._label.setString("");
+			}
 		}
 	},
 	
@@ -843,12 +870,7 @@ var Bomb = cc.PhysicsSprite.extend({
 		
 		if( this._bomb ) this._space.removeBody(this._bomb);
 		if( this._shape ) this._space.removeShape(this._shape);
-	},
-	
-	setTimer: function(seconds) {
-		this._timer = seconds;
-		this._startTime = new Date().getTime();
-	}, 
+	}	
 });
 
 // Bomb is the class for hourglasses
@@ -897,7 +919,11 @@ var Bomb2 = cc.PhysicsSprite.extend({
 
 	onExit: function() {
         cc.PhysicsSprite.prototype.onExit.call(this);
-	}
+	},
+	
+	applyImpulse: function() {
+		
+	},
 });
 
 
