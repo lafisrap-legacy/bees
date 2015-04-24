@@ -97,8 +97,8 @@ var WordBattleLayer = cc.Layer.extend({
 		this._text = json.text;
 		this._sphinx = json.sphinx;
 
-/*		var drawNode = cc.DrawNode.create();
-        drawNode.clear();
+		var drawNode = cc.DrawNode.create();
+/*        drawNode.clear();
         for( var i=1 ; i<_B_MAX_SHIP_LENGTH ; i++ ) {
 	        drawNode.drawSegment(cc.p(i*_B_SQUARE_SIZE,560),cc.p(i*_B_SQUARE_SIZE,0),0.5,new cc.Color(255,0,0,100));
 	        drawNode.drawSegment(cc.p(560,i*_B_SQUARE_SIZE),cc.p(0,i*_B_SQUARE_SIZE),0.5,new cc.Color(255,0,0,100));

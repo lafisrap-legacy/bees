@@ -3,8 +3,8 @@
 // _B_SERVER_ADDRESS: websocket address of bee server
 // _B_RECONNECT_TIME: Seconds after a reconnected is tried, if there is no connection 
 //
-var _B_SERVER_ADDRESS = "ws://192.168.178.41:4000/socket",
-//var _B_SERVER_ADDRESS = "ws://localhost:4000/socket",
+//var _B_SERVER_ADDRESS = "ws://192.168.178.41:4000/socket",
+var _B_SERVER_ADDRESS = "ws://localhost:4000/socket",
 	_B_RECONNECT_TIME = 10;
 
 // WebLayer contains all websocket related functionality 
