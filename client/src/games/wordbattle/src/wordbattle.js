@@ -167,10 +167,16 @@ var WordBattleLayer = cc.Layer.extend({
         this.addChild(this._fairy,10);
 		_b_retain(this._fairy, "Fairy");
 		
-//		this._fairy.addObject(new Bomb(this._fairy._space, cc.p(140,700)));
-//		this._fairy.addObject(new Bomb(this._fairy._space, cc.p(200,770)));
-//		this._fairy.addObject(new Bomb(this._fairy._space, cc.p(260,730)));
+		/*
+		bomb1 = new Bomb(this._fairy._space, cc.p(140,700));
+		bomb2 = new Bomb(this._fairy._space, cc.p(200,770));
+		bomb3 = new Bomb(this._fairy._space, cc.p(260,730));
+		this._fairy.addObject(bomb1);
+		this._fairy.addObject(bomb2);
+		this._fairy.addObject(bomb3);
 		
+		bomb1.applyImpulse(cp.v(20000,-20000), cp.v(0,0));
+		*/
         return true;
     },
     
@@ -223,14 +229,18 @@ var WordBattleLayer = cc.Layer.extend({
 			cc.assert(lotteryWheel.length == 0, "Lottery wheel is not empty.");
 			
 			this._rounds = rounds;
-			this.startRound();
+			_b_one(["seas_have_moved_in"], function() {
+				self.startRound();
+			});
 
 			$b.sendMessage({ message: "initRounds", rounds: this._rounds });
 		} else {
 			$b.receiveMessage(function(data) {
 				cc.assert(data.message === "initRounds", "Received wrong message ('"+data.message+"' instead of 'initRounds') while starting episode.");
 				self._rounds = data.rounds;
-				self.startRound();
+				_b_one(["seas_have_moved_in"], function() {
+					self.startRound();
+				});
 			});
 		}
 	},
@@ -238,34 +248,31 @@ var WordBattleLayer = cc.Layer.extend({
 	startRound: function(allStrait) {
 		var self = this;
 	
-        //////////////////////////////
-        // Build ships
-		var r = this._rounds[this._round],
-			own = this._ownSea;  
-		
+		//////////////////////////////
+		// Build ships
+		var r = self._rounds[self._round],
+			own = self._ownSea;  
+	
 		for( var i=0; i<r.length ; i++ ) {
 
-			var word = this._pureWords[r[i]];
+			var word = self._pureWords[r[i]];
 			if( word.length > _B_MAX_SHIP_LENGTH ) continue; // don't take words that don't fit ...
-			cc.log("Creating ship with '"+word+"', this._round: "+this._round);
 			var ship = new Battleship(word);
-				
+			
 			own.addChild(ship,10);
 			var rotation = allStrait!==undefined? allStrait : Math.floor(Math.random()*2)*90;
 			var pos = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},rotation);
 			if( !pos ) {
-				cc.log("Didn't find room for the ship. Setting all ships strait...");
 				own.removeAllChildren();
-				return this.startRound(Math.floor(Math.random()*2)*90);
+				return self.startRound(Math.floor(Math.random()*2)*90);
 			}
-			cc.log("Placing ship at "+JSON.stringify(pos)+" with rotation "+rotation);
 			ship.setRCPosition(pos);
 			ship.setRotation(rotation);
 		}
 
 		for( var i=0; i<own.children.length ; i++ ) {
 			var ship = own.children[i];
-		
+	
 			ship.setOpacity(0);
 			ship.setRotation(ship.getRotation()+180);
 			ship.setScale(0.6);
@@ -281,35 +288,33 @@ var WordBattleLayer = cc.Layer.extend({
 				)
 			);
 		}		
-		
-		this.letShipsBeMoved();
-		
-		var fairy = this._fairy;
-		
-		_b_one(["seas_have_moved_in"], function() {
-			// first set the right rects, after first they were set while the ships were moving (yes, that's a hack ...)
-			for( var i=0; i<own.children.length ; i++ ) own.children[i].setRCPosition();	
-					
-			fairy.show(0);
-			fairy.say(_b_remember("fairies.move_ships")?10:2, 5, _b_t.fairies.move_ships);
-			_b_one(["in_20_seconds"], function(data) {
-				fairy.silent().show(2).say(0, 5, _b_t.fairies.move_ships );
-			});
-			_b_one(["a_ship_was_moved"], function(data) {
-				_b_clear("in_20_seconds");
+	
+		self.letShipsBeMoved();
+	
+		var fairy = self._fairy;
+	
+		// first set the right rects, after first they were set while the ships were moving (yes, that's a hack ...)
+		for( var i=0; i<own.children.length ; i++ ) own.children[i].setRCPosition();	
 				
-				var hg = self._hourglass = new Hourglass(self._fairy._space, _B_HOURGLASS_POS);
-    		    self.addChild(self._hourglass,10);
-				_b_retain(self._hourglass, "Hourglass");
-				
-				fairy.silent().show(1).say(0, 5, _b_t.fairies.press_it );
-				hg.show();
-				hg.countdown(10);
+		fairy.show(0);
+		fairy.say(_b_remember("fairies.move_ships")?10:2, 5, _b_t.fairies.move_ships);
+		_b_one(["in_20_seconds"], function(data) {
+			fairy.silent().show(2).say(0, 5, _b_t.fairies.move_ships );
+		});
+		_b_one(["a_ship_was_moved"], function(data) {
+			_b_clear("in_20_seconds");
+			
+			var hg = self._hourglass = new Hourglass(self._fairy._space, _B_HOURGLASS_POS);
+			self.addChild(self._hourglass,10);
+			_b_retain(self._hourglass, "Hourglass");
+			
+			fairy.silent().show(1).say(0, 5, _b_t.fairies.press_it );
+			hg.show();
+			hg.countdown(10);
 
-				_b_one(["countdown_finished", "hourglass_is_clicked"], function() {
-					hg.clearCountdown();
-					self.sendInitialBoard();
-				});
+			_b_one(["countdown_finished", "hourglass_is_clicked"], function() {
+				hg.clearCountdown();
+				self.sendInitialBoard();
 			});
 		});
 	},
@@ -353,10 +358,11 @@ var WordBattleLayer = cc.Layer.extend({
 				// start always with three bombs
 				for( var i=0 ; i<3 ; i++ ) {	
 					self._bombs[i] = new Bomb(fairy._space, cc.p(100+80*i,700+(i%2)*100));
+					self._bombs[i].applyImpulse(cp.v(30,100),cp.v(i*300,0));
 					fairy.addObject(self._bombs[i]);
 				}
 
-				_b_one("2.5" , function() {
+				_b_one("in_2_seconds" , function() {
 					hg.hide(function() {
 						hg.exit();
 		    		    self.removeChild(hg);
@@ -366,7 +372,7 @@ var WordBattleLayer = cc.Layer.extend({
 					fairy.hide();
 
 					for( var i=0 ; i<3 ; i++ ) {	
-						self._bombs[i].setTimer(5);
+						self._bombs[i].setTimer(30);
 					}
 
 					for( var other=self._otherSea, i=0 ; i<otherBoard.tiles.length ; i++ ) {
@@ -610,10 +616,10 @@ var Battleship = cc.Node.extend({
     		
     	this._rect = cc.rect(minX, minY, maxX-minX, maxY-minY);
     	
- //   	var drawNode = cc.DrawNode.create();
+//    	var drawNode = cc.DrawNode.create();
 //	    drawNode.drawRect({x:minX,y:minY}, {x:maxX,y:maxY}, cc.color(255,0,0,30));
- //       this.getParent().getParent().addChild(drawNode,20);
-// HIER GEHTS WEITER!
+//        this.getParent().getParent().addChild(drawNode,20);
+
     	//cc.log("setRCPosition: rect: "+JSON.stringify(this._rect)+", row/col: "+JSON.stringify(pos));
     	
     },
@@ -758,6 +764,15 @@ var Battleship = cc.Node.extend({
     }
 });
 
+
+cc.PhysicsSprite.prototype.applyImpulse = function(j,r) {
+	this._body.applyImpulse(j,r);
+};
+
+cc.PhysicsSprite.prototype.applyForce = function(force, r) {
+	this._body.applyForce(force,r);
+};
+
 // Bomb is the class for bombs
 //
 // Methods
@@ -798,7 +813,7 @@ var Bomb = cc.PhysicsSprite.extend({
         this.setPosition(pos);
         //this.setCascadeOpacityEnabled(true);
 
-        var label = this._label = cc.LabelTTF.create(this._text, _b_getFontName(res.indieflower_ttf), 140, cc.size(140,140),cc.TEXT_ALIGNMENT_CENTER, cc.VERTICAL_TEXT_ALIGNMENT_CENTER);
+        var label = this._label = cc.LabelTTF.create(this._text, _b_getFontName(res.indieflower_ttf), 140, cc.size(300,140),cc.TEXT_ALIGNMENT_CENTER, cc.VERTICAL_TEXT_ALIGNMENT_CENTER);
         label.setColor(cc.color(255,255,255));
         label.setOpacity(100);
 		label.setPosition(cc.p(60, 46));
@@ -809,13 +824,19 @@ var Bomb = cc.PhysicsSprite.extend({
 		this.scheduleUpdate();
 	},
 	
+	setTimer: function(seconds) {
+		this._timer = seconds;
+		this._startTime = new Date().getTime();
+	}, 
+
+	
 	explode: function() {
 		var self = this;
 		
 		this.runAction(
 			cc.sequence(
 				cc.spawn(
-					cc.scale(0.33,40),
+					cc.scaleTo(0.33,40),
 					cc.fadeOut(0.33)
 				),
 				cc.callFunc(function() {
@@ -826,15 +847,21 @@ var Bomb = cc.PhysicsSprite.extend({
 	},
 	
 	update: function() {
+		var self = this;
+		
 		this._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
 		
-		var now = new Date().getTime(),
-			seconds = Math.floor((now - this._startTime)/1000);
+		if( this._timer ) {
+			var now = new Date().getTime(),
+				seconds = Math.floor((now - this._startTime)/1000);
 		
-		var time = this._timer - seconds;
-		this._label.setString(time);
-		if( time === 0 ) {
-			cc.eventManager.dispatchCustomEvent("bomb_time_is_up", this);					
+			var time = this._timer - seconds;
+			this._label.setString(time);
+			if( time === 0 ) {
+				cc.eventManager.dispatchCustomEvent("bomb_time_is_up", this);
+				self._timer = null;		
+				this._label.setString("");
+			}
 		}
 	},
 	
@@ -843,12 +870,7 @@ var Bomb = cc.PhysicsSprite.extend({
 		
 		if( this._bomb ) this._space.removeBody(this._bomb);
 		if( this._shape ) this._space.removeShape(this._shape);
-	},
-	
-	setTimer: function(seconds) {
-		this._timer = seconds;
-		this._startTime = new Date().getTime();
-	}, 
+	}	
 });
 
 // Bomb is the class for hourglasses
@@ -897,7 +919,11 @@ var Bomb2 = cc.PhysicsSprite.extend({
 
 	onExit: function() {
         cc.PhysicsSprite.prototype.onExit.call(this);
-	}
+	},
+	
+	applyImpulse: function() {
+		
+	},
 });
 
 

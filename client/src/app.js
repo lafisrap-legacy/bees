@@ -259,7 +259,7 @@ var _b_recall = function() {
 }
 var _b_remember = _b_recall();
 
-var _b_in_seconds = /^in_([\d\.]+)_seconds$/g;
+var _b_in_seconds = /^in_([\d\.]+)_seconds$/;
 
 var _b_one = function(events, cb) {
 	_b_on(events, cb, true);
