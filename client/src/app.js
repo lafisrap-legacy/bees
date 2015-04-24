@@ -124,11 +124,9 @@ var BeesScene = cc.Scene.extend({
         cc.width = cc.winSize.width;
         cc.height = cc.winSize.height;	
         
-/*        cc.log("Loading word battle scene ...");
         cc.LoaderScene.preload(_b_getResources("wordbattle","Das Eselein"), function () {
-	        cc.log("Running word battle scene ...");
 			cc.director.runScene(new WordBattleScene("Das Eselein"));
-		}, this);	*/
+		}, this);
     },
     
     onExit: function() {
@@ -236,5 +234,81 @@ var _b_IdFactory = function() {
 }
 var _b_getId = _b_IdFactory();
 
+var _b_getFontName = function(resource) {
+    if (cc.sys.isNative) {
+        return resource.srcs[0];
+    } else {
+        return resource.name;
+    }
+}
+
+var _b_recall = function() {
+	try {
+		var textMemory = JSON.parse(cc.sys.localStorage.getItem('textMemory') || []);
+	} catch(e) {
+		var textMemory = [];
+	}
+
+	return function(text) {
+		if( textMemory.indexOf(text) >= 0 ) return true;
+		
+		textMemory.push(text);
+		cc.sys.localStorage.setItem('textMemory', JSON.stringify(textMemory));
+		return false;
+	}
+}
+var _b_remember = _b_recall();
+
+var _b_in_seconds = /^in_([\d\.]+)_seconds$/g;
+
+var _b_one = function(events, cb) {
+	_b_on(events, cb, true);
+};
+
+var _b_on = function(events, cb, justOne) {
+	if( typeof events === "string" ) events = [events];
+	cc.assert(typeof events === "object", "I need an array of event string or a single event string.");
+	
+	for( var i=0, listeners=[] ; i<events.length ; i++ ) {
+		var event = events[i],
+			res = _b_in_seconds.exec(event);
+
+		var seconds;
+		if( seconds = parseFloat(event)) {
+			var e = event;
+
+			setTimeout(function() {
+				cc.eventManager.dispatchCustomEvent(e, seconds);
+			}, seconds * 1000);		
+		} else if( res ) {
+			seconds = parseFloat(res[1]),
+				e = event;
+
+			setTimeout(function() {
+				cc.eventManager.dispatchCustomEvent(e, seconds);
+			}, seconds * 1000);		
+		}
+		
+		
+		listeners.push(cc.eventManager.addCustomListener(event, function(event) {
+			if( justOne ) for( var i=0 ; i<listeners.length ; i++ ) cc.eventManager.removeListener(listeners[i]);
+			cb(event);
+		}));
+	}
+	
+	return listeners;
+};
+
+var _b_off = function(listeners) {
+	cc.assert(typeof listeners === "array", "I need an array of cc.EventListener objects.");
+	
+	for( var i=0 ; i<listeners.length ; i++ ) cc.eventManager.removeListener(listeners[i]);
+};
+
+var _b_clear = function(events) {
+	if( typeof events === "string" ) events = [events];
+
+	for( var i=0 ; i<events.length ; i++ ) cc.eventManager.removeCustomListeners(events[i]);
+}
 
 

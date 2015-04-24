@@ -91,7 +91,7 @@ var SelectPlayerLayer = cc.Layer.extend({
 				cc.scaleTo(0.33,1)
 			)
 		);
-		var bl = this._BarLabel = cc.LabelBMFont.create( _b_t.playerlist.noplayers , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
+		var bl = this._BarLabel = new cc.LabelBMFont( _b_t.playerlist.noplayers , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
 		bl.setPosition(cc.p(275,75+_B_BEESFONT_Y_OFFSET));
 		bar.addChild(bl, 5);	
         this.addChild(bar,0);
@@ -256,7 +256,7 @@ var SelectPlayerLayer = cc.Layer.extend({
 	    		spritesSelected =cc.Sprite.create(frame,cc.rect(0,0,380,100)),
 	    		spritesDisabled =cc.Sprite.create(frame,cc.rect(0,0,380,100));
 
-			var label = cc.LabelBMFont.create( players[i].name , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
+			var label = new cc.LabelBMFont( players[i].name , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
 			label.setPosition(cc.p(190,label.getContentSize().height+_B_BEESFONT_Y_OFFSET));
 			label.setColor(cc.color(200,130,140,255));
 			spritesNormal.addChild(label, 5);	
