@@ -152,8 +152,8 @@ var WordBattleLayer = cc.Layer.extend({
 		this._text = json.text;
 		this._sphinx = json.sphinx;
 
-		var drawNode = cc.DrawNode.create();
-/*        drawNode.clear();
+/*		var drawNode = cc.DrawNode.create();
+        drawNode.clear();
         for( var i=1 ; i<_B_MAX_SHIP_LENGTH ; i++ ) {
 	        drawNode.drawSegment(cc.p(i*_B_SQUARE_SIZE,560),cc.p(i*_B_SQUARE_SIZE,0),0.5,new cc.Color(255,0,0,100));
 	        drawNode.drawSegment(cc.p(560,i*_B_SQUARE_SIZE),cc.p(0,i*_B_SQUARE_SIZE),0.5,new cc.Color(255,0,0,100));
@@ -175,7 +175,7 @@ var WordBattleLayer = cc.Layer.extend({
 		this._fairy.addObject(bomb2);
 		this._fairy.addObject(bomb3);
 		
-		bomb1.applyImpulse(cp.v(20000,-20000), cp.v(0,0));
+		bomb1.getBody().applyImpulse(cp.v(20000,-20000), cp.v(0,0));
 		*/
         return true;
     },
@@ -358,7 +358,7 @@ var WordBattleLayer = cc.Layer.extend({
 				// start always with three bombs
 				for( var i=0 ; i<3 ; i++ ) {	
 					self._bombs[i] = new Bomb(fairy._space, cc.p(100+80*i,700+(i%2)*100));
-					self._bombs[i].applyImpulse(cp.v(30,100),cp.v(i*300,0));
+					self._bombs[i].getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
 					fairy.addObject(self._bombs[i]);
 				}
 
@@ -764,15 +764,6 @@ var Battleship = cc.Node.extend({
     }
 });
 
-
-cc.PhysicsSprite.prototype.applyImpulse = function(j,r) {
-	this._body.applyImpulse(j,r);
-};
-
-cc.PhysicsSprite.prototype.applyForce = function(force, r) {
-	this._body.applyForce(force,r);
-};
-
 // Bomb is the class for bombs
 //
 // Methods
@@ -919,11 +910,7 @@ var Bomb2 = cc.PhysicsSprite.extend({
 
 	onExit: function() {
         cc.PhysicsSprite.prototype.onExit.call(this);
-	},
-	
-	applyImpulse: function() {
-		
-	},
+	}	
 });
 
 

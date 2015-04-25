@@ -30,6 +30,7 @@ var FairyLayer = cc.Layer.extend({
 	_currentGesture: null,
 	_bubble: null,
 	_objects: [],
+	_draggedObject: null,
 	
 	// event callbacks
 	_onFairyIsClicked: null,
@@ -74,6 +75,13 @@ var FairyLayer = cc.Layer.extend({
 	},
 	
     update : function(dt) {
+		var dob = this._draggedObject;
+
+		if( dob && dob.draggingPos ) {
+			var pos = dob.getPosition();
+			dob.getBody().setVel(cp.v((dob.draggingPos.x-pos.x)*10,(dob.draggingPos.y-pos.y)*10));
+		}
+
         this._space.step(dt);
     },
 	
@@ -203,7 +211,6 @@ var FairyLayer = cc.Layer.extend({
 	// initListeners start the event handling
 	initListeners: function() {
 		var self = this,
-			draggedObject = null,
 			startTime = null,
 			offset = null,
 			lastTouch = null,
@@ -214,52 +221,65 @@ var FairyLayer = cc.Layer.extend({
 			event: cc.EventListener.TOUCH_ALL_AT_ONCE,
 			onTouchesBegan: function(touches, event) {
 				var touch = touches[0],
-					start = touch.getLocation(),
+					loc = touch.getLocation(),
 					startTime = new Date().getTime();
 
-				cc.log("FairyLayer: onTouchesBegan: "+(self._objects?self._objects.length:"no")+"objects");
 				for( var i=0, objs = self._objects ; objs && i<objs.length ; i++ ) {
 					var o = objs[i],
 						pos = o.getPosition(),
 						rect = o.getBoundingBox();
 						
-					if( cc.rectContainsPoint(rect, start) ) {
+					if( cc.rectContainsPoint(rect, loc) ) {
 						cc.eventManager.dispatchCustomEvent("object_touches_began", o);
-						draggedObject = o;
-						offset = {
-							x: start.x - pos.x,
-							y: start.y - pos.y
+						self._draggedObject = o;
+						o.draggingPos = {
+							x: loc.x,
+							y: loc.y
 						};
+						o.getBody().setAngVel(0.1);
+						offset = {
+							x: loc.x - pos.x,
+							y: loc.y - pos.y
+						};
+						cc.log("FairyLayer: Start dragging bomb "+i+". offset.x:"+offset.x+", offset.y:"+offset.y);
 						break;
 					}					
 				}
 			},
 			onTouchesMoved: function(touches, event) {
 				var touch = touches[0],
-					loc = touch.getLocation();
+					loc = touch.getLocation(),
+					dob = self._draggedObject;
 					
 				lastTouch = touches;
 				lastEvent = event;
 				
-				if(draggedObject) {
-					draggedObject.setPosition(cc.p(loc.x-offset.x,loc.y-offset.y));
+				if(dob) {
+					dob.draggingPos = {
+						x: loc.x-offset.x,
+						y: loc.y-offset.y
+					}
+					cc.log("FairyLayer: ... dragging bomb ... Next pos: "+dob.draggingPos.x+"/"+dob.draggingPos.y);
 				}
 			},
 			onTouchesEnded: function(touches, event){
+				cc.log("onTouchesEnded: "+self._draggedObject);
 
-				var touch = touches[0],
+				var	touch = touches[0],
 					loc = touch.getLocation(),
+					dob = self._draggedObject,
 					fairyRect = self._fairy && self._fairy.getBoundingBox() || null,
 					bubbleRect = self._bubble && self._bubble && self._bubble.getBoundingBox() || null;
 
-				if( !draggedObject ) {				
-					if( cc.rectContainsPoint(fairyRect, loc) ) cc.eventManager.dispatchCustomEvent("fairy_is_clicked", this);					
+				if( !dob ) {				
+					if( fairyRect && cc.rectContainsPoint(fairyRect, loc) ) cc.eventManager.dispatchCustomEvent("fairy_is_clicked", this);					
 					if( bubbleRect && cc.rectContainsPoint(bubbleRect, loc) ) cc.eventManager.dispatchCustomEvent("bubble_is_clicked", this);	
 				} else if( !bombFlies ) {
-					bombFlies = true;
+					//bombFlies = true;
 					
-					draggedObject.explode();
-					draggedObject = null;
+					//draggedObject.explode();
+					self._draggedObject = null;
+					cc.log("Letting the object go ...");
 				}
 			}
 		});
