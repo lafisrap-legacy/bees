@@ -92,7 +92,7 @@ var WordBattleLayer = cc.Layer.extend({
 			
 			//////////////////////////////
 			// Create and show seas
-			var s1 = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1"),cc.rect(0,0,560,560));
+			var s1 = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
 			s1.setPosition(cc.p(284,cc.height/2));
 			s1.setScale(0.0);
 			s1.setOpacity(0);
@@ -104,7 +104,7 @@ var WordBattleLayer = cc.Layer.extend({
 					)
 				)
 			);
-			var s2 = self._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1"),cc.rect(0,0,560,560));
+			var s2 = self._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
 			s2.setPosition(cc.p(852,cc.height/2));
 			s2.setScale(0.0);
 			s2.setOpacity(0);
@@ -129,7 +129,7 @@ var WordBattleLayer = cc.Layer.extend({
 
 		//////////////////////////////
 		// Create and show title screen
-		var startscreen = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("startscreen"),cc.rect(0,0,1136,640));
+		var startscreen = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("startscreen.jpg"),cc.rect(0,0,1136,640));
 		startscreen.setPosition(cc.p(cc.width/2, cc.height/2));
 		startscreen.setScale(0.9);
 		startscreen.setOpacity(0);
@@ -357,7 +357,7 @@ var WordBattleLayer = cc.Layer.extend({
 
 				// start always with three bombs
 				for( var i=0 ; i<3 ; i++ ) {	
-					self._bombs[i] = new Bomb(fairy._space, cc.p(100+80*i,700+(i%2)*100));
+					self._bombs[i] = new Bomb(fairy._space, cc.p(100+80*i,500+(i%2)*100),self._otherSea);
 					self._bombs[i].getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
 					fairy.addObject(self._bombs[i]);
 				}
@@ -572,11 +572,11 @@ var Battleship = cc.Node.extend({
 		var wl = this._word.length;
 
 		// create the sprites and add them to the node		
-		this.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_front"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2)));
+		this.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_front.png"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2)));
 		for( var i=1 ; i<wl-1 ; i++ ) {
-			this.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_middle"+(parseInt(Math.random()*3+1))),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2)));
+			this.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_middle"+(parseInt(Math.random()*3+1))+".png"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2)));
 		}
-		this.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_back"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2)));
+		this.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_back.png"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2)));
 
 		// set positions
 		for( var i=0 ; i<wl ; i++ ) {
@@ -775,22 +775,28 @@ var Battleship = cc.Node.extend({
 var Bomb = cc.PhysicsSprite.extend({
 
 	_space: null,
+	_sea: null,
 	_text: "",
 	_clickable: true,
 	_dragable: true,
 	_bomb: null,
 	_shape: null,
+	_crosshair: null,
 	_timer: null,
 	_startTime: null,
 
+	getCrosshair: function() { return this._crosshair; },
+	setCrosshair: function(crosshair) { this._crosshair = crosshair; },
+
 	// ctor calls the parent class with appropriate parameter
 	//
-    ctor: function(space, pos) {
+    ctor: function(space, pos, sea) {
         cc.PhysicsSprite.prototype.ctor.call(this);
         
         this._space = space;
+		this._sea = sea;
 
-		var frame = cc.spriteFrameCache.getSpriteFrame("bomb");
+		var frame = cc.spriteFrameCache.getSpriteFrame("bomb.png");
         this.initWithSpriteFrame(frame);
 		this.setAnchorPoint(0.50,0.42);
 		var radius = 50,
@@ -798,8 +804,9 @@ var Bomb = cc.PhysicsSprite.extend({
 			bomb = this._bomb = space.addBody(new cp.Body(mass, cp.momentForCircle(mass, 0, radius, cp.v(0, 0)))),
 			circle = this._shape = space.addShape(new cp.CircleShape(bomb, radius, cp.v(0, 0)));
 		circle.setElasticity(0.5);
-		circle.setFriction(3);
-		
+		circle.setFriction(3);		
+		circle.setCollisionType(2);
+
 		this.setBody(bomb);
         this.setPosition(pos);
         //this.setCascadeOpacityEnabled(true);
@@ -811,7 +818,13 @@ var Bomb = cc.PhysicsSprite.extend({
 		label.setScale(0.7);	
 		this.addChild(label,20);
 		_b_retain(label,"Bomb: label");	
-		
+	
+		var crosshair = this._crosshair = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("crosshair.png"),cc.rect(0,0,103,102));
+		crosshair.setPosition(cc.p(60,60));
+		crosshair.setOpacity(255);
+		this.addChild(crosshair,30);
+		_b_retain(crosshair,"Bomb: crosshair");	
+	
 		this.scheduleUpdate();
 	},
 	
@@ -820,6 +833,34 @@ var Bomb = cc.PhysicsSprite.extend({
 		this._startTime = new Date().getTime();
 	}, 
 
+	dragging: function() {
+		var dpos = this.draggingPos;
+
+		if( dpos ) {
+			var pos = this.getPosition(),
+				seaRect = this._sea && this._sea.getBoundingBox() || null;
+
+			if( seaRect && cc.rectContainsPoint(seaRect, dpos) ) {
+				if( !this._imIn ) {
+					this._imIn = true;
+					cc.log("I'm in!");
+					this.getCrosshair().runAction(cc.fadeIn(0.22));
+					this.runAction(cc.fadeOut(0.22));
+				}
+				dpos.x = Math.floor((dpos.x-seaRect.x)/_B_SQUARE_SIZE)*_B_SQUARE_SIZE + seaRect.x + _B_SQUARE_SIZE/2;
+				dpos.y = Math.floor((dpos.y-seaRect.y)/_B_SQUARE_SIZE)*_B_SQUARE_SIZE + seaRect.y + _B_SQUARE_SIZE/2;
+			} else {
+				if( this._imIn ) {
+					this._imIn = false;
+					cc.log("I'm out!");
+					this.getCrosshair().runAction(cc.fadeOut(0.22));
+					this.runAction(cc.fadeIn(0.22));
+				}
+			}
+
+			this.getBody().setVel(cp.v((dpos.x-pos.x)*10,(dpos.y-pos.y+90)*10));
+		}
+	},
 	
 	explode: function() {
 		var self = this;
@@ -861,60 +902,9 @@ var Bomb = cc.PhysicsSprite.extend({
 		
 		if( this._bomb ) this._space.removeBody(this._bomb);
 		if( this._shape ) this._space.removeShape(this._shape);
+		if( this._crosshair ) this._space.removeShape(this._crosshair);
 	}	
 });
-
-// Bomb is the class for hourglasses
-//
-// Methods
-// -------
-//
-// Properties
-// ----------
-//
-var Bomb2 = cc.PhysicsSprite.extend({
-	_space: null,
-	_bomb: null,
-	_shape: null,
-
-	// ctor calls the parent class with appropriate parameter
-	//
-    ctor: function(space, pos) {
-    	cc.assert(pos, "I need a position for the hourglass.");
-    	
-        cc.PhysicsSprite.prototype.ctor.call(this);
-
-    	this._space = space;
-    	
-        this.initWithSpriteFrame(cc.spriteFrameCache.getSpriteFrame("bomb"));
-		this.setAnchorPoint(0.50,0.42);
-		var radius = 50,
-			mass = 30,
-			bomb = this._bomb = space.addBody(new cp.Body(mass, cp.momentForCircle(mass, 0, radius, cp.v(0, 0)))),
-			circle = space.addShape(new cp.CircleShape(bomb, radius, cp.v(0, 0)));
-		circle.setElasticity(0.5);
-		circle.setFriction(3);
-		
-		this.setBody(bomb);
-        
-        this.setPosition(pos);
-        this.setCascadeOpacityEnabled(true);
-	},
-	
-	exit: function() {
-		if( this._bomb ) {
-			this._space.removeBody(this._bomb);
-			this._space.removeShape(this._shape);
-		}
-	},
-
-	onExit: function() {
-        cc.PhysicsSprite.prototype.onExit.call(this);
-	}	
-});
-
-
-
 
 var WordBattleScene = cc.Scene.extend({
 	gameState: null,

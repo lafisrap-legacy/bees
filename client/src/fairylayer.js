@@ -77,10 +77,7 @@ var FairyLayer = cc.Layer.extend({
     update : function(dt) {
 		var dob = this._draggedObject;
 
-		if( dob && dob.draggingPos ) {
-			var pos = dob.getPosition();
-			dob.getBody().setVel(cp.v((dob.draggingPos.x-pos.x)*10,(dob.draggingPos.y-pos.y)*10));
-		}
+		if( dob && dob.dragging ) dob.dragging();
 
         this._space.step(dt);
     },
@@ -236,12 +233,13 @@ var FairyLayer = cc.Layer.extend({
 							x: loc.x,
 							y: loc.y
 						};
-						o.getBody().setAngVel(0.1);
+						o.getBody().setAngVel(0.0);
+						o.getBody().setAngle(0.0);
 						offset = {
 							x: loc.x - pos.x,
 							y: loc.y - pos.y
 						};
-						cc.log("FairyLayer: Start dragging bomb "+i+". offset.x:"+offset.x+", offset.y:"+offset.y);
+						//cc.log("FairyLayer: Start dragging bomb "+i+". offset.x:"+offset.x+", offset.y:"+offset.y);
 						break;
 					}					
 				}
@@ -259,7 +257,7 @@ var FairyLayer = cc.Layer.extend({
 						x: loc.x-offset.x,
 						y: loc.y-offset.y
 					}
-					cc.log("FairyLayer: ... dragging bomb ... Next pos: "+dob.draggingPos.x+"/"+dob.draggingPos.y);
+					//cc.log("FairyLayer: ... dragging bomb ... Next pos: "+dob.draggingPos.x+"/"+dob.draggingPos.y);
 				}
 			},
 			onTouchesEnded: function(touches, event){
@@ -301,21 +299,29 @@ var FairyLayer = cc.Layer.extend({
         floorLeft.setElasticity(0.4);
         floorLeft.setFriction(0.2);
         floorLeft.setLayers(_B_NOT_GRABABLE_MASK);
+		floorLeft.setCollisionType(1);
         
         var floorRight = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(668, 0), cp.v(1136, 0), 0));        
         floorRight.setFriction(0.1);
         floorRight.setElasticity(0.3);
         floorRight.setLayers(_B_NOT_GRABABLE_MASK);
-
-        var stopperLeft = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(0, 0), cp.v(0, 640), 0));        
+		floorRight.setCollisionType(1);
+        
+		var stopperLeft = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(0, 0), cp.v(0, 640), 0));        
         stopperLeft.setFriction(0.1);
         stopperLeft.setElasticity(0.3);
         stopperLeft.setLayers(_B_NOT_GRABABLE_MASK);
+		stopperLeft.setCollisionType(1);
 
         var stopperRight = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(1136, 0), cp.v(1136, 640), 0));        
         stopperRight.setFriction(0.1);
         stopperRight.setElasticity(0.3);
         stopperRight.setLayers(_B_NOT_GRABABLE_MASK);
+		stopperRight.setCollisionType(1);
+
+		space.addCollisionHandler(1,2,function(arb, space, data) {
+			return true;
+		},null,null,null);	
     },
 
 });
