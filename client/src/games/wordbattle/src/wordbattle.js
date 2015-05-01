@@ -769,15 +769,13 @@ var Battleship = cc.Node.extend({
 		var rect = this._rect;
 		if( cc.rectContainsPoint(rect, pos) ) {
 			var col = Math.floor((pos.x-rect.x)/_B_SQUARE_SIZE),
-				row = Math.floor((pos.y-rect.y)/_B_SQUARE_SIZE);
+				row = Math.floor((pos.y-rect.y)/_B_SQUARE_SIZE),
+				i = this._rotation===0? this._word.length-row-1 : this._word.length-col-1,
+				part = this.children[i],
+				d = ++(part._damage);
 
-			if( row === 0 ) var i = col;
-			else 			var i = this._word.length-row-1;
-
-			var part = this.children[i];
-			part.damage++;
 			part.setOpacity(255);
-			part.setColor(part.damage===1?255:0,part.damage===2?255:0,part.damage===3?255:0,255);
+			part.runAction(cc.tintBy(0.11,d===1?50:0,d===2?50:0,d===3?50:0));
 		}
 	},
     
@@ -890,38 +888,52 @@ var Bomb = cc.PhysicsSprite.extend({
 	
 	land: function() {
 		var self = this,
+			parent = this.getParent(),
 			dpos = this.draggingPos,
+			seaRect = this._sea.getBoundingBox(),
+			distance = dpos.x - seaRect.x, 
 			bomb = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bomb.png"),cc.rect(0,0,120,120));
+
 		bomb.setPosition(_B_CANONBALL_POS);
-		this.getParent().addChild(bomb,20);
+		parent.addChild(bomb,20);
+
+		var bezier = [
+			cc.p(seaRect.x,dpos.y+distance/5+_B_CROSSHAIR_Y_OFFSET),
+			cc.p(seaRect.x+distance/2,dpos.y+distance/10+_B_CROSSHAIR_Y_OFFSET),
+			cc.p(dpos.x,dpos.y+_B_CROSSHAIR_Y_OFFSET)
+		];
 
 		bomb.runAction(
 			cc.sequence(
 				cc.EaseSineOut.create(
 					cc.moveBy(0.22,cc.p(1200,400))
 				),
-				cc.delayTime(0.33),
+				cc.delayTime(0.66),
 				cc.spawn(
-					cc.moveTo(0.001,cc.p(568,320)),
-					cc.scaleTo(0.001,0.1)
+					cc.moveTo(0.001,cc.p(seaRect.x,dpos.y+distance/5+_B_CROSSHAIR_Y_OFFSET)),
+					cc.scaleTo(0.001,0.2)
 				),
-				cc.moveTo(0.33,cc.p(800,240)),
+				cc.bezierTo((dpos.x-seaRect.x)/400,bezier),
 				cc.fadeOut(0.001),
 				cc.callFunc(function() {
+					parent.removeChild(bomb);
+
+					// look if we hit a ship ...
+					var ships = self._sea.getChildren(),
+						hit = false;
+					for( var i=0 ; i<ships.length ; i++ ) {
+						var ship = ships[i];
+
+						if( ship.dropBomb ) ship.dropBomb({x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET});
+					}
+					
 					// Explosion
 				})
 			)
 		);
+
+		cc.audioEngine.playEffect(gRes.bomb_flying_mp3);
 		
-		// look if we hit a ship ...
-		var ships = this._sea.getChildren(),
-			hit = false;
-		for( var i=0 ; i<ships.length ; i++ ) {
-			var ship = ships[i];
-
-			if( ship.dropBomb ) ship.dropBomb({x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET});
-		}
-
 		this.exit();
 	},
 	
