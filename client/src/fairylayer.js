@@ -56,9 +56,9 @@ var FairyLayer = cc.Layer.extend({
         space.sleepTimeThreshold = 0.5;
         space.collisionSlop = 0.5;
 
-        this._debugNode = new cc.PhysicsDebugNode(this._space );
-        this._debugNode.visible = true ;
-        this.addChild( this._debugNode );
+        //this._debugNode = new cc.PhysicsDebugNode(this._space );
+        //this._debugNode.visible = true ;
+        //this.addChild( this._debugNode );
         // debug
                 
         this.scheduleUpdate();
@@ -257,7 +257,6 @@ var FairyLayer = cc.Layer.extend({
 						x: loc.x-offset.x,
 						y: loc.y-offset.y
 					}
-					//cc.log("FairyLayer: ... dragging bomb ... Next pos: "+dob.draggingPos.x+"/"+dob.draggingPos.y);
 				}
 			},
 			onTouchesEnded: function(touches, event){
@@ -272,10 +271,8 @@ var FairyLayer = cc.Layer.extend({
 				if( !dob ) {				
 					if( fairyRect && cc.rectContainsPoint(fairyRect, loc) ) cc.eventManager.dispatchCustomEvent("fairy_is_clicked", this);					
 					if( bubbleRect && cc.rectContainsPoint(bubbleRect, loc) ) cc.eventManager.dispatchCustomEvent("bubble_is_clicked", this);	
-				} else if( !bombFlies ) {
-					//bombFlies = true;
-					
-					//draggedObject.explode();
+				} else {
+					self._draggedObject.land();
 					self._draggedObject = null;
 					cc.log("Letting the object go ...");
 				}
@@ -313,7 +310,7 @@ var FairyLayer = cc.Layer.extend({
         stopperLeft.setLayers(_B_NOT_GRABABLE_MASK);
 		stopperLeft.setCollisionType(1);
 
-        var stopperRight = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(1136, 0), cp.v(1136, 640), 0));        
+        var stopperRight = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(1136+56, 0), cp.v(1136+56, 640), 0));        
         stopperRight.setFriction(0.1);
         stopperRight.setElasticity(0.3);
         stopperRight.setLayers(_B_NOT_GRABABLE_MASK);

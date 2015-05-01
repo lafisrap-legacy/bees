@@ -4,6 +4,9 @@ var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_SQUARE_SIZE = 56,
 	_B_WORDS_PER_ROUND = 7,		// maximum number of words per round
 	_B_HOURGLASS_POS = cc.p(668,140),
+	_B_CANON_POS = cc.p(30,140),
+	_B_CANONBALL_POS = cc.p(100,240),
+	_B_CROSSHAIR_Y_OFFSET = _B_SQUARE_SIZE + 7,
 	_B_TAP_TIME = 200,
 
 	_B_MODE_TITLE = 1,
@@ -377,7 +380,7 @@ var WordBattleLayer = cc.Layer.extend({
 
 					for( var other=self._otherSea, i=0 ; i<otherBoard.tiles.length ; i++ ) {
 						var tile = otherBoard.tiles[i];
-						var ship = new Battleship(tile.word);
+						var ship = new Battleship(tile.word, true);
 						other.addChild(ship,10);
 						ship.setRCPosition(tile.pos);
 						ship.setRotation(tile.rotation);							
@@ -539,18 +542,20 @@ var WordBattleLayer = cc.Layer.extend({
 
 var Battleship = cc.Node.extend({
 	_word: null,
+	_hidden: false,
 	_row: null,
 	_col: null,
 	_rect: null,
 	_rotation: 0, // 0 or 90
 	
-	ctor: function(word) {
+	ctor: function(word, hidden) {
 	
 	    cc.assert( word && word.length >=2 && word.length <= _B_MAX_SHIP_LENGTH , word+" is too short or too long. I need a word with a length between 2 and "+_B_MAX_SHIP_LENGTH );
     	
 		this._super();
 		
 		this._word = word;
+		this._hidden = hidden;
 		this.buildShip();	
 		this.isTile = true;
 		
@@ -580,7 +585,12 @@ var Battleship = cc.Node.extend({
 
 		// set positions
 		for( var i=0 ; i<wl ; i++ ) {
-			this.children[i].setPosition(cc.p(0, (wl/2-i)*_B_SQUARE_SIZE*2 - _B_SQUARE_SIZE));
+			var part = this.children[i];
+			part.setPosition(cc.p(0, (wl/2-i)*_B_SQUARE_SIZE*2 - _B_SQUARE_SIZE));
+			if( this._hidden ) {
+				part._damage = 0;
+				part.setOpacity(50);
+			}
 		}
 		
 		this.setScale(0.50);
@@ -754,6 +764,22 @@ var Battleship = cc.Node.extend({
 		}
 		return false;    		
     },
+
+	dropBomb: function(pos) {
+		var rect = this._rect;
+		if( cc.rectContainsPoint(rect, pos) ) {
+			var col = Math.floor((pos.x-rect.x)/_B_SQUARE_SIZE),
+				row = Math.floor((pos.y-rect.y)/_B_SQUARE_SIZE);
+
+			if( row === 0 ) var i = col;
+			else 			var i = this._word.length-row-1;
+
+			var part = this.children[i];
+			part.damage++;
+			part.setOpacity(255);
+			part.setColor(part.damage===1?255:0,part.damage===2?255:0,part.damage===3?255:0,255);
+		}
+	},
     
     getRect: function() {
     	return this._rect;
@@ -820,8 +846,8 @@ var Bomb = cc.PhysicsSprite.extend({
 		_b_retain(label,"Bomb: label");	
 	
 		var crosshair = this._crosshair = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("crosshair.png"),cc.rect(0,0,103,102));
-		crosshair.setPosition(cc.p(60,60));
-		crosshair.setOpacity(255);
+		crosshair.setPosition(cc.p(60,46));
+		crosshair.setOpacity(0);
 		this.addChild(crosshair,30);
 		_b_retain(crosshair,"Bomb: crosshair");	
 	
@@ -840,7 +866,7 @@ var Bomb = cc.PhysicsSprite.extend({
 			var pos = this.getPosition(),
 				seaRect = this._sea && this._sea.getBoundingBox() || null;
 
-			if( seaRect && cc.rectContainsPoint(seaRect, dpos) ) {
+			if( seaRect && cc.rectContainsPoint(seaRect, {x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET}) ) {
 				if( !this._imIn ) {
 					this._imIn = true;
 					cc.log("I'm in!");
@@ -858,24 +884,45 @@ var Bomb = cc.PhysicsSprite.extend({
 				}
 			}
 
-			this.getBody().setVel(cp.v((dpos.x-pos.x)*10,(dpos.y-pos.y+90)*10));
+			this.getBody().setVel(cp.v((dpos.x-pos.x)*10,(dpos.y-pos.y+_B_CROSSHAIR_Y_OFFSET)*10));
 		}
 	},
 	
-	explode: function() {
-		var self = this;
-		
-		this.runAction(
+	land: function() {
+		var self = this,
+			dpos = this.draggingPos,
+			bomb = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bomb.png"),cc.rect(0,0,120,120));
+		bomb.setPosition(_B_CANONBALL_POS);
+		this.getParent().addChild(bomb,20);
+
+		bomb.runAction(
 			cc.sequence(
-				cc.spawn(
-					cc.scaleTo(0.33,40),
-					cc.fadeOut(0.33)
+				cc.EaseSineOut.create(
+					cc.moveBy(0.22,cc.p(1200,400))
 				),
+				cc.delayTime(0.33),
+				cc.spawn(
+					cc.moveTo(0.001,cc.p(568,320)),
+					cc.scaleTo(0.001,0.1)
+				),
+				cc.moveTo(0.33,cc.p(800,240)),
+				cc.fadeOut(0.001),
 				cc.callFunc(function() {
-					self.exit();
+					// Explosion
 				})
 			)
 		);
+		
+		// look if we hit a ship ...
+		var ships = this._sea.getChildren(),
+			hit = false;
+		for( var i=0 ; i<ships.length ; i++ ) {
+			var ship = ships[i];
+
+			if( ship.dropBomb ) ship.dropBomb({x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET});
+		}
+
+		this.exit();
 	},
 	
 	update: function() {
@@ -900,9 +947,9 @@ var Bomb = cc.PhysicsSprite.extend({
 	exit: function() {
 		this.onExit();
 		
-		if( this._bomb ) this._space.removeBody(this._bomb);
 		if( this._shape ) this._space.removeShape(this._shape);
-		if( this._crosshair ) this._space.removeShape(this._crosshair);
+		if( this._bomb ) this._space.removeBody(this._bomb);
+		this.getParent().removeChild(this);
 	}	
 });
 
