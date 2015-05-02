@@ -776,7 +776,10 @@ var Battleship = cc.Node.extend({
 
 			part.setOpacity(255);
 			part.runAction(cc.tintBy(0.11,d===1?50:0,d===2?50:0,d===3?50:0));
+
+			return true;
 		}
+		return false;
 	},
     
     getRect: function() {
@@ -908,7 +911,7 @@ var Bomb = cc.PhysicsSprite.extend({
 				cc.EaseSineOut.create(
 					cc.moveBy(0.22,cc.p(1200,400))
 				),
-				cc.delayTime(0.66),
+				cc.delayTime(1.00),
 				cc.spawn(
 					cc.moveTo(0.001,cc.p(seaRect.x,dpos.y+distance/5+_B_CROSSHAIR_Y_OFFSET)),
 					cc.scaleTo(0.001,0.2)
@@ -924,9 +927,12 @@ var Bomb = cc.PhysicsSprite.extend({
 					for( var i=0 ; i<ships.length ; i++ ) {
 						var ship = ships[i];
 
-						if( ship.dropBomb ) ship.dropBomb({x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET});
+						if( ship.dropBomb ) hit = ship.dropBomb({x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET});
+						if( hit ) break;
 					}
 					
+					if( hit ) cc.audioEngine.playEffect(gRes.bomb_on_ship_mp3);
+					else cc.audioEngine.playEffect(gRes.bomb_in_water_mp3);
 					// Explosion
 				})
 			)
@@ -980,6 +986,9 @@ var WordBattleScene = cc.Scene.extend({
 
     	$b.getState().currentGame 	  = this.game;
     	$b.getState().currentVariation = this.variation;
+
+		cc.audioEngine.setEffectsVolume(0.5);
+		cc.audioEngine.setMusicVolume(0.5);
 
         $b.sendCommand({
         	command: "registerVariation",
