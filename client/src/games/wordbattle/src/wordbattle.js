@@ -832,7 +832,7 @@ var Bomb = cc.PhysicsSprite.extend({
 			circle = this._shape = space.addShape(new cp.CircleShape(bomb, radius, cp.v(0, 0)));
 		circle.setElasticity(0.5);
 		circle.setFriction(3);		
-		circle.setCollisionType(2);
+		circle.setCollisionType(_B_COLL_TYPE_OBJECT);
 
 		this.setBody(bomb);
         this.setPosition(pos);
@@ -870,7 +870,6 @@ var Bomb = cc.PhysicsSprite.extend({
 			if( seaRect && cc.rectContainsPoint(seaRect, {x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET}) ) {
 				if( !this._imIn ) {
 					this._imIn = true;
-					cc.log("I'm in!");
 					this.getCrosshair().runAction(cc.fadeIn(0.22));
 					this.runAction(cc.fadeOut(0.22));
 				}
@@ -879,7 +878,6 @@ var Bomb = cc.PhysicsSprite.extend({
 			} else {
 				if( this._imIn ) {
 					this._imIn = false;
-					cc.log("I'm out!");
 					this.getCrosshair().runAction(cc.fadeOut(0.22));
 					this.runAction(cc.fadeIn(0.22));
 				}

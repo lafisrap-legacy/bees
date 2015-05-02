@@ -8,7 +8,10 @@
 var _B_FAIRY_LEFT = 1,
 	_B_FAIRY_RIGHT = -1,
 	_B_GRABABLE_MASK_BIT = 1<<31,
-	_B_NOT_GRABABLE_MASK = ~_B_GRABABLE_MASK_BIT;
+	_B_NOT_GRABABLE_MASK = ~_B_GRABABLE_MASK_BIT,
+
+	_B_COLL_TYPE_STATIC = 1,
+	_B_COLL_TYPE_OBJECT = 2;
 
 
 // FairyLayer is the base class for all fairies
@@ -227,6 +230,11 @@ var FairyLayer = cc.Layer.extend({
 						rect = o.getBoundingBox();
 						
 					if( cc.rectContainsPoint(rect, loc) ) {
+				        var drawNode = cc.DrawNode.create();
+						drawNode.clear();
+						drawNode.drawRect(cc.p(rect.x,rect.y),cc.p(rect.x+rect.width,rect.y+rect.height),new cc.Color(255,0,0,100),1);
+						self.addChild(drawNode,20);
+
 						cc.eventManager.dispatchCustomEvent("object_touches_began", o);
 						self._draggedObject = o;
 						o.draggingPos = {
@@ -291,7 +299,8 @@ var FairyLayer = cc.Layer.extend({
     
     // chipmonk addons
 	cp_addWorldObjects: function() {
-        var space = this._space;
+        var self = this,
+			space = this._space;
         var floorLeft = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(0, 40), cp.v(668, 0), 0));
         floorLeft.setElasticity(0.4);
         floorLeft.setFriction(0.2);
@@ -314,9 +323,25 @@ var FairyLayer = cc.Layer.extend({
         stopperRight.setFriction(0.1);
         stopperRight.setElasticity(0.3);
         stopperRight.setLayers(_B_NOT_GRABABLE_MASK);
-		stopperRight.setCollisionType(1);
+		stopperRight.setCollisionType(_B_COLL_TYPE_STATIC);
 
-		space.addCollisionHandler(1,2,function(arb, space, data) {
+		space.addCollisionHandler(_B_COLL_TYPE_OBJECT,_B_COLL_TYPE_OBJECT,function(arb, space, data) {
+			if( self._draggedObject ) {
+				var body = self._draggedObject.getBody();
+
+				if( body === arb.body_a || body === arb.body_b ) return false;  // no collision if the dragged object collides with other objects
+			}
+			cc.log("Two objects touched!");
+			return true;
+		},null,null,null);	
+
+		space.addCollisionHandler(_B_COLL_TYPE_OBJECT,_B_COLL_TYPE_STATIC,function(arb, space, data) {
+			if( self._draggedObject ) {
+				var body = self._draggedObject.getBody();
+
+				if( body === arb.body_a || body === arb.body_b ) return false;  // no collision if the dragged object collides with other objects
+			}
+			cc.log("Object touched wall!");
 			return true;
 		},null,null,null);	
     },
