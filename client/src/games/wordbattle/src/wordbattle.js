@@ -888,8 +888,11 @@ var Bomb = cc.PhysicsSprite.extend({
 	},
 	
 	land: function() {
-		var self = this,
-			parent = this.getParent(),
+		var self = this;
+
+		if( !this._imIn ) return;
+
+		var parent = this.getParent(),
 			dpos = this.draggingPos,
 			seaRect = this._sea.getBoundingBox(),
 			distance = dpos.x - seaRect.x, 
@@ -931,7 +934,6 @@ var Bomb = cc.PhysicsSprite.extend({
 					
 					if( hit ) cc.audioEngine.playEffect(gRes.bomb_on_ship_mp3);
 					else cc.audioEngine.playEffect(gRes.bomb_in_water_mp3);
-					// Explosion
 				})
 			)
 		);

@@ -226,13 +226,12 @@ var FairyLayer = cc.Layer.extend({
 
 				for( var i=0, objs = self._objects ; objs && i<objs.length ; i++ ) {
 					var o = objs[i],
-						pos = o.getPosition(),
-						rect = o.getBoundingBox();
+						pos = o.getPosition();
 						
-					if( cc.rectContainsPoint(rect, loc) ) {
+					if( cp.v.dist(pos, loc) < o.width ) {
 				        var drawNode = cc.DrawNode.create();
 						drawNode.clear();
-						drawNode.drawRect(cc.p(rect.x,rect.y),cc.p(rect.x+rect.width,rect.y+rect.height),new cc.Color(255,0,0,100),1);
+						drawNode.drawCircle(cc.p(pos.x,pos.y),o.width/2,0,32,false,1,new cc.Color(255,0,0,100));
 						self.addChild(drawNode,20);
 
 						cc.eventManager.dispatchCustomEvent("object_touches_began", o);
@@ -319,7 +318,7 @@ var FairyLayer = cc.Layer.extend({
         stopperLeft.setLayers(_B_NOT_GRABABLE_MASK);
 		stopperLeft.setCollisionType(1);
 
-        var stopperRight = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(1136+56, 0), cp.v(1136+56, 640), 0));        
+        var stopperRight = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(1136, 0), cp.v(1136, 640), 0));        
         stopperRight.setFriction(0.1);
         stopperRight.setElasticity(0.3);
         stopperRight.setLayers(_B_NOT_GRABABLE_MASK);
