@@ -311,4 +311,61 @@ var _b_clear = function(events) {
 	for( var i=0 ; i<events.length ; i++ ) cc.eventManager.removeCustomListeners(events[i]);
 }
 
+// audio enhancements
+var _b_audio = function() {
+
+	var musicToPlay = [],
+		fadeTime = 0,
+		fadePerSec = 0;
+	
+	cc.audioEngine.step = function(dt) {
+		if( fadeTime ) {
+			var volume = cc.audioEngine.getMusicVolume() + fadePerSec*dt;
+			cc.audioEngine.setMusicVolume(volume);
+
+			fadeTime -= dt;
+			if( fadeTime < 0 ) fadeTime = 0;
+		}
+
+		if( musicToPlay.length > 0 ) {	
+			if( !cc.audioEngine.isMusicPlaying() ) {
+				var music = musicToPlay.splice(0,1)[0];
+
+				cc.audioEngine.playMusic(music.url, music.loop);
+			}
+		}
+	};
+
+	cc.audioEngine.fadeTo = function(time, targetVolume) {
+		var currentVolume = cc.audioEngine.getMusicVolume(),
+			diff = targetVolume - currentVolume;
+
+		fadeTime = time;
+		fadePerSec = diff / time;
+	};
+
+	cc.audioEngine.fadeOut = function(time) {
+		this.fadeTo(time,0);
+	};
+
+	cc.audioEngine.fadeIn = function(time) {
+		this.fadeTo(time,1);
+	};
+
+	cc.audioEngine.addMusic = function(url, loop) {
+		musicToPlay.push({
+			url: url,
+			loop: loop
+		});
+	};
+
+	cc.audioEngine.stopAllMusic = function() {
+		cc.audioEngine.stopMusic();
+		musicToPlay = [];
+	};
+};
+_b_audio();
+
+
+
 

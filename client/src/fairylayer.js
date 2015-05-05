@@ -83,6 +83,7 @@ var FairyLayer = cc.Layer.extend({
 		if( dob && dob.dragging ) dob.dragging();
 
         this._space.step(dt);
+		cc.audioEngine.step(dt);
     },
 	
 	// show displays a fairy
@@ -228,11 +229,11 @@ var FairyLayer = cc.Layer.extend({
 					var o = objs[i],
 						pos = o.getPosition();
 						
-					if( cp.v.dist(pos, loc) < o.width ) {
-				        var drawNode = cc.DrawNode.create();
-						drawNode.clear();
-						drawNode.drawCircle(cc.p(pos.x,pos.y),o.width/2,0,32,false,1,new cc.Color(255,0,0,100));
-						self.addChild(drawNode,20);
+					if( cp.v.dist(pos, loc) < o.width/2 ) {
+				//       var drawNode = cc.DrawNode.create();
+				//		drawNode.clear();
+				//		drawNode.drawCircle(cc.p(pos.x,pos.y),o.width/2,0,32,false,1,new cc.Color(255,0,0,100));
+				//		self.addChild(drawNode,20);
 
 						cc.eventManager.dispatchCustomEvent("object_touches_began", o);
 						self._draggedObject = o;

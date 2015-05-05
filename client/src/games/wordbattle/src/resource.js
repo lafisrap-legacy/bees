@@ -14,6 +14,11 @@
 			wordbattle_png : path+"res/wordbattle.png",
 			wordbattle_plist : path+"res/wordbattle.plist",
 
+			startscreen_mp3 : path+"res/sounds/suedsee04.mp3",
+			organizing_intro_mp3: path+"res/sounds/schiffe_intro01,03.mp3",
+			organizing_loop1_mp3: path+"res/sounds/schiffe_loop02,03.mp3",
+			organizing_loop2_mp3: path+"res/sounds/schiffe_loop03,03.mp3",
+			organizing_loop3_mp3: path+"res/sounds/schiffe_loop04,03.mp3",
 			bomb_in_water_mp3 : path+"res/sounds/wasserbombe2,0.mp3",
 			bomb_on_ship_mp3 : path+"res/sounds/schiffbombe1,0.mp3",
 			bomb_flying_mp3: path+"res/sounds/kanonenpfeifen1,0.mp3"

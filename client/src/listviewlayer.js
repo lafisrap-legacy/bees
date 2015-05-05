@@ -185,7 +185,9 @@ var SelectPlayerLayer = cc.Layer.extend({
 			_b_release(self._BarLabel);
 			_b_release(self._bar);
 		}, 2000);
-		    	
+		
+		cc.audioEngine.fadeOut(2);
+    	
 	    this.stopListeners();	    
 
 		$b.sendCommand({command: "stopInvitations"}); 

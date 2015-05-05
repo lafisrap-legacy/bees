@@ -125,8 +125,8 @@ var WordBattleLayer = cc.Layer.extend({
 				)
 			);
 			self.addChild(s1,0);
-			self.addChild(s2,0);
-			
+			self.addChild(s2,0);	
+
 			self.startGame();
 		}, this.gameUpdate, this);
 
@@ -144,6 +144,9 @@ var WordBattleLayer = cc.Layer.extend({
 		);
 		this.addChild(startscreen,0);
 		_b_retain(startscreen, "startscreen");
+		
+		cc.audioEngine.setMusicVolume(0.5);
+		cc.audioEngine.playMusic(gRes.startscreen_mp3,true);
 
         //////////////////////////////
         // Reading the fairytale and related data
@@ -201,6 +204,12 @@ var WordBattleLayer = cc.Layer.extend({
         //////////////////////////////
         // Send the list to the opponent (first) or wait for his list and make a selection
         // to be done ...
+
+		cc.audioEngine.setMusicVolume(0.5);
+		cc.audioEngine.playMusic(gRes.organizing_intro_mp3,false);
+		cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,true);
+		cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,true);
+		cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,true);
 
     	// for now start with episode 1
     	this.startEpisode(0);
@@ -332,7 +341,7 @@ var WordBattleLayer = cc.Layer.extend({
 			hg = this._hourglass;
 			
 		this.stopShipsBeMoved();
-		
+	
 		_b_one(["a_ship_was_moved","in_0.35_seconds"], function(data) {
 			var tiles = [];
 			for( var i=0 ; i<own.children.length ; i++ ) {
@@ -354,39 +363,51 @@ var WordBattleLayer = cc.Layer.extend({
 				cc.assert(otherBoard.message === "initBoard", "Received wrong message ('"+otherBoard.message+"' instead of 'initBoard') while starting round.");
 				cc.assert(otherBoard.tiles.length === tiles.length, "I got "+otherBoard.tiles.length+" ships, but I have "+tiles.length+" while starting round.");
 
-				cc.log("Starting countdown ...");
-				fairy.show(2);
-				fairy.say(0, 2, _b_t.fairies.lets_go);
-
-				// start always with three bombs
-				for( var i=0 ; i<3 ; i++ ) {	
-					self._bombs[i] = new Bomb(fairy._space, cc.p(100+80*i,500+(i%2)*100),self._otherSea);
-					self._bombs[i].getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
-					fairy.addObject(self._bombs[i]);
+				// set the ships
+				for( var other=self._otherSea, i=0 ; i<otherBoard.tiles.length ; i++ ) {
+					var tile = otherBoard.tiles[i];
+					var ship = new Battleship(tile.word, true);
+					other.addChild(ship,10);
+					ship.setRCPosition(tile.pos);
+					ship.setRotation(tile.rotation);							
 				}
 
-				_b_one("in_2_seconds" , function() {
-					hg.hide(function() {
-						hg.exit();
-		    		    self.removeChild(hg);
-						_b_release(hg);
-						self._hourglass = null;
-					});
-					fairy.hide();
+				cc.audioEngine.stopAllMusic();
 
-					for( var i=0 ; i<3 ; i++ ) {	
-						self._bombs[i].setTimer(30);
-					}
-
-					for( var other=self._otherSea, i=0 ; i<otherBoard.tiles.length ; i++ ) {
-						var tile = otherBoard.tiles[i];
-						var ship = new Battleship(tile.word, true);
-						other.addChild(ship,10);
-						ship.setRCPosition(tile.pos);
-						ship.setRotation(tile.rotation);							
-					}
-				});
+				self.playRound();
 			});
+		});
+	},
+
+	playRound: function() {
+		var self = this,
+			own = this._ownSea,
+			fairy = this._fairy,
+			hg = this._hourglass;	
+
+		cc.log("Starting countdown ...");
+		fairy.show(2);
+		fairy.say(0, 2, _b_t.fairies.lets_go);
+
+		// start always with three bombs
+		for( var i=0 ; i<3 ; i++ ) {	
+			self._bombs[i] = new Bomb(fairy._space, cc.p(100+80*i,500+(i%2)*100),self._otherSea);
+			self._bombs[i].getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
+			fairy.addObject(self._bombs[i]);
+		}
+
+		_b_one("in_2_seconds" , function() {
+			hg.hide(function() {
+				hg.exit();
+				self.removeChild(hg);
+				_b_release(hg);
+				self._hourglass = null;
+			});
+			fairy.hide();
+
+			for( var i=0 ; i<3 ; i++ ) {	
+				self._bombs[i].setTimer(30);
+			}
 		});
 	},
 
@@ -932,18 +953,25 @@ var Bomb = cc.PhysicsSprite.extend({
 						if( hit ) break;
 					}
 					
-					if( hit ) cc.audioEngine.playEffect(gRes.bomb_on_ship_mp3);
+					if( hit ) {
+						cc.audioEngine.playEffect(gRes.bomb_on_ship_mp3);
+
+						var bomb = new Bomb(self._space, cc.p(100+80*i,500+(i%2)*100),self._sea);
+						bomb.getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
+						self.getParent().addObject(bomb);
+					}
 					else cc.audioEngine.playEffect(gRes.bomb_in_water_mp3);
+					self._crossHairStatic = false;
+					self.exit();
 				})
 			)
 		);
 
 		cc.audioEngine.playEffect(gRes.bomb_flying_mp3);
-		
-		this.exit();
+		this._crossHairStatic = true;
 	},
 	
-	update: function() {
+	update: function(dt) {
 		var self = this;
 		
 		this._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
@@ -960,6 +988,10 @@ var Bomb = cc.PhysicsSprite.extend({
 				this._label.setString("");
 			}
 		}
+
+		if( this._crossHairStatic ) {
+			this.dragging();
+		}
 	},
 	
 	exit: function() {
@@ -967,7 +999,7 @@ var Bomb = cc.PhysicsSprite.extend({
 		
 		if( this._shape ) this._space.removeShape(this._shape);
 		if( this._bomb ) this._space.removeBody(this._bomb);
-		this.getParent().removeChild(this);
+		this.getParent().removeObject(this);
 	}	
 });
 
