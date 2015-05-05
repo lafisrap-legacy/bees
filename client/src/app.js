@@ -180,7 +180,7 @@ var BeesScene = cc.Scene.extend({
     invitePlayer:		function(invitee,cb1,cb2) { return this.weblayer.invitePlayer(invitee, cb1, cb2); },
     sendUpdate:			function(data) 			  { return this.weblayer.sendUpdate(data); },    
     sendMessage:		function(data) 			  { return this.weblayer.sendMessage(data); },    
-    receiveMessage:		function(cb) 			  { return this.weblayer.receiveMessage(cb); },    
+    receiveMessage:		function(message,cb) 	  { return this.weblayer.receiveMessage(message,cb); },    
     disinvitePlayer:	function(invitee)	 	  { return this.weblayer.disinvitePlayer(invitee); },
 });
 

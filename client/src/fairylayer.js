@@ -205,6 +205,9 @@ var FairyLayer = cc.Layer.extend({
 			this._objects.splice(index, 1);
 			this.removeChild(obj);
 			_b_release(obj);
+
+			if( this._objects.length === 0 ) cc.eventManager.dispatchCustomEvent("last_object_gone", this);	
+			cc.eventManager.dispatchCustomEvent("object_gone", this);
 		}
 		else cc.assert(false, "Couldn't find fairy object in list.");
 	},

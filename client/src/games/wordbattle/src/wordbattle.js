@@ -172,17 +172,13 @@ var WordBattleLayer = cc.Layer.extend({
 		this._fairy = new GameFairy();
         this.addChild(this._fairy,10);
 		_b_retain(this._fairy, "Fairy");
-		
-		/*
-		bomb1 = new Bomb(this._fairy._space, cc.p(140,700));
-		bomb2 = new Bomb(this._fairy._space, cc.p(200,770));
-		bomb3 = new Bomb(this._fairy._space, cc.p(260,730));
-		this._fairy.addObject(bomb1);
-		this._fairy.addObject(bomb2);
-		this._fairy.addObject(bomb3);
-		
-		bomb1.getBody().applyImpulse(cp.v(20000,-20000), cp.v(0,0));
-		*/
+	/*	
+		for( var i=0 ; i<3 ; i++ ) {	
+			var bomb = new Bomb(this._fairy._space, cc.p(100+80*i,500+(i%2)*100),self._otherSea);
+			bomb.getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
+			this._fairy.addChild(bomb,20);
+		}
+*/
         return true;
     },
     
@@ -247,7 +243,7 @@ var WordBattleLayer = cc.Layer.extend({
 
 			$b.sendMessage({ message: "initRounds", rounds: this._rounds });
 		} else {
-			$b.receiveMessage(function(data) {
+			$b.receiveMessage("initRounds", function(data) {
 				cc.assert(data.message === "initRounds", "Received wrong message ('"+data.message+"' instead of 'initRounds') while starting episode.");
 				self._rounds = data.rounds;
 				_b_one(["seas_have_moved_in"], function() {
@@ -359,7 +355,7 @@ var WordBattleLayer = cc.Layer.extend({
 			hg.show();
 			cc.log("Send message with initBoard!");
 			$b.sendMessage({ message: "initBoard", tiles: tiles });
-			$b.receiveMessage(function(otherBoard) {
+			$b.receiveMessage("initBoard", function(otherBoard) {
 				cc.assert(otherBoard.message === "initBoard", "Received wrong message ('"+otherBoard.message+"' instead of 'initBoard') while starting round.");
 				cc.assert(otherBoard.tiles.length === tiles.length, "I got "+otherBoard.tiles.length+" ships, but I have "+tiles.length+" while starting round.");
 
@@ -385,7 +381,6 @@ var WordBattleLayer = cc.Layer.extend({
 			fairy = this._fairy,
 			hg = this._hourglass;	
 
-		cc.log("Starting countdown ...");
 		fairy.show(2);
 		fairy.say(0, 2, _b_t.fairies.lets_go);
 
@@ -408,6 +403,21 @@ var WordBattleLayer = cc.Layer.extend({
 			for( var i=0 ; i<3 ; i++ ) {	
 				self._bombs[i].setTimer(30);
 			}
+
+			_b_one(["last_object_gone","bomb_time_is_up"], function() {
+							
+				fairy.show(3);
+				fairy.say(0, 2, _b_t.fairies.ceasefire);
+
+				$b.sendMessage({ message: "ceasefire" });
+				$b.receiveMessage("ceasefire", function() {
+					
+				});
+			});
+
+			$b.receiveMessage("bomb", function() {
+				
+			});
 		});
 	},
 
@@ -879,7 +889,14 @@ var Bomb = cc.PhysicsSprite.extend({
 	setTimer: function(seconds) {
 		this._timer = seconds;
 		this._startTime = new Date().getTime();
-	}, 
+	},
+
+	getTimer: function() {
+		var now = new Date().getTime(),
+			seconds = Math.floor((now - this._startTime)/1000);
+	
+		return this._timer - seconds;
+	},
 
 	dragging: function() {
 		var dpos = this.draggingPos;
@@ -958,6 +975,7 @@ var Bomb = cc.PhysicsSprite.extend({
 
 						var bomb = new Bomb(self._space, cc.p(100+80*i,500+(i%2)*100),self._sea);
 						bomb.getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
+						bomb.setTimer(self.getTimer());
 						self.getParent().addObject(bomb);
 					}
 					else cc.audioEngine.playEffect(gRes.bomb_in_water_mp3);
@@ -969,6 +987,9 @@ var Bomb = cc.PhysicsSprite.extend({
 
 		cc.audioEngine.playEffect(gRes.bomb_flying_mp3);
 		this._crossHairStatic = true;
+		self.runAction(cc.scaleTo(2,0.5));
+
+		$b.sendMessage({ message: "bomb", pos: cc.p(dpos.x-seaRect.x, dpos.y-seaRect.y) });	
 	},
 	
 	update: function(dt) {
@@ -986,6 +1007,9 @@ var Bomb = cc.PhysicsSprite.extend({
 				cc.eventManager.dispatchCustomEvent("bomb_time_is_up", this);
 				self._timer = null;		
 				this._label.setString("");
+
+				// maybe explosion here, some nice tricks ...
+				this.exit();
 			}
 		}
 

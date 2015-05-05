@@ -155,13 +155,23 @@ var WebLayer = cc.Class.extend({
 	    });
 	},
 
-	receiveMessage: function(cb) {
-		var self = this;
-		if( self._messageStorage.length === 0 ) {
-			self._messageCbs.push(cb);
-		} else {
-			var msg = JSON.parse(self._messageStorage.splice(0,1));
+	receiveMessage: function(message, cb) {
+		var self = this,
+			ms = self._messageStorage,
+			found = false;
+
+		for( var i=0 ; i<ms.length ; i++ ) {
+			if( ms[i].message === message ) {
+				found = true;
+				break;
+			}
+		}
+
+		if( found ) {
+			var msg = self._messageStorage.splice(i,1)[0];
 			cb(msg);
+		} else {
+			self._messageCbs.push({ message: message, cb: cb});
 		}
 	},
  
@@ -231,15 +241,25 @@ var WebLayer = cc.Class.extend({
 			self._updateGameCb(data.data);
 			break;			
 		case "message":	
-			if( self._messageCbs.length === 0 ) {
-				self._messageStorage.push(data.data[0].data);
-			} else {
-				try {
-					self._messageCbs[0](JSON.parse(data.data[0].data));
-					self._messageCbs.splice(0,1);
-				} catch(e) {
-					cc.log("Couldn't parse JSON data: "+e.message);
+			try {
+				var data = JSON.parse(data.data[0].data),
+					mcb = self._messageCbs,
+					found = false;
+
+				for( var i=0 ; i<mcb.length ; i++ ) {
+					if( mcb[i].message === data.message ) {
+						found = true;
+						break;
+					}
 				}
+				if( found ) {
+					mcb[i].cb(data);
+					self._messageCbs.splice(i,1);
+				} else {
+					self._messageStorage.push(data);
+				}
+			} catch(e) {
+				cc.log("Couldn't parse JSON data: "+e.message);
 			}
 			break;			
 		default:
