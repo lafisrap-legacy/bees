@@ -409,15 +409,28 @@ var WordBattleLayer = cc.Layer.extend({
 				fairy.show(3);
 				fairy.say(0, 2, _b_t.fairies.ceasefire);
 
+				$b.stopMessage("bomb");
 				$b.sendMessage({ message: "ceasefire" });
-				$b.receiveMessage("ceasefire", function() {
+				$b.receiveMessage("ceasefire", function(data) {
 					
 				});
 			});
 
-			$b.receiveMessage("bomb", function() {
-				
-			});
+			(function receiveBomb() {
+				$b.receiveMessage("bomb", function(data) {
+					var pos = data.pos,
+						seaRect = self._ownSea.getBoundingBox(),
+						flyingBomb = new FlyingBomb(self._ownSea, true);
+
+					fairy.addChild(flyingBomb);
+
+					flyingBomb.land(cc.p(seaRect.x+pos.x, seaRect.y+pos.y), function(hit) {
+						fairy.removeChild(flyingBomb);
+					});
+
+					receiveBomb();
+				});
+			})();
 		});
 	},
 
@@ -452,7 +465,7 @@ var WordBattleLayer = cc.Layer.extend({
 								x: start.x - pos.x,
 								y: start.y - pos.y
 							};
-							cc.log("Found it on position "+JSON.stringify(draggedShip._pos));
+							cc.log("Found it on position "+JSON.stringify(draggedShip._coords));
 							return
 						} 
 					}		
@@ -574,10 +587,9 @@ var WordBattleLayer = cc.Layer.extend({
 var Battleship = cc.Node.extend({
 	_word: null,
 	_hidden: false,
-	_row: null,
-	_col: null,
 	_rect: null,
 	_rotation: 0, // 0 or 90
+	_coords: null,
 	
 	ctor: function(word, hidden) {
 	
@@ -625,8 +637,8 @@ var Battleship = cc.Node.extend({
 		for( var i=0 ; i<wl ; i++ ) {
 			var part = this.children[i];
 			part.setPosition(cc.p(0, (wl/2-i)*_B_SQUARE_SIZE*2 - _B_SQUARE_SIZE));
+			part._damage = 0;
 			if( this._hidden ) {
-				part._damage = 0;
 				part.setOpacity(50);
 			}
 		}
@@ -640,36 +652,26 @@ var Battleship = cc.Node.extend({
     	return this._word;
     },
     
-    setRCPosition: function(pos) {
-    	if( pos === undefined ) {
-    		pos = this._pos;
+    setRCPosition: function(coords) {
+    	if( coords === undefined ) {
+    		coords = this._coords;
     	} else {
-    		this._pos = pos;
+    		this._coords = coords;
     	}
-    	cc.assert(pos.row !== undefined && pos.row>=0 && pos.row<_B_MAX_SHIP_LENGTH && pos.col !== undefined && pos.col>=0 && pos.col<_B_MAX_SHIP_LENGTH, "buildShip: Illegal position of ship." );
+    	cc.assert(coords.row !== undefined && coords.row>=0 && coords.row<_B_MAX_SHIP_LENGTH && coords.col !== undefined && coords.col>=0 && coords.col<_B_MAX_SHIP_LENGTH, "buildShip: Illegal position of ship." );
     	
-    	pos.row = parseInt(pos.row);
-    	pos.col = parseInt(pos.col);
+    	coords.row = parseInt(coords.row);
+    	coords.col = parseInt(coords.col);
     	
-    	cc.Node.prototype.setPosition.call(this,this.getXYPosition(pos));
-    	
-    	// computing the bounding rectangle in world coordinates. It is assumed, that the first children are the sprites!
-    	var cl = this._word.length,
-    		pos1 = this.convertToWorldSpace(this.children[0].getPosition()),
-    		pos2 = this.convertToWorldSpace(this.children[cl-1].getPosition()),
-    		minX = Math.min(pos1.x, pos2.x)-_B_SQUARE_SIZE/2,
-    		maxX = Math.max(pos1.x, pos2.x)+_B_SQUARE_SIZE/2,
-    		minY = Math.min(pos1.y, pos2.y)-_B_SQUARE_SIZE/2,
-    		maxY = Math.max(pos1.y, pos2.y)+_B_SQUARE_SIZE/2;
-    		
-    	this._rect = cc.rect(minX, minY, maxX-minX, maxY-minY);
-    	
-//    	var drawNode = cc.DrawNode.create();
-//	    drawNode.drawRect({x:minX,y:minY}, {x:maxX,y:maxY}, cc.color(255,0,0,30));
-//        this.getParent().getParent().addChild(drawNode,20);
+		var pos = this.getXYPosition(coords);
+    	cc.Node.prototype.setPosition.call(this,pos);
 
-    	//cc.log("setRCPosition: rect: "+JSON.stringify(this._rect)+", row/col: "+JSON.stringify(pos));
-    	
+    	// computing the bounding rectangle in world coordinates.
+    	var cl = this._word.length,
+			box = this.getParent().getBoundingBox();
+
+		this._rect = this._rotation === 0? cc.rect(pos.x-_B_SQUARE_SIZE/2+box.x, pos.y-cl*_B_SQUARE_SIZE/2+box.y, _B_SQUARE_SIZE , cl*_B_SQUARE_SIZE):
+										   cc.rect(pos.x-cl*_B_SQUARE_SIZE/2+box.x, pos.y-_B_SQUARE_SIZE/2+box.y , cl*_B_SQUARE_SIZE , _B_SQUARE_SIZE);
     },
     
     getXYPosition: function(pos, rotation) {
@@ -684,7 +686,7 @@ var Battleship = cc.Node.extend({
     },
     
     getRCPosition: function() {
-	    return this._pos;
+	    return this._coords;
     },
     
     getLength: function() {
@@ -716,8 +718,8 @@ var Battleship = cc.Node.extend({
 
 		if( pos === undefined ) {
 			pos = {
-				row: this._pos.row,
-				col: this._pos.col
+				row: this._coords.row,
+				col: this._coords.col
 			};	
 		}	
 		if( rotation === undefined ) rotation = this._rotation;
@@ -942,63 +944,29 @@ var Bomb = cc.PhysicsSprite.extend({
 		var parent = this.getParent(),
 			dpos = this.draggingPos,
 			seaRect = this._sea.getBoundingBox(),
-			distance = dpos.x - seaRect.x, 
-			bomb = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bomb.png"),cc.rect(0,0,120,120));
+			flyingBomb = new FlyingBomb(this._sea, false);
+		
+		parent.addChild(flyingBomb,20);
 
-		bomb.setPosition(_B_CANONBALL_POS);
-		parent.addChild(bomb,20);
+		flyingBomb.fire();
+		flyingBomb.land(cc.p(dpos.x, dpos.y+_B_CROSSHAIR_Y_OFFSET), function(hit) {
+			if(hit) {	
+				var bomb = new Bomb(self._space, cc.p(180,600),self._sea);
+				bomb.getBody().applyImpulse(cp.v(30,100),cp.v(300,0));
+				bomb.setTimer(self.getTimer());
+				self.getParent().addObject(bomb);
+			}
 
-		var bezier = [
-			cc.p(seaRect.x,dpos.y+distance/5+_B_CROSSHAIR_Y_OFFSET),
-			cc.p(seaRect.x+distance/2,dpos.y+distance/10+_B_CROSSHAIR_Y_OFFSET),
-			cc.p(dpos.x,dpos.y+_B_CROSSHAIR_Y_OFFSET)
-		];
-
-		bomb.runAction(
-			cc.sequence(
-				cc.EaseSineOut.create(
-					cc.moveBy(0.22,cc.p(1200,400))
-				),
-				cc.delayTime(1.00),
-				cc.spawn(
-					cc.moveTo(0.001,cc.p(seaRect.x,dpos.y+distance/5+_B_CROSSHAIR_Y_OFFSET)),
-					cc.scaleTo(0.001,0.2)
-				),
-				cc.bezierTo((dpos.x-seaRect.x)/400,bezier),
-				cc.fadeOut(0.001),
-				cc.callFunc(function() {
-					parent.removeChild(bomb);
-
-					// look if we hit a ship ...
-					var ships = self._sea.getChildren(),
-						hit = false;
-					for( var i=0 ; i<ships.length ; i++ ) {
-						var ship = ships[i];
-
-						if( ship.dropBomb ) hit = ship.dropBomb({x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET});
-						if( hit ) break;
-					}
-					
-					if( hit ) {
-						cc.audioEngine.playEffect(gRes.bomb_on_ship_mp3);
-
-						var bomb = new Bomb(self._space, cc.p(100+80*i,500+(i%2)*100),self._sea);
-						bomb.getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
-						bomb.setTimer(self.getTimer());
-						self.getParent().addObject(bomb);
-					}
-					else cc.audioEngine.playEffect(gRes.bomb_in_water_mp3);
-					self._crossHairStatic = false;
-					self.exit();
-				})
-			)
-		);
+			parent.removeChild(flyingBomb);
+			self._crossHairStatic = false;
+			self.exit();
+		});
 
 		cc.audioEngine.playEffect(gRes.bomb_flying_mp3);
 		this._crossHairStatic = true;
-		self.runAction(cc.scaleTo(2,0.5));
+		self.runAction(cc.scaleTo(2,0.8));
 
-		$b.sendMessage({ message: "bomb", pos: cc.p(dpos.x-seaRect.x, dpos.y-seaRect.y) });	
+		$b.sendMessage({ message: "bomb", pos: cc.p(dpos.x-seaRect.x, dpos.y+_B_CROSSHAIR_Y_OFFSET-seaRect.y) });	
 	},
 	
 	update: function(dt) {
@@ -1035,6 +1003,73 @@ var Bomb = cc.PhysicsSprite.extend({
 		this.getParent().removeObject(this);
 	}	
 });
+
+var FlyingBomb = cc.Sprite.extend({
+
+	_sea: null,
+	_incoming: false,
+
+	// ctor calls the parent class with appropriate parameter
+	//
+    ctor: function(sea, incoming) {
+        cc.Sprite.prototype.ctor.call(this);
+        
+        this._sea = sea;
+		this._incoming = incoming;
+
+		var frame = cc.spriteFrameCache.getSpriteFrame("bomb.png");
+        this.initWithSpriteFrame(frame);
+	},
+
+	fire: function() {
+		
+		this.setPosition(_B_CANONBALL_POS);
+		this.runAction(
+			cc.EaseSineOut.create(
+				cc.moveBy(0.22,cc.p(1200,400))
+			)
+		);
+		
+		cc.audioEngine.playEffect(gRes.bomb_flying_mp3);
+	},
+
+	land: function(pos, cb) {
+		var self = this,
+			seaRect = this._sea.getBoundingBox(),
+			xStart = seaRect.x + this._incoming?seaRect.width:0,
+			distance = Math.abs(pos.x - xStart);
+
+		this.setScale(0.0);
+
+		if( this._incoming ) cc.audioEngine.playEffect(gRes.bomb_flying_mp3);
+
+		this.runAction(
+			cc.sequence(
+				cc.delayTime(2 - 0.66*distance/seaRect.width),
+				cc.spawn(
+					cc.moveTo(0.001,cc.p(xStart,pos.y+distance/5)),
+					cc.scaleTo(0.001,0.2)
+				),
+				cc.moveTo(0.66*distance/seaRect.width,pos),
+				cc.fadeOut(0.001),
+				cc.callFunc(function() {
+
+					// look if we hit a ship ...
+					var ships = self._sea.getChildren(),
+						hit = false;
+					for( var i=0 ; i<ships.length ; i++ ) {
+						if( ships[i].dropBomb ) if( hit = ships[i].dropBomb(pos) ) break;
+					}
+					
+					if( hit ) cc.audioEngine.playEffect(gRes.bomb_on_ship_mp3);
+					else cc.audioEngine.playEffect(gRes.bomb_in_water_mp3);
+					cb(hit);
+				})
+			)
+		);
+	}
+});
+
 
 var WordBattleScene = cc.Scene.extend({
 	gameState: null,

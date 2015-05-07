@@ -174,6 +174,19 @@ var WebLayer = cc.Class.extend({
 			self._messageCbs.push({ message: message, cb: cb});
 		}
 	},
+
+	stopMessage: function(message) {
+		var ms = self._messageStorage,
+			mcb = self._messageCbs;
+
+		for( var i=0 ; i<ms.length ; i++ ) {
+			if( ms[i].message === message ) ms.splice(i,1);
+		}
+
+		for( var i=0 ; i<mcb.length ; i++ ) {
+			if( mcb[i].message === message ) mcb.splice(i,1);
+		}
+	},
  
     saveState: function(state) {
     	self = this;

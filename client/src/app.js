@@ -181,6 +181,7 @@ var BeesScene = cc.Scene.extend({
     sendUpdate:			function(data) 			  { return this.weblayer.sendUpdate(data); },    
     sendMessage:		function(data) 			  { return this.weblayer.sendMessage(data); },    
     receiveMessage:		function(message,cb) 	  { return this.weblayer.receiveMessage(message,cb); },    
+    stopMessage:		function(message) 	  	  { return this.weblayer.stopMessage(message); },    
     disinvitePlayer:	function(invitee)	 	  { return this.weblayer.disinvitePlayer(invitee); },
 });
 
