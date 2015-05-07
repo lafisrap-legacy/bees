@@ -608,11 +608,18 @@ var Battleship = cc.Node.extend({
 		var wl = this._word.length;
 
 		// create the sprites and add them to the node		
-		this.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_front.png"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2)));
+		var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_front.png"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2));
+		sprite._shipDamaged = "ship1_front_damaged.png";
+		this.addChild(sprite);
 		for( var i=1 ; i<wl-1 ; i++ ) {
-			this.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_middle"+(parseInt(Math.random()*3+1))+".png"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2)));
+			var shipPart = parseInt(Math.random()*3+1),
+				sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_middle"+shipPart+".png"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2));
+			sprite._shipDamaged = "ship1_middle"+shipPart+"_damaged.png";
+			this.addChild(sprite);
 		}
-		this.addChild(cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_back.png"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2)));
+		var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_back.png"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2));
+		sprite._shipDamaged = "ship1_back_damaged.png";
+		this.addChild(sprite);
 
 		// set positions
 		for( var i=0 ; i<wl ; i++ ) {
@@ -807,6 +814,8 @@ var Battleship = cc.Node.extend({
 
 			part.setOpacity(255);
 			part.runAction(cc.tintBy(0.11,d===1?50:0,d===2?50:0,d===3?50:0));
+
+			if( d === 1 ) part.setSpriteFrame(cc.spriteFrameCache.getSpriteFrame(part._shipDamaged));
 
 			return true;
 		}
