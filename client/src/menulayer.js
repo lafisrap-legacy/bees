@@ -90,7 +90,7 @@ var MenuLayer = cc.Layer.extend({
 		// Create menu items from object
 		var items = [];
 		for( var i=0 ; i<Math.min(labelsAndCallbacks.length,_B_MAX_MENU_ENTRIES) ; i++ ) {
-			var frame = cc.spriteFrameCache.getSpriteFrame("item"+(i+1)),
+			var frame = cc.spriteFrameCache.getSpriteFrame("item"+(i+1)+".png"),
 	    		spritesNormal = cc.Sprite.create(frame,cc.rect(0,0,380,100)),
 	    		spritesSelected =cc.Sprite.create(frame,cc.rect(0,0,380,100)),
 	    		spritesDisabled =cc.Sprite.create(frame,cc.rect(0,0,380,100));
@@ -127,7 +127,7 @@ var MenuLayer = cc.Layer.extend({
 		));
 
 		// Create, adjust and animate gate
-		this.gate = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("gate"),cc.rect(0,0,1136,640)),
+		this.gate = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("gate.png"),cc.rect(0,0,1136,640)),
 		this.gate.setPosition(cc.p(1136*1.5,370));
 		this.gate.setScale(1.15);
 		this.gate.runAction(cc.EaseSineOut.create(

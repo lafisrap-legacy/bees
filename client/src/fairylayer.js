@@ -364,7 +364,7 @@ var SpeechBubble = cc.Sprite.extend({
 	
 	_bubbles: {
 		"strong": {
-			sprite: "bubble1",
+			sprite: "bubble1.png",
 			ax: 0.6,
 			ay: 0.0,
 			padding: {
@@ -376,7 +376,7 @@ var SpeechBubble = cc.Sprite.extend({
 			color: cc.color(64,0,0,255)
 		},
 		"nice": {
-			sprite: "bubble2",
+			sprite: "bubble2.png",
 			ax: 0.6,
 			ay: 0.0,
 			padding: {
@@ -472,7 +472,7 @@ var Hourglass = cc.PhysicsSprite.extend({
     	
         cc.PhysicsSprite.prototype.ctor.call(this);
 
-        this.initWithSpriteFrame(cc.spriteFrameCache.getSpriteFrame("hourglass"));
+        this.initWithSpriteFrame(cc.spriteFrameCache.getSpriteFrame("hourglass.png"));
 		this.setAnchorPoint(0.50,0.5);
 		var width = 120,
 			height = 220,
@@ -644,7 +644,7 @@ var GameFairy = FairyLayer.extend({
 	//
     ctor: function() {
         this._super("gamefairy",[{
-        	sprite: "gamefairy1",
+        	sprite: "gamefairy1.png",
         	x: 1020,
         	y: 160,
         	width: 251,
@@ -659,7 +659,7 @@ var GameFairy = FairyLayer.extend({
         		fontsize: 48,
         	},
         },{
-        	sprite: "gamefairy2",
+        	sprite: "gamefairy2.png",
         	x: 1020,
         	y: 160,
         	width: 251,
@@ -674,7 +674,7 @@ var GameFairy = FairyLayer.extend({
         		fontsize: 48,
         	},
         },{
-        	sprite: "gamefairy3",
+        	sprite: "gamefairy3.png",
         	x: 1020,
         	y: 160,
         	width: 251,
@@ -689,12 +689,42 @@ var GameFairy = FairyLayer.extend({
         		fontsize: 48,
         	},
         },{
-        	sprite: "gamefairy4",
+        	sprite: "gamefairy4.png",
         	x: 1020,
         	y: 160,
         	width: 251,
         	height: 320,
         	orientation: _B_FAIRY_RIGHT,
+        	bubble: {
+        		type: "strong",
+        		x: 340,
+        		y: 260,
+        		width: 500,
+        		height: 300,
+        		fontsize: 48,
+        	},
+        },{
+        	sprite: "gamefairy4.png",
+        	x: 200,
+        	y: 160,
+        	width: 251,
+        	height: 320,
+        	orientation: _B_FAIRY_LEFT,
+        	bubble: {
+        		type: "strong",
+        		x: 340,
+        		y: 260,
+        		width: 500,
+        		height: 300,
+        		fontsize: 48,
+        	},
+        },{
+        	sprite: "gamefairy2.png",
+        	x: 200,
+        	y: 160,
+        	width: 251,
+        	height: 320,
+        	orientation: _B_FAIRY_LEFT,
         	bubble: {
         		type: "strong",
         		x: 340,

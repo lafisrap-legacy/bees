@@ -6,9 +6,12 @@ _b_text = {
         },
         "fairies": {
         	"move_ships": "Bewege und drehe die Schiffe!",
-        	"press_it":	"Drücke die Sanduhr, wenn du fertig bist.",
+        	"press_it":	"Drücke die Sanduhr, wenn du bereit bist.",
         	"lets_go":	"3 .. 2 .. 1 .. 0.\nUnd los geht's!",
-			"ceasefire": "FEUERPAUSE!"
+			"ceasefire": "FEUERPAUSE!",
+			"results": "Die Ergebnisse dieser Runde!!",
+			"ready": "Bereit für die nächste Runde?"
+
         }
     }
 }

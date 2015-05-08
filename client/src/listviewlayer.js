@@ -80,7 +80,7 @@ var SelectPlayerLayer = cc.Layer.extend({
 		
         //////////////////////////////
 		// Create, adjust and animate main bar
-		var bar = this._bar = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bar"),cc.rect(0,0,550,115));
+		var bar = this._bar = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bar.png"),cc.rect(0,0,550,115));
 		bar.setPosition(cc.p(cc.width/2,cc.height+50));
 		bar.setScale(2);
 		bar.runAction(
@@ -253,7 +253,7 @@ var SelectPlayerLayer = cc.Layer.extend({
     	
     	// build up the players list
 		for( var i=0 ; i<Math.min(players.length, _B_MAX_LISTVIEW_ENTRIES) ; i++ ) {
-			var frame = cc.spriteFrameCache.getSpriteFrame("listviewitem"+(i+1)),
+			var frame = cc.spriteFrameCache.getSpriteFrame("listviewitem"+(i+1)+".png"),
 	    		spritesNormal = cc.Sprite.create(frame,cc.rect(0,0,380,100)),
 	    		spritesSelected =cc.Sprite.create(frame,cc.rect(0,0,380,100)),
 	    		spritesDisabled =cc.Sprite.create(frame,cc.rect(0,0,380,100));
@@ -266,8 +266,8 @@ var SelectPlayerLayer = cc.Layer.extend({
 			//spritesSelected.addChild(label, 5);	
 			//spritesDisabled.addChild(label, 5);	
 			
-			var icon1 = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("invited"),cc.rect(0,0,64,64)),
-				icon2 = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("inviting"),cc.rect(0,0,64,64));
+			var icon1 = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("invited.png"),cc.rect(0,0,64,64)),
+				icon2 = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("inviting.png"),cc.rect(0,0,64,64));
 			icon1.setPosition(cc.p(50,50));
 			icon1.setScale(0.0)
 			icon2.setPosition(cc.p(330,50));

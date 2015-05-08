@@ -7,6 +7,7 @@ var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_CANON_POS = cc.p(30,140),
 	_B_CANONBALL_POS = cc.p(100,240),
 	_B_CROSSHAIR_Y_OFFSET = _B_SQUARE_SIZE + 7,
+	_B_DAMAGE_PROGRESS_DELAY = 0.4,
 	_B_TAP_TIME = 200,
 
 	_B_MODE_TITLE = 1,
@@ -343,7 +344,7 @@ var WordBattleLayer = cc.Layer.extend({
 			for( var i=0 ; i<own.children.length ; i++ ) {
 				var tile = own.children[i];
 			
-				if( tile.isTile ) {
+				if( tile._isTile ) {
 					tiles.push({
 						word: tile.getWord(),
 						coords: tile.getRCPosition(),
@@ -381,6 +382,8 @@ var WordBattleLayer = cc.Layer.extend({
 			fairy = this._fairy,
 			hg = this._hourglass;	
 
+		cc.assert(hg, "playRound assumes to have an hourglass at the beginning.")
+
 		fairy.show(2);
 		fairy.say(0, 2, _b_t.fairies.lets_go);
 
@@ -407,12 +410,55 @@ var WordBattleLayer = cc.Layer.extend({
 			_b_one(["last_object_gone","bomb_time_is_up"], function() {
 							
 				fairy.show(3);
-				fairy.say(0, 2, _b_t.fairies.ceasefire);
+				fairy.say(0, 99, _b_t.fairies.ceasefire);
 
 				$b.stopMessage("bomb");
 				$b.sendMessage({ message: "ceasefire" });
 				$b.receiveMessage("ceasefire", function(data) {
+
+					_b_one("in_7_seconds", function() {
+						fairy.silent();
+						fairy.show(4);
+						fairy.say(0, 3, _b_t.fairies.results);
 					
+						_b_one("in_7_seconds", function() {
+							var own = self._ownSea.getChildren(),
+								other = self._otherSea.getChildren();
+
+							var progressDamage = function(ships) {
+								var i=0,
+									interval = setInterval(function() {
+										if( ships[i]._isTile ) ships[i].progressDamage();
+										if( ++i >= ships.length ) clearInterval(interval);
+									}, _B_DAMAGE_PROGRESS_DELAY*1000);
+							};
+
+							progressDamage(own);
+							progressDamage(other);
+							
+							_b_one("in_7_seconds", function() {
+
+								fairy.say(0, 3, _b_t.fairies.ready);
+
+								_b_one("in_3_seconds", function() {
+									
+									var hg = self._hourglass = new Hourglass(self._fairy._space, _B_HOURGLASS_POS);
+									self.addChild(self._hourglass,10);
+									_b_retain(self._hourglass, "Hourglass");
+									hg.show();
+									fairy.show(5);
+									fairy.say(1,3, _b_t.fairies.press_it);
+
+									_b_one("hourglass_is_clicked", function() {
+										$b.sendMessage({ message: "playRound" });
+										$b.receiveMessage("playRound", function() {
+											self.playRound();
+										});
+									});
+								})
+							})
+						});
+					});
 				});
 			});
 
@@ -590,6 +636,7 @@ var Battleship = cc.Node.extend({
 	_rect: null,
 	_rotation: 0, // 0 or 90
 	_coords: null,
+	_isTile: true,
 	
 	ctor: function(word, hidden) {
 	
@@ -600,7 +647,6 @@ var Battleship = cc.Node.extend({
 		this._word = word;
 		this._hidden = hidden;
 		this.buildShip();	
-		this.isTile = true;
 		
 		this.setCascadeOpacityEnabled(true);
 	},
@@ -811,13 +857,33 @@ var Battleship = cc.Node.extend({
 				d = ++(part._damage);
 
 			part.setOpacity(255);
-			part.runAction(cc.tintBy(0.11,d===1?50:0,d===2?50:0,d===3?50:0));
-
-			if( d === 1 ) part.setSpriteFrame(cc.spriteFrameCache.getSpriteFrame(part._shipDamaged));
+			this.showDamage(part);
 
 			return true;
 		}
 		return false;
+	},
+
+	showDamage: function(part) {
+		var d = part._damage;
+
+		part.runAction(cc.tintBy(0.11,d===1?50:0,d===2?50:0,d===3?50:0));
+		if( d === 1 ) part.setSpriteFrame(cc.spriteFrameCache.getSpriteFrame(part._shipDamaged));
+	},
+
+	progressDamage: function() {	
+		var self = this,
+			wl = this._word.length;
+
+		for( var i=0 ; i<wl ; i++ ) {
+			var part = this.children[i];
+			if( part._damage > 0 ) {
+				setTimeout(function(part) {
+					part._damage++;
+					self.showDamage(part);
+				}, _B_DAMAGE_PROGRESS_DELAY*Math.random()*1000, part);
+			}
+		}
 	},
     
     getRect: function() {
@@ -937,8 +1003,11 @@ var Bomb = cc.PhysicsSprite.extend({
 
 		if( !this._imIn ) return;
 
-		var parent = this.getParent(),
-			dpos = this.draggingPos,
+		var parent = this.getParent();
+		
+		if( !parent ) return; // I have no sea anymore to land
+
+		var	dpos = this.draggingPos,
 			seaRect = this._sea.getBoundingBox(),
 			flyingBomb = new FlyingBomb(this._sea, false);
 		
@@ -946,16 +1015,18 @@ var Bomb = cc.PhysicsSprite.extend({
 
 		flyingBomb.fire();
 		flyingBomb.land(cc.p(dpos.x, dpos.y+_B_CROSSHAIR_Y_OFFSET), function(hit) {
-			if(hit) {	
-				var bomb = new Bomb(self._space, cc.p(180,600),self._sea);
-				bomb.getBody().applyImpulse(cp.v(30,100),cp.v(300,0));
-				bomb.setTimer(self.getTimer());
-				self.getParent().addObject(bomb);
-			}
+			if( self.getParent() ) {
+				if(hit) {	
+					var bomb = new Bomb(self._space, cc.p(180,600),self._sea);
+					bomb.getBody().applyImpulse(cp.v(30,100),cp.v(300,0));
+					bomb.setTimer(self.getTimer());
+					parent.addObject(bomb);
+				}
 
-			parent.removeChild(flyingBomb);
-			self._crossHairStatic = false;
-			self.exit();
+				parent.removeChild(flyingBomb);
+				self._crossHairStatic = false;
+				self.exit();
+			}
 		});
 
 		cc.audioEngine.playEffect(gRes.bomb_flying_mp3);
@@ -997,6 +1068,7 @@ var Bomb = cc.PhysicsSprite.extend({
 		if( this._shape ) this._space.removeShape(this._shape);
 		if( this._bomb ) this._space.removeBody(this._bomb);
 		this.getParent().removeObject(this);
+		this._timer = null;
 	}	
 });
 

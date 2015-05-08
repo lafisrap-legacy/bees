@@ -1,135 +1,113 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>frames</key>
-	<dict>
-		<key>item1</key>
-		<dict>
-			<key>frame</key>
-			<string>{{0, 0}, {376, 78}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 0}, {376, 78}}</string>
-			<key>sourceSize</key>
-			<string>{376, 78}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>item2</key>
-		<dict>
-			<key>frame</key>
-			<string>{{376, 0}, {380, 73}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 0}, {373, 69}}</string>
-			<key>sourceSize</key>
-			<string>{380, 73}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>item3</key>
-		<dict>
-			<key>frame</key>
-			<string>{{756, 0}, {380, 84}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 2}, {374, 81}}</string>
-			<key>sourceSize</key>
-			<string>{380, 84}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>item4</key>
-		<dict>
-			<key>frame</key>
-			<string>{{1136, 0}, {380, 90}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 0}, {378, 87}}</string>
-			<key>sourceSize</key>
-			<string>{380, 90}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>item5</key>
-		<dict>
-			<key>frame</key>
-			<string>{{1516, 0}, {380, 97}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 1}, {378, 95}}</string>
-			<key>sourceSize</key>
-			<string>{380, 97}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>item6</key>
-		<dict>
-			<key>frame</key>
-			<string>{{0, 97}, {374, 84}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 0}, {374, 84}}</string>
-			<key>sourceSize</key>
-			<string>{374, 84}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>gate</key>
-		<dict>
-			<key>frame</key>
-			<string>{{374, 97}, {1136, 640}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 0}, {1136, 640}}</string>
-			<key>sourceSize</key>
-			<string>{1136, 640}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		</dict>
-		<key>metadata</key>
-		<dict>
-		<key>format</key>
-		<integer>2</integer>
-		<key>textureFileName</key>
-		<string>menu.png</string>
-		<key>size</key>
-		<string>{2048, 2048}</string>
-	</dict></dict></plist>
+    <dict>
+        <key>frames</key>
+        <dict>
+            <key>gate.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{2,267},{1136,640}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{1136,640}}</string>
+                <key>sourceSize</key>
+                <string>{1136,640}</string>
+            </dict>
+            <key>item1.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{384,2},{376,78}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{376,78}}</string>
+                <key>sourceSize</key>
+                <string>{376,78}</string>
+            </dict>
+            <key>item2.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{2,2},{380,73}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{380,73}}</string>
+                <key>sourceSize</key>
+                <string>{380,73}</string>
+            </dict>
+            <key>item3.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{2,82},{380,84}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{380,84}}</string>
+                <key>sourceSize</key>
+                <string>{380,84}</string>
+            </dict>
+            <key>item4.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{2,168},{380,90}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{380,90}}</string>
+                <key>sourceSize</key>
+                <string>{380,90}</string>
+            </dict>
+            <key>item5.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{384,168},{380,97}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{380,97}}</string>
+                <key>sourceSize</key>
+                <string>{380,97}</string>
+            </dict>
+            <key>item6.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{384,82},{374,84}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{374,84}}</string>
+                <key>sourceSize</key>
+                <string>{374,84}</string>
+            </dict>
+        </dict>
+        <key>metadata</key>
+        <dict>
+            <key>format</key>
+            <integer>2</integer>
+            <key>realTextureFileName</key>
+            <string>menu.png</string>
+            <key>size</key>
+            <string>{1140,909}</string>
+            <key>smartupdate</key>
+            <string>$TexturePacker:SmartUpdate:61aa101189abfa096c23bd649e04e0cd:da7ac02dd53dc5177101d774c3024897:9622c220910f706aac7e93396e53b943$</string>
+            <key>textureFileName</key>
+            <string>menu.png</string>
+        </dict>
+    </dict>
+</plist>
