@@ -8,8 +8,9 @@ var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_CANONBALL_POS = cc.p(100,240),
 	_B_CROSSHAIR_Y_OFFSET = _B_SQUARE_SIZE + 7,
 	_B_DAMAGE_PROGRESS_DELAY = 0.4,
+	_B_MAX_DAMAGE = 3,
+	_B_LETTER_SIZE = 96,
 	_B_TAP_TIME = 200,
-
 	_B_MODE_TITLE = 1,
 	_B_MODE_MOVING = 2,
 	_B_MODE_BOMBING = 3,
@@ -684,6 +685,7 @@ var Battleship = cc.Node.extend({
 			var part = this.children[i];
 			part.setPosition(cc.p(0, (wl/2-i)*_B_SQUARE_SIZE*2 - _B_SQUARE_SIZE));
 			part._damage = 0;
+			part._letter = this._word[i];
 			if( this._hidden ) {
 				part.setOpacity(50);
 			}
@@ -854,21 +856,31 @@ var Battleship = cc.Node.extend({
 				row = Math.floor((pos.y-rect.y)/_B_SQUARE_SIZE),
 				i = this._rotation===0? this._word.length-row-1 : this._word.length-col-1,
 				part = this.children[i],
-				d = ++(part._damage);
+				d = Math.min(++part._damage,_B_MAX_DAMAGE);
 
 			part.setOpacity(255);
-			this.showDamage(part);
+			this.markDamage(part);
 
 			return true;
 		}
 		return false;
 	},
 
-	showDamage: function(part) {
+	markDamage: function(part) {
 		var d = part._damage;
 
 		part.runAction(cc.tintBy(0.11,d===1?50:0,d===2?50:0,d===3?50:0));
 		if( d === 1 ) part.setSpriteFrame(cc.spriteFrameCache.getSpriteFrame(part._shipDamaged));
+		if( d === _B_MAX_DAMAGE && this._hidden ) {
+			var letter = cc.LabelTTF.create(part._letter, _b_getFontName(res.indieflower_ttf), _B_LETTER_SIZE , cc.size(_B_LETTER_SIZE,0),cc.TEXT_ALIGNMENT_CENTER, cc.VERTICAL_TEXT_ALIGNMENT_CENTER)
+			letter.setColor(cc.color(255,255,255,255));
+			letter.setPosition(cc.p(part.width/2,part.height/2));
+			letter.setScale(0.0);
+			letter.runAction(
+				cc.scaleTo(0.66,1)	
+			);
+			part.addChild(letter);
+		}
 	},
 
 	progressDamage: function() {	
@@ -877,10 +889,10 @@ var Battleship = cc.Node.extend({
 
 		for( var i=0 ; i<wl ; i++ ) {
 			var part = this.children[i];
-			if( part._damage > 0 ) {
+			if( part._damage > 0 && part._damage < _B_MAX_DAMAGE ) {
 				setTimeout(function(part) {
 					part._damage++;
-					self.showDamage(part);
+					self.markDamage(part);
 				}, _B_DAMAGE_PROGRESS_DELAY*Math.random()*1000, part);
 			}
 		}
