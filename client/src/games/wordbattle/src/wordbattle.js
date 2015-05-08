@@ -269,12 +269,12 @@ var WordBattleLayer = cc.Layer.extend({
 			
 			own.addChild(ship,10);
 			var rotation = allStrait!==undefined? allStrait : Math.floor(Math.random()*2)*90;
-			var pos = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},rotation);
-			if( !pos ) {
+			var coords = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},rotation);
+			if( !coords ) {
 				own.removeAllChildren();
 				return self.startRound(Math.floor(Math.random()*2)*90);
 			}
-			ship.setRCPosition(pos);
+			ship.setRCPosition(coords);
 			ship.setRotation(rotation);
 		}
 
@@ -346,7 +346,7 @@ var WordBattleLayer = cc.Layer.extend({
 				if( tile.isTile ) {
 					tiles.push({
 						word: tile.getWord(),
-						pos: tile.getRCPosition(),
+						coords: tile.getRCPosition(),
 						rotation: tile.getRotation()
 					});
 				}
@@ -364,7 +364,7 @@ var WordBattleLayer = cc.Layer.extend({
 					var tile = otherBoard.tiles[i];
 					var ship = new Battleship(tile.word, true);
 					other.addChild(ship,10);
-					ship.setRCPosition(tile.pos);
+					ship.setRCPosition(tile.coords);
 					ship.setRotation(tile.rotation);							
 				}
 
@@ -493,8 +493,8 @@ var WordBattleLayer = cc.Layer.extend({
 					if( time < _B_TAP_TIME ) {
 						var rotation = draggedShip.getRotation();
 							
-						var pos = draggedShip.findPosition(undefined, 90-rotation);
-						if( !pos ) {
+						var coords = draggedShip.findPosition(undefined, 90-rotation);
+						if( !coords ) {
 							draggedShip.runAction(
 								cc.sequence(
 									cc.EaseSineOut.create(
@@ -512,7 +512,7 @@ var WordBattleLayer = cc.Layer.extend({
 								)
 							);
 						} else {
-							var endPos = draggedShip.getXYPosition(pos, 90-rotation);
+							var endPos = draggedShip.getXYPosition(coords, 90-rotation);
 							draggedShip.runAction(
 								cc.sequence(
 									cc.EaseSineOut.create(
@@ -523,7 +523,7 @@ var WordBattleLayer = cc.Layer.extend({
 									),
 									cc.callFunc(function() {
 										draggedShip.setRotation(90-rotation);
-										draggedShip.setRCPosition(pos);
+										draggedShip.setRCPosition(coords);
 										draggedShip = null;
 										shipMoves = false;
 										cc.eventManager.dispatchCustomEvent("a_ship_was_moved", draggedShip);					
@@ -674,13 +674,13 @@ var Battleship = cc.Node.extend({
 										   cc.rect(pos.x-cl*_B_SQUARE_SIZE/2+box.x, pos.y-_B_SQUARE_SIZE/2+box.y , cl*_B_SQUARE_SIZE , _B_SQUARE_SIZE);
     },
     
-    getXYPosition: function(pos, rotation) {
+    getXYPosition: function(coords, rotation) {
     	var wl = this._word.length,
     		rotation = rotation!==undefined? rotation : this._rotation,
     		xOffset = rotation===0?0.5:(wl%2?0.5:0),
     		yOffset = rotation===0?(wl%2?0.5:0):0.5,
-    		x = (pos.col+xOffset) * _B_SQUARE_SIZE,
-    		y = (pos.row+yOffset) * _B_SQUARE_SIZE;
+    		x = (coords.col+xOffset) * _B_SQUARE_SIZE,
+    		y = (coords.row+yOffset) * _B_SQUARE_SIZE;
     		
     		return cc.p(x,y);    		
     },
@@ -696,10 +696,10 @@ var Battleship = cc.Node.extend({
     setRotation: function(rotation) {
     	if( rotation === 0 || rotation === 90 ) { 
     		this._rotation = rotation;
-			var pos = this.findPosition();
-			if( pos ) {
+			var coords = this.findPosition();
+			if( coords ) {
 				var ret = cc.Node.prototype.setRotation.call(this,rotation);
-				this.setRCPosition(pos);
+				this.setRCPosition(coords);
 				return ret;
 			}
 			else return false;
@@ -713,24 +713,19 @@ var Battleship = cc.Node.extend({
 	    else return this._rotation;
     },
     
-    findPosition: function(pos, rotation, collisionBase) {
+    findPosition: function(coords, rotation, collisionBase) {
     	var wl = this._word.length;
 
-		if( pos === undefined ) {
-			pos = {
-				row: this._coords.row,
-				col: this._coords.col
-			};	
-		}	
+		if( coords === undefined ) coords = this._coords;
 		if( rotation === undefined ) rotation = this._rotation;
 
 		// moving the ship into the sea		
 		if( rotation === 0 ) {
-			pos.row = Math.max(Math.min(pos.row,Math.floor(_B_MAX_SHIP_LENGTH-wl/2)),Math.floor(wl/2));
-			pos.col = Math.max(Math.min(pos.col,_B_MAX_SHIP_LENGTH-1),0);
+			coords.row = Math.max(Math.min(coords.row,Math.floor(_B_MAX_SHIP_LENGTH-wl/2)),Math.floor(wl/2));
+			coords.col = Math.max(Math.min(coords.col,_B_MAX_SHIP_LENGTH-1),0);
 		} else if( rotation === 90 ){
-			pos.row = Math.max(Math.min(pos.row,_B_MAX_SHIP_LENGTH-1),0);
-			pos.col = Math.max(Math.min(pos.col,Math.floor(_B_MAX_SHIP_LENGTH-wl/2)),Math.floor(wl/2));
+			coords.row = Math.max(Math.min(coords.row,_B_MAX_SHIP_LENGTH-1),0);
+			coords.col = Math.max(Math.min(coords.col,Math.floor(_B_MAX_SHIP_LENGTH-wl/2)),Math.floor(wl/2));
 		} else {
 			cc.assert(false,"Must be 0 or 90 degree rotation!")
 		}
@@ -740,9 +735,9 @@ var Battleship = cc.Node.extend({
 		for( var i=0 ; i<ships.length ; i++ ) {
 			ship = ships[i];
 			if( ship !== this && ship.getCollision ) {
-				if( this.getCollision(ship, pos, rotation) ) {
+				if( this.getCollision(ship, coords, rotation) ) {
 					var c = collisionBase || {
-							pos: pos,
+							coords: coords,
 							offset: [0,0,0,0,0,0,0,0],
 							index: 0,
 							directions: [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]]
@@ -750,27 +745,27 @@ var Battleship = cc.Node.extend({
 						
 					for( var i=0 ; i<c.offset.length ; i++ ) {
 						c.offset[c.index]++;
-						var newPos = {
-							row: c.pos.row + c.directions[c.index][0] * c.offset[c.index],
-							col: c.pos.col + c.directions[c.index][1] * c.offset[c.index]
+						var newCoords = {
+							row: c.coords.row + c.directions[c.index][0] * c.offset[c.index],
+							col: c.coords.col + c.directions[c.index][1] * c.offset[c.index]
 						}
 						++c.index; c.index %= c.offset.length;
-						if(newPos.row>=0 && newPos.row<_B_MAX_SHIP_LENGTH && newPos.col>=0 && newPos.col<_B_MAX_SHIP_LENGTH ) break;
+						if(newCoords.row>=0 && newCoords.row<_B_MAX_SHIP_LENGTH && newCoords.col>=0 && newCoords.col<_B_MAX_SHIP_LENGTH ) break;
 					}
 					
-					if( i<c.offset.length )	return this.findPosition(newPos, rotation, c);
+					if( i<c.offset.length )	return this.findPosition(newCoords, rotation, c);
 					else return false;
 				}
 			}
 		}
 		
-		return pos;
+		return coords;
     },
     
-    getCollision: function(ship, pos, rotation) {
+    getCollision: function(ship, coords, rotation) {
     	var r1 = rotation!==undefined?rotation : this.getRotation(),
     		r2 = ship.getRotation(),
-    		p1 = pos || this.getRCPosition(),
+    		p1 = coords || this.getRCPosition(),
     		p2 = ship.getRCPosition(),
     		l1 = this.getLength(),
     		l2 = ship.getLength();
@@ -794,8 +789,9 @@ var Battleship = cc.Node.extend({
 			var p1_rowOffset = p1.row - (l1%2==0&&r1==0? 0.5:0),
 				p2_rowOffset = p2.row - (l2%2==0&&r2==0? 0.5:0),
 				p1_colOffset = p1.col - (l1%2==0&&r1==90? 0.5:0),
-				p2_colOffset = p2.col - (l2%2==0&&r2==90? 0.5:0);
-			var rowDistance = Math.abs(p1_rowOffset-p2_rowOffset),
+				p2_colOffset = p2.col - (l2%2==0&&r2==90? 0.5:0),
+				
+				rowDistance = Math.abs(p1_rowOffset-p2_rowOffset),
 				colDistance = Math.abs(p1_colOffset-p2_colOffset),
 				rowSpace = (r1==0? l1+1:l2+1)/2,
 				colSpace = (r1==0? l2+1:l1+1)/2;
