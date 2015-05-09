@@ -320,7 +320,7 @@ var WordBattleLayer = cc.Layer.extend({
 			
 			fairy.silent().show(1).say(0, 5, _b_t.fairies.press_it );
 			hg.show();
-			hg.countdown(10);
+			hg.countdown(30);
 
 			_b_one(["countdown_finished", "hourglass_is_clicked"], function() {
 				hg.clearCountdown();
@@ -355,7 +355,6 @@ var WordBattleLayer = cc.Layer.extend({
 			}
 	
 			hg.show();
-			cc.log("Send message with initBoard!");
 			$b.sendMessage({ message: "initBoard", tiles: tiles });
 			$b.receiveMessage("initBoard", function(otherBoard) {
 				cc.assert(otherBoard.message === "initBoard", "Received wrong message ('"+otherBoard.message+"' instead of 'initBoard') while starting round.");
@@ -564,7 +563,7 @@ var WordBattleLayer = cc.Layer.extend({
 								cc.sequence(
 									cc.EaseSineOut.create(
 										cc.spawn(
-											cc.rotateTo(0.33, 90-rotation),
+											cc.rotateTo(0.33, rotation-90),
 											cc.moveTo(0.33, endPos)
 										)
 									),
@@ -746,13 +745,13 @@ var Battleship = cc.Node.extend({
     		this._rotation = rotation;
 			var coords = this.findPosition();
 			if( coords ) {
-				var ret = cc.Node.prototype.setRotation.call(this,rotation);
+				var ret = cc.Node.prototype.setRotation.call(this,-rotation);
 				this.setRCPosition(coords);
 				return ret;
 			}
 			else return false;
 		} else {
-			cc.Node.prototype.setRotation.call(this,rotation!==undefined?rotation:this._rotation);
+			cc.Node.prototype.setRotation.call(this,rotation!==undefined?-rotation:-this._rotation);
 		}
     },
 
@@ -764,7 +763,12 @@ var Battleship = cc.Node.extend({
     findPosition: function(coords, rotation, collisionBase) {
     	var wl = this._word.length;
 
-		if( coords === undefined ) coords = this._coords;
+		if( coords === undefined ) {
+			coords = { 
+				row : this._coords.row,
+				col : this._coords.col
+			};
+		}
 		if( rotation === undefined ) rotation = this._rotation;
 
 		// moving the ship into the sea		
@@ -820,26 +824,26 @@ var Battleship = cc.Node.extend({
     		
 		cc.assert((r1 === 0 || r1 === 90) && (r2 === 0 || r2 === 90),"Collision detection only works with 0 and 90 degree rotation.");
 
+		var p1_rowOffset = p1.row - (l1%2==0&&r1==0? 0.5:0),
+			p2_rowOffset = p2.row - (l2%2==0&&r2==0? 0.5:0),
+			p1_colOffset = p1.col - (l1%2==0&&r1==90? 0.5:0),
+			p2_colOffset = p2.col - (l2%2==0&&r2==90? 0.5:0);
+				
 		// ... if both ships head into the same direction
 		if( r1 === r2 ) {
 			if( r1 === 0 && p1.col === p2.col ) {
-				var distance = Math.abs(p1.row-p2.row),
+				var distance = Math.abs(p1_rowOffset-p2_rowOffset),
 					spaceNeeded = (l1+l2)/2;
 				if( distance < spaceNeeded ) return true;
 			} else if(r1 === 90 && p1.row === p2.row ) {
-				var distance = Math.abs(p1.col-p2.col),
+				var distance = Math.abs(p1_colOffset-p2_colOffset),
 					spaceNeeded = (l1+l2)/2;
 				if( distance < spaceNeeded ) return true;				
 			}
 
 		// ... if both ships head into different directions
 		} else {
-			var p1_rowOffset = p1.row - (l1%2==0&&r1==0? 0.5:0),
-				p2_rowOffset = p2.row - (l2%2==0&&r2==0? 0.5:0),
-				p1_colOffset = p1.col - (l1%2==0&&r1==90? 0.5:0),
-				p2_colOffset = p2.col - (l2%2==0&&r2==90? 0.5:0),
-				
-				rowDistance = Math.abs(p1_rowOffset-p2_rowOffset),
+			var	rowDistance = Math.abs(p1_rowOffset-p2_rowOffset),
 				colDistance = Math.abs(p1_colOffset-p2_colOffset),
 				rowSpace = (r1==0? l1+1:l2+1)/2,
 				colSpace = (r1==0? l2+1:l1+1)/2;
@@ -872,14 +876,13 @@ var Battleship = cc.Node.extend({
 		part.runAction(cc.tintBy(0.11,d===1?50:0,d===2?50:0,d===3?50:0));
 		if( d === 1 ) part.setSpriteFrame(cc.spriteFrameCache.getSpriteFrame(part._shipDamaged));
 		if( d === _B_MAX_DAMAGE && this._hidden ) {
-			var letter = cc.LabelTTF.create(part._letter, _b_getFontName(res.indieflower_ttf), _B_LETTER_SIZE , cc.size(_B_LETTER_SIZE,0),cc.TEXT_ALIGNMENT_CENTER, cc.VERTICAL_TEXT_ALIGNMENT_CENTER)
-			letter.setColor(cc.color(255,255,255,255));
-			letter.setPosition(cc.p(part.width/2,part.height/2));
+			var letter = new cc.LabelBMFont( part._letter , "res/fonts/PTMono100Bees.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
+			letter.setPosition(part.getPosition());
 			letter.setScale(0.0);
 			letter.runAction(
 				cc.scaleTo(0.66,1)	
 			);
-			part.addChild(letter);
+			this.addChild(letter,10);
 		}
 	},
 
