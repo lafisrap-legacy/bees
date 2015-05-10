@@ -3,11 +3,11 @@
 var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_SQUARE_SIZE = 56,
 	_B_WORDS_PER_ROUND = 7,		// maximum number of words per round
-	_B_HOURGLASS_POS = cc.p(668,140),
+	_B_HOURGLASS_POS = cc.p(668,80),
 	_B_CANON_POS = cc.p(30,140),
 	_B_CANONBALL_POS = cc.p(100,240),
 	_B_CROSSHAIR_Y_OFFSET = _B_SQUARE_SIZE + 7,
-	_B_DAMAGE_PROGRESS_DELAY = 0.4,
+	_B_DAMAGE_PROGRESS_DELAY = 0.1,
 	_B_MAX_DAMAGE = 3,
 	_B_LETTER_SIZE = 96,
 	_B_TAP_TIME = 200,
@@ -128,6 +128,8 @@ var WordBattleLayer = cc.Layer.extend({
 			);
 			self.addChild(s1,0);
 			self.addChild(s2,0);	
+			_b_retain(s1,"WordBattleLayer: sea1");		
+			_b_retain(s2,"WordBattleLayer: sea2");		
 
 			self.startGame();
 		}, this.gameUpdate, this);
@@ -145,7 +147,7 @@ var WordBattleLayer = cc.Layer.extend({
 			)
 		);
 		this.addChild(startscreen,0);
-		_b_retain(startscreen, "startscreen");
+		_b_retain(startscreen,"Startscreen");
 		
 		cc.audioEngine.setMusicVolume(0.5);
 		cc.audioEngine.playMusic(gRes.startscreen_mp3,true);
@@ -189,6 +191,8 @@ var WordBattleLayer = cc.Layer.extend({
         
 		_b_release(this._fairy);
 		_b_release(this._hourglass);
+		_b_release(this._ownSea);
+		_b_release(this._otherSea);
 
     	this.stopListeners();
     },
@@ -416,12 +420,12 @@ var WordBattleLayer = cc.Layer.extend({
 				$b.sendMessage({ message: "ceasefire" });
 				$b.receiveMessage("ceasefire", function(data) {
 
-					_b_one("in_7_seconds", function() {
+					_b_one("in_4_seconds", function() {
 						fairy.silent();
 						fairy.show(4);
 						fairy.say(0, 3, _b_t.fairies.results);
 					
-						_b_one("in_7_seconds", function() {
+						_b_one("in_3_seconds", function() {
 							var own = self._ownSea.getChildren(),
 								other = self._otherSea.getChildren();
 
@@ -451,6 +455,8 @@ var WordBattleLayer = cc.Layer.extend({
 
 									_b_one("hourglass_is_clicked", function() {
 										$b.sendMessage({ message: "playRound" });
+
+										hg.getBody().applyImpulse(cp.v(0,60000),cp.v(0,0));
 										$b.receiveMessage("playRound", function() {
 											self.playRound();
 										});
@@ -686,7 +692,7 @@ var Battleship = cc.Node.extend({
 			part._damage = 0;
 			part._letter = this._word[i];
 			if( this._hidden ) {
-				part.setOpacity(50);
+				part.setOpacity(0);
 			}
 		}
 		
@@ -858,7 +864,7 @@ var Battleship = cc.Node.extend({
 		if( cc.rectContainsPoint(rect, pos) ) {
 			var col = Math.floor((pos.x-rect.x)/_B_SQUARE_SIZE),
 				row = Math.floor((pos.y-rect.y)/_B_SQUARE_SIZE),
-				i = this._rotation===0? this._word.length-row-1 : this._word.length-col-1,
+				i = this._rotation===0? this._word.length-row-1 : col,
 				part = this.children[i],
 				d = Math.min(++part._damage,_B_MAX_DAMAGE);
 
@@ -873,11 +879,15 @@ var Battleship = cc.Node.extend({
 	markDamage: function(part) {
 		var d = part._damage;
 
-		part.runAction(cc.tintBy(0.11,d===1?50:0,d===2?50:0,d===3?50:0));
-		if( d === 1 ) part.setSpriteFrame(cc.spriteFrameCache.getSpriteFrame(part._shipDamaged));
+		part.runAction(cc.tintBy(0.11,d===1?20:0,d===2?20:0,d===3?20:0));
+		if( d === 1 ) {
+			part.setSpriteFrame(cc.spriteFrameCache.getSpriteFrame(part._shipDamaged));
+			part.setRotation(Math.random()*360);
+		}
 		if( d === _B_MAX_DAMAGE && this._hidden ) {
 			var letter = new cc.LabelBMFont( part._letter , "res/fonts/PTMono100Bees.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
 			letter.setPosition(part.getPosition());
+			letter.setRotation(this._rotation);
 			letter.setScale(0.0);
 			letter.runAction(
 				cc.scaleTo(0.66,1)	
@@ -896,7 +906,7 @@ var Battleship = cc.Node.extend({
 				setTimeout(function(part) {
 					part._damage++;
 					self.markDamage(part);
-				}, _B_DAMAGE_PROGRESS_DELAY*Math.random()*1000, part);
+				}, _B_DAMAGE_PROGRESS_DELAY*Math.random()*1000*10, part);
 			}
 		}
 	},
@@ -1046,7 +1056,17 @@ var Bomb = cc.PhysicsSprite.extend({
 
 		cc.audioEngine.playEffect(gRes.bomb_flying_mp3);
 		this._crossHairStatic = true;
-		self.runAction(cc.scaleTo(2,0.8));
+		self.runAction(
+			cc.sequence(
+				cc.EaseSineIn.create(
+					cc.scaleTo(0.11,0.1)
+				),
+				cc.EaseSineOut.create(
+					cc.scaleTo(0.11,1.1)
+				),
+				cc.scaleTo(2,0.8)
+			)
+		);
 
 		$b.sendMessage({ message: "bomb", pos: cc.p(dpos.x-seaRect.x, dpos.y+_B_CROSSHAIR_Y_OFFSET-seaRect.y) });	
 	},
