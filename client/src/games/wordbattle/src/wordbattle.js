@@ -8,7 +8,8 @@ var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_CANONBALL_POS = cc.p(100,240),
 	_B_CROSSHAIR_Y_OFFSET = _B_SQUARE_SIZE + 7,
 	_B_DAMAGE_PROGRESS_DELAY = 0.1,
-	_B_MAX_DAMAGE = 3,
+	_B_MAX_DAMAGE = 4,
+	_B_MAX_SHIP_DAMAGE = 0.85,
 	_B_LETTER_SIZE = 96,
 	_B_TAP_TIME = 200,
 	_B_MODE_TITLE = 1,
@@ -55,6 +56,8 @@ var WordBattleLayer = cc.Layer.extend({
 	_round: null,
 	_first: null,
 	_mode: null,
+	_bigShipMoving: false,
+	_bigShipQueue: [],
 	
 	// event callbacks
 	_onShipMovementCb: null,  // called if a ship is dragged or turned
@@ -274,6 +277,7 @@ var WordBattleLayer = cc.Layer.extend({
 			var ship = new Battleship(word);
 			
 			own.addChild(ship,10);
+			_b_retain(ship,"WordBattleLayer: ship"+i);		
 			var rotation = allStrait!==undefined? allStrait : Math.floor(Math.random()*2)*90;
 			var coords = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},rotation);
 			if( !coords ) {
@@ -307,8 +311,8 @@ var WordBattleLayer = cc.Layer.extend({
 	
 		var fairy = self._fairy;
 	
-		// first set the right rects, after first they were set while the ships were moving (yes, that's a hack ...)
-		for( var i=0; i<own.children.length ; i++ ) own.children[i].setRCPosition();	
+		// set the right rects, after first they were set while the ships were moving (yes, that's a hack ...)
+		//for( var i=0; i<own.children.length ; i++ ) own.children[i].setRCPosition();	
 				
 		fairy.show(0);
 		fairy.say(_b_remember("fairies.move_ships")?10:2, 5, _b_t.fairies.move_ships);
@@ -331,6 +335,17 @@ var WordBattleLayer = cc.Layer.extend({
 				self.sendInitialBoard();
 			});
 		});
+	},
+
+	endRound: function() {
+		var own = this._ownSea,
+			other = this._otherSea;
+
+		for( var i=0 ; i<own.children.length ; i++ ) _b_release(own.chldren[i]);
+		for( var i=0 ; i<other.children.length ; i++ ) _b_release(other.chldren[i]);
+
+		own.removeAllChildren();
+		other.removeAllChildren();
 	},
 	
 	// multiple call ins
@@ -369,6 +384,7 @@ var WordBattleLayer = cc.Layer.extend({
 					var tile = otherBoard.tiles[i];
 					var ship = new Battleship(tile.word, true);
 					other.addChild(ship,10);
+					_b_retain(ship,"WordBattleLayer: other ship"+i);		
 					ship.setRCPosition(tile.coords);
 					ship.setRotation(tile.rotation);							
 				}
@@ -425,7 +441,7 @@ var WordBattleLayer = cc.Layer.extend({
 						fairy.show(4);
 						fairy.say(0, 3, _b_t.fairies.results);
 					
-						_b_one("in_3_seconds", function() {
+						_b_one("in_1_seconds", function() {
 							var own = self._ownSea.getChildren(),
 								other = self._otherSea.getChildren();
 
@@ -440,11 +456,11 @@ var WordBattleLayer = cc.Layer.extend({
 							progressDamage(own);
 							progressDamage(other);
 							
-							_b_one("in_7_seconds", function() {
+							_b_one("in_5_seconds", function() {
 
 								fairy.say(0, 3, _b_t.fairies.ready);
 
-								_b_one("in_3_seconds", function() {
+								_b_one("in_1_seconds", function() {
 									
 									var hg = self._hourglass = new Hourglass(self._fairy._space, _B_HOURGLASS_POS);
 									self.addChild(self._hourglass,10);
@@ -475,9 +491,11 @@ var WordBattleLayer = cc.Layer.extend({
 						flyingBomb = new FlyingBomb(self._ownSea, true);
 
 					fairy.addChild(flyingBomb);
+					_b_retain(flyingBomb,"WordBattleLayer: Flying Bomb");		
 
 					flyingBomb.land(cc.p(seaRect.x+pos.x, seaRect.y+pos.y), function(hit) {
 						fairy.removeChild(flyingBomb);
+						_b_release(flyingBomb);
 					});
 
 					receiveBomb();
@@ -694,11 +712,13 @@ var Battleship = cc.Node.extend({
 			if( this._hidden ) {
 				part.setOpacity(0);
 			}
+
+			_b_retain(part,"WordBattleLayer: ship part "+i);		
 		}
 		
 		this.setScale(0.50);
 
-		_b_retain(this,"Battleship: buildShip");		
+		//_b_retain(this,"Battleship: buildShip");		
     },
     
     getWord: function() {
@@ -879,7 +899,7 @@ var Battleship = cc.Node.extend({
 	markDamage: function(part) {
 		var d = part._damage;
 
-		part.runAction(cc.tintBy(0.11,d===1?20:0,d===2?20:0,d===3?20:0));
+		part.runAction(cc.tintBy(0.11,d===1||d===4?10:0,d===2||d===4?10:0,d===3?10:0));
 		if( d === 1 ) {
 			part.setSpriteFrame(cc.spriteFrameCache.getSpriteFrame(part._shipDamaged));
 			part.setRotation(Math.random()*360);
@@ -898,17 +918,43 @@ var Battleship = cc.Node.extend({
 
 	progressDamage: function() {	
 		var self = this,
-			wl = this._word.length;
+			wl = this.getLength();
 
 		for( var i=0 ; i<wl ; i++ ) {
 			var part = this.children[i];
 			if( part._damage > 0 && part._damage < _B_MAX_DAMAGE ) {
+				part._damage++;
 				setTimeout(function(part) {
-					part._damage++;
 					self.markDamage(part);
 				}, _B_DAMAGE_PROGRESS_DELAY*Math.random()*1000*10, part);
 			}
 		}
+
+		if( this.totalDamage() > _B_MAX_SHIP_DAMAGE ) {
+			var battleLayer = this.getParent().getParent();
+			var bigShip = new BigBattleShip(this._word);
+			battleLayer.addChild(bigShip,50);
+			if( !battleLayer._bigShipMoving ) {
+				battleLayer._bigShipMoving = true;
+				(function bigShipMove(bigShip) {
+					bigShip.move(function() {
+						battleLayer._bigShipMoving = false;
+						if( battleLayer._bigShipQueue.length ) bigShipMove(battleLayer._bigShipQueue.splice(0,1)[0]);
+					});
+				})(bigShip);
+			} else {
+				battleLayer._bigShipQueue.push(bigShip);
+			}
+		}
+	},
+
+	totalDamage: function() {
+		var wl = this.getLength(),
+			d = 0;
+
+		for( var i=0 ; i<wl ; i++ ) d += this.children[i]._damage;
+
+		return d / wl / _B_MAX_DAMAGE;
 	},
     
     getRect: function() {
@@ -916,8 +962,69 @@ var Battleship = cc.Node.extend({
     },
     
     destroyShip: function(ship) {
-		_b_release(this);
+		//_b_release(this);
     }
+});
+
+
+// BigBattleShip is the class for the ship carrying the won word
+//
+// Methods
+// -------
+//
+// Properties
+// ----------
+//
+var BigBattleShip = cc.Node.extend({
+	
+	ctor: function(word) {
+
+	    cc.assert( word && word.length >=2 && word.length <= _B_MAX_SHIP_LENGTH , word+" is too short or too long. I need a word with a length between 2 and "+_B_MAX_SHIP_LENGTH );
+    	
+		this._super();
+		
+		this.buildShip(word);	
+		this.width = word.length*350;
+		this.height = 350;
+	},
+
+	buildShip: function(word) {
+		var wl = word.length;
+
+		// create the sprites and add them to the node		
+		var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bigship_front.png"),cc.rect(0,0,350,350));
+		this.addChild(sprite);
+		for( var i=1 ; i<wl-1 ; i++ ) {
+			var shipPart = parseInt(Math.random()*3+1),
+				sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bigship_middle"+shipPart+".png"),cc.rect(0,0,350,350));
+			this.addChild(sprite);
+		}
+		var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bigship_back.png"),cc.rect(0,0,350,350));
+		this.addChild(sprite);
+
+		// set positions
+		for( var i=0 ; i<wl ; i++ ) {
+			var part = this.children[i];
+			part.setPosition(cc.p((i-wl/2)*350 + 175,0));
+			_b_retain(part,"WordBattleLayer: big ship part "+i);		
+			
+			var letter = new cc.LabelBMFont( word[i] , "res/fonts/PTMono280Bees.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
+			letter.setPosition(cc.p(part.width/2, part.height/2));
+			part.addChild(letter);
+		}
+    },
+
+	move: function(cb) {
+		this.setPosition(cc.p(1136+this.width/2+50, 130));
+		this.runAction(
+			cc.sequence(
+				cc.moveTo(25, cc.p(-this.width/2-50, 130)),
+				cc.callFunc(function() {
+					if(typeof cb === "function") cb();
+				})
+			)
+		);
+	}
 });
 
 // Bomb is the class for bombs
@@ -1020,6 +1127,7 @@ var Bomb = cc.PhysicsSprite.extend({
 			}
 
 			this.getBody().setVel(cp.v((dpos.x-pos.x)*10,(dpos.y-pos.y+_B_CROSSHAIR_Y_OFFSET)*10));
+			this._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
 		}
 	},
 	
@@ -1037,6 +1145,7 @@ var Bomb = cc.PhysicsSprite.extend({
 			flyingBomb = new FlyingBomb(this._sea, false);
 		
 		parent.addChild(flyingBomb,20);
+		_b_retain(flyingBomb,"WordBattleLayer: Flying Bomb");		
 
 		flyingBomb.fire();
 		flyingBomb.land(cc.p(dpos.x, dpos.y+_B_CROSSHAIR_Y_OFFSET), function(hit) {
@@ -1049,6 +1158,7 @@ var Bomb = cc.PhysicsSprite.extend({
 				}
 
 				parent.removeChild(flyingBomb);
+				_b_release(flyingBomb);
 				self._crossHairStatic = false;
 				self.exit();
 			}
@@ -1072,9 +1182,7 @@ var Bomb = cc.PhysicsSprite.extend({
 	},
 	
 	update: function(dt) {
-		var self = this;
-		
-		this._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
+		var self = this;	
 		
 		if( this._timer ) {
 			var now = new Date().getTime(),

@@ -4,10 +4,75 @@
     <dict>
         <key>frames</key>
         <dict>
+            <key>bigship_back.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{2,2},{350,350}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{350,350}}</string>
+                <key>sourceSize</key>
+                <string>{350,350}</string>
+            </dict>
+            <key>bigship_front.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{354,2},{350,350}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{350,350}}</string>
+                <key>sourceSize</key>
+                <string>{350,350}</string>
+            </dict>
+            <key>bigship_middle1.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{706,2},{350,350}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{350,350}}</string>
+                <key>sourceSize</key>
+                <string>{350,350}</string>
+            </dict>
+            <key>bigship_middle2.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{2,354},{350,350}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{350,350}}</string>
+                <key>sourceSize</key>
+                <string>{350,350}</string>
+            </dict>
+            <key>bigship_middle3.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{354,354},{350,350}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{350,350}}</string>
+                <key>sourceSize</key>
+                <string>{350,350}</string>
+            </dict>
             <key>bomb.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{2,2},{120,120}}</string>
+                <string>{{706,354},{120,120}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -20,7 +85,7 @@
             <key>crosshair.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{124,2},{103,102}}</string>
+                <string>{{828,354},{103,102}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -33,7 +98,7 @@
             <key>sea1.jpg</key>
             <dict>
                 <key>frame</key>
-                <string>{{229,2},{560,560}}</string>
+                <string>{{2,706},{560,560}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -46,7 +111,7 @@
             <key>ship1_back.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{791,2},{112,112}}</string>
+                <string>{{564,706},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -59,7 +124,7 @@
             <key>ship1_back_damaged.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{905,2},{112,112}}</string>
+                <string>{{678,706},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -72,7 +137,7 @@
             <key>ship1_front.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1019,2},{112,112}}</string>
+                <string>{{792,706},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -85,7 +150,7 @@
             <key>ship1_front_damaged.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{2,564},{112,112}}</string>
+                <string>{{906,706},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -98,7 +163,7 @@
             <key>ship1_middle1.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{116,564},{112,112}}</string>
+                <string>{{1020,706},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -111,7 +176,7 @@
             <key>ship1_middle1_damaged.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{230,564},{112,112}}</string>
+                <string>{{2,1268},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -124,7 +189,7 @@
             <key>ship1_middle2.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{344,564},{112,112}}</string>
+                <string>{{116,1268},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -137,7 +202,7 @@
             <key>ship1_middle2_damaged.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{458,564},{112,112}}</string>
+                <string>{{230,1268},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -150,7 +215,7 @@
             <key>ship1_middle3.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{572,564},{112,112}}</string>
+                <string>{{344,1268},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -163,7 +228,7 @@
             <key>ship1_middle3_damaged.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{686,564},{112,112}}</string>
+                <string>{{458,1268},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -176,7 +241,7 @@
             <key>startscreen.jpg</key>
             <dict>
                 <key>frame</key>
-                <string>{{2,678},{1136,640}}</string>
+                <string>{{2,1382},{1136,640}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -194,9 +259,9 @@
             <key>realTextureFileName</key>
             <string>wordbattle.png</string>
             <key>size</key>
-            <string>{1140,1320}</string>
+            <string>{1140,2024}</string>
             <key>smartupdate</key>
-            <string>$TexturePacker:SmartUpdate:f846f9af219de012556e86479896ca2d:f8d1b17819ae62f90134fe2b90aade8e:7becf5da526d24a235d4fba256143341$</string>
+            <string>$TexturePacker:SmartUpdate:334893d23ab9388d4358923d3ccd9fa6:bd115a9b612d31baf73875877d34c0ba:7becf5da526d24a235d4fba256143341$</string>
             <key>textureFileName</key>
             <string>wordbattle.png</string>
         </dict>

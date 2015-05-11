@@ -250,6 +250,7 @@ var FairyLayer = cc.Layer.extend({
 							x: loc.x - pos.x,
 							y: loc.y - pos.y
 						};
+						 o._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
 						//cc.log("FairyLayer: Start dragging bomb "+i+". offset.x:"+offset.x+", offset.y:"+offset.y);
 						break;
 					}					

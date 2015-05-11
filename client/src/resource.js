@@ -15,6 +15,8 @@ var res = {
 	hourglass140_fnt : "res/fonts/hourglass140.fnt",
 	PTMono100Bees_png : "res/fonts/PTMono100Bees.png",
 	PTMono100Bees_fnt : "res/fonts/PTMono100Bees.fnt",
+	PTMono700Bees_png : "res/fonts/PTMono280Bees.png",
+	PTMono700Bees_fnt : "res/fonts/PTMono280Bees.fnt",
 	indieflower_ttf: {type:"font", name:"IndieFlower", srcs:["res/fonts/IndieFlower.ttf"]},
 
 	// list view
