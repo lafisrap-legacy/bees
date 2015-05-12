@@ -690,8 +690,10 @@ var Battleship = cc.Node.extend({
 		var wl = this._word.length;
 
 		// create the sprites and add them to the node		
-		var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_front.png"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2));
-		sprite._shipDamaged = "ship1_front_damaged.png";
+		var topUp = Math.random()>0.5? true:false,
+			sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(topUp?"ship1_front.png":"ship1_back.png"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2));
+		sprite._shipDamaged = topUp?"ship1_front_damaged.png":"ship1_back_damaged.png";
+		sprite.setFlippedY(topUp? false:true);
 		this.addChild(sprite);
 		for( var i=1 ; i<wl-1 ; i++ ) {
 			var shipPart = parseInt(Math.random()*3+1),
@@ -699,8 +701,9 @@ var Battleship = cc.Node.extend({
 			sprite._shipDamaged = "ship1_middle"+shipPart+"_damaged.png";
 			this.addChild(sprite);
 		}
-		var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("ship1_back.png"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2));
-		sprite._shipDamaged = "ship1_back_damaged.png";
+		var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(topUp?"ship1_back.png":"ship1_front.png"),cc.rect(0,0,_B_SQUARE_SIZE*2,_B_SQUARE_SIZE*2));
+		sprite._shipDamaged = topUp?"ship1_back_damaged.png":"ship1_front_damaged.png";
+		sprite.setFlippedY(topUp? false:true);
 		this.addChild(sprite);
 
 		// set positions
