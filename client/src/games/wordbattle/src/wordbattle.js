@@ -907,7 +907,7 @@ var Battleship = cc.Node.extend({
 	markDamage: function(part) {
 		var d = part._damage;
 
-		part.runAction(cc.tintBy(0.11,0.1,0.1,0.1));
+		part.runAction(cc.tintBy(0.11,-50,-50,-50));
 		if( d === 1 ) {
 			part.setSpriteFrame(cc.spriteFrameCache.getSpriteFrame(part._shipDamaged));
 			part.setRotation(Math.random()*360);
@@ -1152,7 +1152,6 @@ var Bomb = cc.PhysicsSprite.extend({
 
 		this.setBody(bomb);
         this.setPosition(pos);
-        //this.setCascadeOpacityEnabled(true);
 
         var label = this._label = cc.LabelTTF.create(this._text, _b_getFontName(res.indieflower_ttf), 140, cc.size(300,140),cc.TEXT_ALIGNMENT_CENTER, cc.VERTICAL_TEXT_ALIGNMENT_CENTER);
         label.setColor(cc.color(255,255,255));
@@ -1173,14 +1172,13 @@ var Bomb = cc.PhysicsSprite.extend({
 	
 	setTimer: function(seconds) {
 		this._timer = seconds;
-		this._startTime = new Date().getTime();
+		this._startTime = new Date().getTime() / 1000;
 	},
 
 	getTimer: function() {
-		var now = new Date().getTime(),
-			seconds = Math.floor((now - this._startTime)/1000);
+		var now = new Date().getTime() / 1000;
 	
-		return this._timer - seconds;
+		return this._startTime - now + this._timer;
 	},
 
 	dragging: function() {
@@ -1265,12 +1263,12 @@ var Bomb = cc.PhysicsSprite.extend({
 		var self = this;	
 		
 		if( this._timer ) {
-			var now = new Date().getTime(),
-				seconds = Math.floor((now - this._startTime)/1000);
+			var now = new Date().getTime() / 1000,
+				time = Math.floor(this._startTime - now + this._timer);
 		
-			var time = this._timer - seconds;
-			this._label.setString(time);
-			if( time === 0 ) {
+			if( time >= 0 ) {
+				this._label.setString(time);
+			} else {
 				cc.eventManager.dispatchCustomEvent("bomb_time_is_up", this);
 				self._timer = null;		
 				this._label.setString("");
