@@ -508,26 +508,18 @@ var WordBattleLayer = cc.Layer.extend({
 							(function receiveShipDestroyed() {
 								$b.receiveMessage("ship_destroyed", function(data) {
 									var word = data.word,
-										ownShips = self._ownSea.children,
-										otherShips = self._otherSea.children;
+										own = self._ownSea,
+										other = self._otherSea;
 
-									for( var i=0 ; i<ownShips.length ; i++ ) {
-										var ship = ownShips[i];
-										if( ship.getWord() === word ) {
-											ship.showWord(false);
-											break;
-										}
-									}
-									cc.assert(i<ownShips.length, "I wanted to show a word on a lost ship, but didn't find it.");
-i
-									for( var i=0 ; i<otherShips.length ; i++ ) {
-										var ship = otherShips[i];
-										if( ship.getWord() === word ) {
-											ship.destroyShip();
-											ship.getParent().removeChild(ship);
-											_b_release(ship);
-											break;
-										}
+									var ship = own.getChildByName(word);
+									if( ship ) ship.showWord(false);
+									cc.assert(ship, "I wanted to show a word on a lost ship, but didn't find it.");
+
+									ship = other.getChildByName(word);
+									if( ship ) {
+										ship.destroyShip();
+										ship.getParent().removeChild(ship);
+										_b_release(ship);
 									}
 
 									receiveShipDestroyed();
@@ -1071,22 +1063,20 @@ var Battleship = cc.Node.extend({
 					}
 
 					// Get rid of old ship in this sea
-					self.destroyShip();
-					self.getParent().removeChild(self);
-					_b_release(self);
+					if( self.getParent().getChildByName(self._word) ) {
+						self.destroyShip();
+						self.getParent().removeChild(self);
+						_b_release(self);
+					}
 
 					var own = battleLayer._ownSea,
-						ships = own.children;
-					for( var i=0 ; i<ships.length ; i++ ) {
-						var ship = ships[i];
-						if( ship.getWord() === self._word ) {
-							ship.showWord(true);
-							// Tell it to the other side, what happend
-							$b.sendMessage({ message: "ship_destroyed", word: self._word });
-							break;
-						}
-					}
-					cc.assert(i<ships.length, "Ship '"+self._word+"' should be destroyed but was not found.");
+						ship = own.getChildByName(self._word);
+					cc.assert(ship, "I wanted to show a word on a won ship, but didn't find it.");
+					
+					ship.showWord(true);
+					
+					// Tell it to the other side, what happend
+					$b.sendMessage({ message: "ship_destroyed", word: self._word });
 
 				}, 3500+wl*100);
 			}, _B_DAMAGE_PROGRESS_DELAY*1000*10);
