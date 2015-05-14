@@ -203,14 +203,14 @@ var _b_retain = function(obj,name) {
 	obj.__retainId = _b_getId();
 	
     _b_retained[obj.__retainId] = name;
-	cc.log("Retaining "+obj.__retainId+": '"+_b_retained[obj.__retainId]+"'");
+	//cc.log("Retaining "+obj.__retainId+": '"+_b_retained[obj.__retainId]+"'");
 }
 
 var _b_release = function(obj) {
 
 	cc.assert(obj && _b_retained[obj.__retainId], "_b_release: Object not valid or not in retained array...");
 	obj.release();		
-	cc.log("Releasing "+obj.__retainId+": '"+_b_retained[obj.__retainId]+"'");
+	//cc.log("Releasing "+obj.__retainId+": '"+_b_retained[obj.__retainId]+"'");
 
 	delete _b_retained[obj.__retainId];
 }

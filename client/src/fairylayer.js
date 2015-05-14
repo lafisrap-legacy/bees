@@ -128,6 +128,11 @@ var FairyLayer = cc.Layer.extend({
 			_b_release(fairy);
 		});
 
+		if( this._timeout ) {
+			clearTimeout(this._timeout);
+			this._timeout = null;
+		}
+
 		this._fairy = null;    			    	
 		
 		return this;
@@ -272,7 +277,7 @@ var FairyLayer = cc.Layer.extend({
 				}
 			},
 			onTouchesEnded: function(touches, event){
-				cc.log("onTouchesEnded: "+self._draggedObject);
+				//cc.log("onTouchesEnded: "+self._draggedObject);
 
 				var	touch = touches[0],
 					loc = touch.getLocation(),
@@ -335,7 +340,7 @@ var FairyLayer = cc.Layer.extend({
 
 				if( body === arb.body_a || body === arb.body_b ) return false;  // no collision if the dragged object collides with other objects
 			}
-			cc.log("Two objects touched!");
+			//cc.log("Two objects touched!");
 			return true;
 		},null,null,null);	
 
@@ -345,7 +350,7 @@ var FairyLayer = cc.Layer.extend({
 
 				if( body === arb.body_a || body === arb.body_b ) return false;  // no collision if the dragged object collides with other objects
 			}
-			cc.log("Object touched wall!");
+			//cc.log("Object touched wall!");
 			return true;
 		},null,null,null);	
     },

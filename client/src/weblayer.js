@@ -111,7 +111,7 @@ var WebLayer = cc.Class.extend({
 		
     	self.whenReady(function() {
 			command["sid"] = self.sid
- 		   	cc.log("Sending "+JSON.stringify(command));
+ 		   	//cc.log("Sending "+JSON.stringify(command));
 	    	self.ws.send(JSON.stringify(command));		
 	    });
 	},
@@ -152,6 +152,7 @@ var WebLayer = cc.Class.extend({
 	sendMessage: function(data) {
 		var self = this;
     	self.whenReady(function() {
+			cc.log("Send message: "+JSON.stringify(data));
 	    	self.ws.send('{"command":"sendMessage", "sid":"'+self.sid+'", "data":"'+JSON.stringifyWithEscapes(data)+'"}');		
 	    });
 	},
@@ -170,8 +171,10 @@ var WebLayer = cc.Class.extend({
 
 		if( found ) {
 			var msg = self._messageStorage.splice(i,1)[0];
+			cc.log("Receive message: Message was already waiting: "+JSON.stringify(msg));
 			cb(msg);
 		} else {
+			cc.log("Receive message: Storing message: '"+message+"'");
 			self._messageCbs.push({ message: message, cb: cb});
 		}
 	},
@@ -208,7 +211,7 @@ var WebLayer = cc.Class.extend({
 			throw "load json [" + url + "] failed : " + e;
 		}
 
-		cc.log("Received JSON: " + JSON.stringify(data));
+		//cc.log("Received JSON: " + JSON.stringify(data));
 
 		ret = data.data.length && data.data[0] || {};
 		if( ret.error ) {
@@ -260,6 +263,7 @@ var WebLayer = cc.Class.extend({
 					mcb = self._messageCbs,
 					found = false;
 
+				cc.log("Received message: "+JSON.stringify(data)+"....."+JSON.stringify(mcb));
 				for( var i=0 ; i<mcb.length ; i++ ) {
 					if( mcb[i].message === data.message ) {
 						found = true;
@@ -267,8 +271,7 @@ var WebLayer = cc.Class.extend({
 					}
 				}
 				if( found ) {
-					mcb[i].cb(data);
-					self._messageCbs.splice(i,1);
+					self._messageCbs.splice(i,1)[0].cb(data);
 				} else {
 					self._messageStorage.push(data);
 				}
