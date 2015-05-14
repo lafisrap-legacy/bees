@@ -1124,7 +1124,10 @@ var Battleship = cc.Node.extend({
 				_b_retain(letter, "Small letter on ship part: "+part._letter);
 				part._letterSprite = letter;
 			} else {
-				part._letterSprite.runAction(tint);
+				if( i%2 ) {
+					part._letterSprite.setColor(cc.color(255,255,255,255));
+					part._letterSprite.runAction(tint);
+				}
 			}
 		}
 	},
