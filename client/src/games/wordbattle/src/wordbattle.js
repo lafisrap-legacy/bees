@@ -1063,7 +1063,7 @@ var Battleship = cc.Node.extend({
 					}
 
 					// Get rid of old ship in this sea
-					if( self.getParent().getChildByName(self._word) ) {
+					if( self.getParent() && self.getParent().getChildByName(self._word) ) {
 						self.destroyShip();
 						self.getParent().removeChild(self);
 						_b_release(self);
@@ -1244,11 +1244,11 @@ var Bomb = cc.PhysicsSprite.extend({
         this.initWithSpriteFrame(frame);
 		this.setAnchorPoint(0.50,0.42);
 		var radius = 50,
-			mass = 30,
+			mass = 60,
 			bomb = this._bomb = space.addBody(new cp.Body(mass, cp.momentForCircle(mass, 0, radius, cp.v(0, 0)))),
 			circle = this._shape = space.addShape(new cp.CircleShape(bomb, radius, cp.v(0, 0)));
-		circle.setElasticity(0.5);
-		circle.setFriction(3);		
+		circle.setElasticity(0.1);
+		circle.setFriction(1.5);		
 		circle.setCollisionType(_B_COLL_TYPE_OBJECT);
 
 		this.setBody(bomb);
@@ -1306,11 +1306,10 @@ var Bomb = cc.PhysicsSprite.extend({
 			}
 
 			this.getBody().setVel(cp.v((dpos.x-pos.x)*10,(dpos.y-pos.y+_B_CROSSHAIR_Y_OFFSET)*10));
-			this._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
 		}
 	},
 	
-	land: function() {
+	land: function(cb) {
 		var self = this;
 
 		if( !this._imIn ) return;
@@ -1340,6 +1339,7 @@ var Bomb = cc.PhysicsSprite.extend({
 				_b_release(flyingBomb);
 				self._crossHairStatic = false;
 				self.exit();
+				if( typeof cb === "function" ) cb();
 			}
 		});
 
@@ -1377,6 +1377,7 @@ var Bomb = cc.PhysicsSprite.extend({
 				// maybe explosion here, some nice tricks ...
 				this.exit();
 			}
+			this._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
 		}
 
 		if( this._crossHairStatic ) {

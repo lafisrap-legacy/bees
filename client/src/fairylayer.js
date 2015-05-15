@@ -34,6 +34,7 @@ var FairyLayer = cc.Layer.extend({
 	_bubble: null,
 	_objects: [],
 	_draggedObject: null,
+	_objectLanding: null,
 	
 	// event callbacks
 	_onFairyIsClicked: null,
@@ -237,7 +238,7 @@ var FairyLayer = cc.Layer.extend({
 					var o = objs[i],
 						pos = o.getPosition();
 						
-					if( cp.v.dist(pos, loc) < o.width/2 ) {
+					if( cp.v.dist(pos, loc) < o.width/2 && self._objectLanding != o) {
 				//       var drawNode = cc.DrawNode.create();
 				//		drawNode.clear();
 				//		drawNode.drawCircle(cc.p(pos.x,pos.y),o.width/2,0,32,false,1,new cc.Color(255,0,0,100));
@@ -277,8 +278,6 @@ var FairyLayer = cc.Layer.extend({
 				}
 			},
 			onTouchesEnded: function(touches, event){
-				//cc.log("onTouchesEnded: "+self._draggedObject);
-
 				var	touch = touches[0],
 					loc = touch.getLocation(),
 					dob = self._draggedObject,
@@ -289,9 +288,11 @@ var FairyLayer = cc.Layer.extend({
 					if( fairyRect && cc.rectContainsPoint(fairyRect, loc) ) cc.eventManager.dispatchCustomEvent("fairy_is_clicked", this);					
 					if( bubbleRect && cc.rectContainsPoint(bubbleRect, loc) ) cc.eventManager.dispatchCustomEvent("bubble_is_clicked", this);	
 				} else {
-					self._draggedObject.land();
+					self._objectLanding = dob;
+					self._draggedObject.land(function() {
+						self._objectLanding = null;
+					});
 					self._draggedObject = null;
-					cc.log("Letting the object go ...");
 				}
 			}
 		});
@@ -311,26 +312,26 @@ var FairyLayer = cc.Layer.extend({
         var self = this,
 			space = this._space;
         var floorLeft = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(0, 40), cp.v(668, 0), 0));
-        floorLeft.setElasticity(0.4);
+        floorLeft.setElasticity(0.2);
         floorLeft.setFriction(0.2);
         floorLeft.setLayers(_B_NOT_GRABABLE_MASK);
 		floorLeft.setCollisionType(1);
         
         var floorRight = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(668, 0), cp.v(1136, 0), 0));        
         floorRight.setFriction(0.1);
-        floorRight.setElasticity(0.3);
+        floorRight.setElasticity(0.2);
         floorRight.setLayers(_B_NOT_GRABABLE_MASK);
 		floorRight.setCollisionType(1);
         
 		var stopperLeft = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(0, 0), cp.v(0, 640), 0));        
         stopperLeft.setFriction(0.1);
-        stopperLeft.setElasticity(0.3);
+        stopperLeft.setElasticity(0.2);
         stopperLeft.setLayers(_B_NOT_GRABABLE_MASK);
 		stopperLeft.setCollisionType(1);
 
         var stopperRight = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(1136, 0), cp.v(1136, 640), 0));        
         stopperRight.setFriction(0.1);
-        stopperRight.setElasticity(0.3);
+        stopperRight.setElasticity(0.2);
         stopperRight.setLayers(_B_NOT_GRABABLE_MASK);
 		stopperRight.setCollisionType(_B_COLL_TYPE_STATIC);
 
@@ -486,7 +487,7 @@ var Hourglass = cc.PhysicsSprite.extend({
 			hourglass = this._hourglass = space.addBody(new cp.Body(mass, cp.momentForBox(mass, width, height))),
 			box = this._shape = space.addShape(new cp.BoxShape(hourglass, width, height));
 		box.setElasticity(0.1);
-		box.setFriction(3);
+		box.setFriction(5);
 		
 		this.setBody(hourglass);
         
