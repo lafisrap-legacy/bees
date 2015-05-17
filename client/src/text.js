@@ -12,7 +12,10 @@ _b_text = {
 			"results": "Die Ergebnisse dieser Runde!!",
 			"ready": "Bereit für die nächste Runde?"
 
-        }
+        },
+		"textinput": {
+			"insert_text": "..."
+		}
     }
 }
 

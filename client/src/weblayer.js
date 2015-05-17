@@ -262,21 +262,21 @@ var WebLayer = cc.Class.extend({
 				var data = JSON.parse(data.data[0].data),
 					mcb = self._messageCbs,
 					found = false;
-
-				cc.log("Received message: "+JSON.stringify(data)+"....."+JSON.stringify(mcb));
-				for( var i=0 ; i<mcb.length ; i++ ) {
-					if( mcb[i].message === data.message ) {
-						found = true;
-						break;
-					}
-				}
-				if( found ) {
-					self._messageCbs.splice(i,1)[0].cb(data);
-				} else {
-					self._messageStorage.push(data);
-				}
 			} catch(e) {
 				cc.log("Couldn't parse JSON data: "+e.message);
+			}
+
+			cc.log("Received message: "+JSON.stringify(data)+"....."+JSON.stringify(mcb));
+			for( var i=0 ; i<mcb.length ; i++ ) {
+				if( mcb[i].message === data.message ) {
+					found = true;
+					break;
+				}
+			}
+			if( found ) {
+				self._messageCbs.splice(i,1)[0].cb(data);
+			} else {
+				self._messageStorage.push(data);
 			}
 			break;			
 		default:

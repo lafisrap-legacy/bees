@@ -27,6 +27,10 @@ var res = {
 	fairies_png : "res/fairies/fairies.png",
     fairies_plist : "res/fairies/fairies.plist",
 
+	// textinput view
+	textinput_png : "res/textinput/textinput.png",
+    textinput_plist : "res/textinput/textinput.plist",
+
 	// global
 	names_json : "res/global/names.json"
 };

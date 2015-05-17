@@ -20,7 +20,7 @@
             <key>bigship_front.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1058,644},{348,350}}</string>
+                <string>{{1410,564},{348,350}}</string>
                 <key>offset</key>
                 <string>{1,0}</string>
                 <key>rotated</key>
@@ -59,7 +59,7 @@
             <key>bigship_middle3.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1408,564},{350,350}}</string>
+                <string>{{1058,644},{350,350}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -72,7 +72,7 @@
             <key>bomb.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1702,2},{106,120}}</string>
+                <string>{{1702,401},{106,120}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -82,10 +82,23 @@
                 <key>sourceSize</key>
                 <string>{120,120}</string>
             </dict>
+            <key>canon.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{1702,2},{258,256}}</string>
+                <key>offset</key>
+                <string>{-1,7}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,7},{258,256}}</string>
+                <key>sourceSize</key>
+                <string>{260,284}</string>
+            </dict>
             <key>crosshair.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1522,916},{103,102}}</string>
+                <string>{{1874,857},{103,102}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -111,11 +124,11 @@
             <key>ship1_back.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1760,900},{84,112}}</string>
+                <string>{{1810,401},{84,112}}</string>
                 <key>offset</key>
                 <string>{-1,0}</string>
                 <key>rotated</key>
-                <true/>
+                <false/>
                 <key>sourceColorRect</key>
                 <string>{{13,0},{84,112}}</string>
                 <key>sourceSize</key>
@@ -124,7 +137,7 @@
             <key>ship1_back_damaged.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1702,124},{112,112}}</string>
+                <string>{{1844,260},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -137,7 +150,7 @@
             <key>ship1_front.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1702,238},{112,112}}</string>
+                <string>{{1760,523},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -150,7 +163,7 @@
             <key>ship1_front_damaged.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1702,352},{112,112}}</string>
+                <string>{{1874,515},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -163,11 +176,11 @@
             <key>ship1_middle1.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1702,466},{90,112}}</string>
+                <string>{{1896,374},{90,112}}</string>
                 <key>offset</key>
                 <string>{-2,0}</string>
                 <key>rotated</key>
-                <true/>
+                <false/>
                 <key>sourceColorRect</key>
                 <string>{{9,0},{90,112}}</string>
                 <key>sourceSize</key>
@@ -176,7 +189,7 @@
             <key>ship1_middle1_damaged.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1760,558},{112,112}}</string>
+                <string>{{1874,629},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -189,7 +202,7 @@
             <key>ship1_middle2.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1408,916},{102,112}}</string>
+                <string>{{1760,751},{102,112}}</string>
                 <key>offset</key>
                 <string>{1,0}</string>
                 <key>rotated</key>
@@ -202,7 +215,7 @@
             <key>ship1_middle2_damaged.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1760,672},{112,112}}</string>
+                <string>{{1760,637},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -215,7 +228,7 @@
             <key>ship1_middle3.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1627,916},{98,112}}</string>
+                <string>{{1760,855},{98,112}}</string>
                 <key>offset</key>
                 <string>{3,0}</string>
                 <key>rotated</key>
@@ -228,7 +241,7 @@
             <key>ship1_middle3_damaged.png</key>
             <dict>
                 <key>frame</key>
-                <string>{{1760,786},{112,112}}</string>
+                <string>{{1874,743},{112,112}}</string>
                 <key>offset</key>
                 <string>{0,0}</string>
                 <key>rotated</key>
@@ -251,6 +264,19 @@
                 <key>sourceSize</key>
                 <string>{1136,640}</string>
             </dict>
+            <key>typewriter.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{1702,260},{140,139}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{140,139}}</string>
+                <key>sourceSize</key>
+                <string>{140,139}</string>
+            </dict>
         </dict>
         <key>metadata</key>
         <dict>
@@ -259,9 +285,9 @@
             <key>realTextureFileName</key>
             <string>wordbattle.png</string>
             <key>size</key>
-            <string>{1874,1020}</string>
+            <string>{1988,996}</string>
             <key>smartupdate</key>
-            <string>$TexturePacker:SmartUpdate:9757fe8d87100061246595e65b5cab69:a21aa55b3cddd85cda89b20708827cd4:7becf5da526d24a235d4fba256143341$</string>
+            <string>$TexturePacker:SmartUpdate:605c098c9453ec3338d0739f29f69a8f:f267934f96df98dd7124efec7f1a483f:7becf5da526d24a235d4fba256143341$</string>
             <key>textureFileName</key>
             <string>wordbattle.png</string>
         </dict>

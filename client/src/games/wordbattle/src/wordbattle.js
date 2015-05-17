@@ -4,8 +4,8 @@ var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_SQUARE_SIZE = 56,
 	_B_WORDS_PER_ROUND = 7,		// maximum number of words per round
 	_B_HOURGLASS_POS = cc.p(668,80),
-	_B_CANON_POS = cc.p(30,140),
-	_B_CANONBALL_POS = cc.p(100,240),
+	_B_CANON_POS = cc.p(130,280),
+	_B_CANONBALL_POS = cc.p(240,340),
 	_B_CROSSHAIR_Y_OFFSET = _B_SQUARE_SIZE + 7,
 	_B_DAMAGE_PROGRESS_DELAY = 0.1,
 	_B_BIGSHIP_MOVING_SPEED = 140,
@@ -408,12 +408,50 @@ var WordBattleLayer = cc.Layer.extend({
 		fairy.show(2);
 		fairy.say(0, 2, _b_t.fairies.lets_go);
 
-		// start always with three bombs
+		// start always with three bombs and one typewriter
 		for( var i=0 ; i<3 ; i++ ) {	
-			self._bombs[i] = new Bomb(fairy._space, cc.p(100+80*i,500+(i%2)*100),self._otherSea);
+			self._bombs[i] = new Bomb(fairy, cc.p(100+80*i,500+(i%2)*100),self._otherSea, function(pos) {
+				if( typewriter ) {
+					typewriter.exit();
+					typewriter = null;
+				}
+			});
 			self._bombs[i].getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
 			fairy.addObject(self._bombs[i]);
 		}
+
+		var afterTyping = function(ship, word) {
+				typewriter.exit();
+				typewriter = null;
+/*
+				if( word == "" ) {
+					typewriter = new TypeWriter(fairy, cc.p(60,500), self._otherSea, afterTyping);
+					return;
+				}
+*/
+				if(ship.getWord().toLowerCase() === word.toLowerCase()) {
+					ship.setFullDamage();
+				} else {
+					// word wrong: let all bombs explode
+					fairy.eachObject(function(i, obj) { 
+						if( obj.resumeTimer ) {
+							obj.resumeTimer();
+							obj.setTimer(0);
+						}
+					});
+				}
+			},
+			typewriter = new TypeWriter(fairy, cc.p(60,500), self._otherSea, afterTyping);
+
+		fairy.addObject(typewriter);
+
+		var canon = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("canon.png"),cc.rect(0,0,260,284)),
+			canonAction = cc.EaseSineOut.create(cc.moveTo(1.66, _B_CANON_POS));
+
+		canon.setPosition(cc.p(_B_CANON_POS.x-130,_B_CANON_POS.y));
+		fairy.addChild(canon,30);
+		_b_retain(canon,"Canon");
+		canon.runAction(canonAction);
 
 		_b_one("in_2_seconds" , function() {
 			hg.hide(function() {
@@ -430,8 +468,24 @@ var WordBattleLayer = cc.Layer.extend({
 
 			_b_one(["last_object_gone","bomb_time_is_up"], function() {
 			
+				cc.log("Last object gone ...");
+				if( typewriter ) {
+					typewriter.exit();
+					typewriter = null;
+				}
+
 				fairy.show(3);
 				fairy.say(0, 99, _b_t.fairies.ceasefire);
+
+				canon.runAction(
+					cc.sequence(
+						cc.moveBy(1.66, cc.p(-260,0)),
+						cc.callFunc(function() {
+							fairy.removeChild(canon);
+							_b_release(canon);
+						})
+					)
+				);
 
 				cc.log("Sending ceasefire ...");
 				$b.sendMessage({ message: "ceasefire" });
@@ -953,6 +1007,20 @@ var Battleship = cc.Node.extend({
 		return false;
 	},
 
+	getLetterAtPosition: function(pos) {
+		var rect = this._rect;
+		if( cc.rectContainsPoint(rect, pos) ) {
+			var col = Math.floor((pos.x-rect.x)/_B_SQUARE_SIZE),
+				row = Math.floor((pos.y-rect.y)/_B_SQUARE_SIZE),
+				i = this._rotation===0? this._word.length-row-1 : col,
+				part = this.children[i];
+
+			if( part._damage > 0 ) return part._letter;
+			else return null;
+		}
+		return null;
+	},
+
 	markDamage: function(part) {
 		var d = part._damage;
 
@@ -975,6 +1043,25 @@ var Battleship = cc.Node.extend({
 		}
 	},
 
+	setFullDamage: function() {
+		var self = this,
+			wl = this.getLength();
+
+		for( var i=0 ; i<wl ; i++ ) {
+			var part = this.children[i];
+			
+			if( part._damage === 0 ) { 
+				part.setOpacity(255);
+				part.setColor(cc.color(200,200,200,255));
+				part.setRotation(Math.random()*360);
+				part.setSpriteFrame(cc.spriteFrameCache.getSpriteFrame(part._shipDamaged));
+			}
+
+			part._damage = _B_MAX_DAMAGE;
+			this.markDamage(part);
+		}
+	},
+
 	progressDamage: function() {	
 		var self = this,
 			wl = this.getLength();
@@ -993,7 +1080,9 @@ var Battleship = cc.Node.extend({
 			setTimeout(function() {
 				var	battleLayer = self.getParent().getParent();
 
-				// get rid of ship in a nice way...
+				// get rid of ship in a nice way... (to do)
+
+				// show letter
 				for( var i=0 ; i<wl ; i++ ) {
 					var part = self.children[i],
 						pos = self.convertToWorldSpace(part.getPosition()),
@@ -1228,25 +1317,29 @@ var Bomb = cc.PhysicsSprite.extend({
 	_crosshair: null,
 	_timer: null,
 	_startTime: null,
+	_pauseTime: null,
+	_finalCallback: null,
 
 	getCrosshair: function() { return this._crosshair; },
 	setCrosshair: function(crosshair) { this._crosshair = crosshair; },
 
 	// ctor calls the parent class with appropriate parameter
 	//
-    ctor: function(space, pos, sea) {
+    ctor: function(parent, pos, sea, cb) {
         cc.PhysicsSprite.prototype.ctor.call(this);
         
-        this._space = space;
+		cc.assert(parent._space, "Parent must have a chipmunk space attibute.");
+        this._space = parent._space;
 		this._sea = sea;
+		this._finalCallback = cb;
 
 		var frame = cc.spriteFrameCache.getSpriteFrame("bomb.png");
         this.initWithSpriteFrame(frame);
 		this.setAnchorPoint(0.50,0.42);
 		var radius = 50,
 			mass = 60,
-			bomb = this._bomb = space.addBody(new cp.Body(mass, cp.momentForCircle(mass, 0, radius, cp.v(0, 0)))),
-			circle = this._shape = space.addShape(new cp.CircleShape(bomb, radius, cp.v(0, 0)));
+			bomb = this._bomb = this._space.addBody(new cp.Body(mass, cp.momentForCircle(mass, 0, radius, cp.v(0, 0)))),
+			circle = this._shape = this._space.addShape(new cp.CircleShape(bomb, radius, cp.v(0, 0)));
 		circle.setElasticity(0.1);
 		circle.setFriction(1.5);		
 		circle.setCollisionType(_B_COLL_TYPE_OBJECT);
@@ -1282,6 +1375,17 @@ var Bomb = cc.PhysicsSprite.extend({
 		return this._startTime - now + this._timer;
 	},
 
+	pauseTimer: function() {
+		this._pauseTime = this.getTimer();
+	},
+
+	resumeTimer: function() {
+		if( this._pauseTime === null ) return;
+
+		this.setTimer(this._pauseTime);
+		this._pauseTime = null;
+	},
+
 	dragging: function() {
 		var dpos = this.draggingPos;
 
@@ -1310,13 +1414,13 @@ var Bomb = cc.PhysicsSprite.extend({
 	},
 	
 	land: function(cb) {
-		var self = this;
+		var self = this,
+			parent = this.getParent();	
 
-		if( !this._imIn ) return;
-
-		var parent = this.getParent();
-		
-		if( !parent ) return; // I have no sea anymore to land
+		if( !this._imIn || !parent ) {
+			if( typeof cb === "function" ) cb();
+			return;
+		}
 
 		var	dpos = this.draggingPos,
 			seaRect = this._sea.getBoundingBox(),
@@ -1325,26 +1429,27 @@ var Bomb = cc.PhysicsSprite.extend({
 		parent.addChild(flyingBomb,20);
 		_b_retain(flyingBomb,"WordBattleLayer: Flying Bomb");		
 
-		flyingBomb.fire();
-		flyingBomb.land(cc.p(dpos.x, dpos.y+_B_CROSSHAIR_Y_OFFSET), function(hit) {
-			if( self.getParent() ) {
-				if(hit) {	
-					var bomb = new Bomb(self._space, cc.p(180,600),self._sea);
-					bomb.getBody().applyImpulse(cp.v(30,100),cp.v(300,0));
-					bomb.setTimer(self.getTimer());
-					parent.addObject(bomb);
-				}
+		flyingBomb.fire(function() {
+			flyingBomb.land(cc.p(dpos.x, dpos.y+_B_CROSSHAIR_Y_OFFSET), function(hit) {
+				if( self.getParent() ) {
+					if(hit) {	
+						var bomb = new Bomb(parent, cc.p(180,600),self._sea);
+						bomb.getBody().applyImpulse(cp.v(30,100),cp.v(300,0));
+						bomb.setTimer(self.getTimer());
+						parent.addObject(bomb);
+					}
 
-				parent.removeChild(flyingBomb);
-				_b_release(flyingBomb);
-				self._crossHairStatic = false;
-				self.exit();
-				if( typeof cb === "function" ) cb();
-			}
+					parent.removeChild(flyingBomb);
+					_b_release(flyingBomb);
+					self._crossHairStatic = false;
+					self.exit();
+					if( typeof cb === "function" ) cb();
+				}
+			});
 		});
 
 		cc.audioEngine.playEffect(gRes.bomb_flying_mp3);
-		this._crossHairStatic = true;
+		self._crossHairStatic = true;
 		self.runAction(
 			cc.sequence(
 				cc.EaseSineIn.create(
@@ -1357,13 +1462,22 @@ var Bomb = cc.PhysicsSprite.extend({
 			)
 		);
 
-		$b.sendMessage({ message: "bomb", pos: cc.p(dpos.x-seaRect.x, dpos.y+_B_CROSSHAIR_Y_OFFSET-seaRect.y) });	
+		var pos = cc.p(dpos.x-seaRect.x, dpos.y+_B_CROSSHAIR_Y_OFFSET-seaRect.y);
+		$b.sendMessage({ message: "bomb", pos: pos });
+		if( typeof self._finalCallback === "function" ) self._finalCallback(pos);
 	},
 	
+	containsPoint: function(point) {
+		var pos = this.getPosition();
+
+		if( cp.v.dist(pos, point) < this.width/2 ) return true;
+		else return false;
+	},
+
 	update: function(dt) {
 		var self = this;	
 		
-		if( this._timer ) {
+		if( this._timer !== null && !this._pauseTime ) {
 			var now = new Date().getTime() / 1000,
 				time = Math.floor(this._startTime - now + this._timer);
 		
@@ -1412,12 +1526,17 @@ var FlyingBomb = cc.Sprite.extend({
         this.initWithSpriteFrame(frame);
 	},
 
-	fire: function() {
+	fire: function(cb) {
 		
 		this.setPosition(_B_CANONBALL_POS);
 		this.runAction(
-			cc.EaseSineOut.create(
-				cc.moveBy(0.22,cc.p(1200,400))
+			cc.sequence(
+				cc.EaseSineOut.create(
+					cc.moveBy(0.22,cc.p(1200,400))
+				),
+				cc.callFunc(function() {
+					if( typeof cb === "function" ) cb();
+				})
 			)
 		);
 		
@@ -1460,6 +1579,194 @@ var FlyingBomb = cc.Sprite.extend({
 		);
 	}
 });
+
+
+// TypeWriter is the class for the typewriter function
+//
+// Methods
+// -------
+//
+// Properties
+// ----------
+//
+var TypeWriter = cc.PhysicsSprite.extend({
+
+	_space: null,
+	_sea: null,
+	_clickable: true,
+	_dragable: true,
+	_shape: null,
+	_crosshair: null,
+	_finalCallback: null,
+	_crossHairStatic: false,
+
+	getCrosshair: function() { return this._crosshair; },
+	setCrosshair: function(crosshair) { this._crosshair = crosshair; },
+
+	// ctor calls the parent class with appropriate parameter
+	//
+    ctor: function(parent, pos, sea, cb) {
+        cc.PhysicsSprite.prototype.ctor.call(this);
+        
+		cc.assert(parent._space, "Parent must have a chipmunk space attibute.");
+        this._space = parent._space;
+		this._sea = sea;
+		this._finalCallback = cb;
+
+		var frame = cc.spriteFrameCache.getSpriteFrame("typewriter.png");
+        this.initWithSpriteFrame(frame);
+		this.setAnchorPoint(0.50,0.42);
+		var width = 140,
+			height = 140,
+			mass = 60,
+			typewriter = this._space.addBody(new cp.Body(mass, cp.momentForBox(mass, width, height))),
+			box = this._shape = this._space.addShape(new cp.BoxShape(typewriter, width, height));
+		box.setElasticity(0.1);
+		box.setFriction(1.5);		
+		box.setCollisionType(_B_COLL_TYPE_OBJECT);
+
+		this.setBody(typewriter);
+        this.setPosition(pos);
+
+		var crosshair = this._crosshair = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("crosshair.png"),cc.rect(0,0,103,102));
+		crosshair.setPosition(cc.p(60,46));
+		crosshair.setOpacity(0);
+		this.addChild(crosshair,30);
+		_b_retain(crosshair,"Bomb: crosshair");	
+		
+		this.scheduleUpdate();
+	},
+
+	dragging: function() {
+		var dpos = this.draggingPos;
+
+		if( dpos ) {
+			var pos = this.getPosition(),
+				seaRect = this._sea && this._sea.getBoundingBox() || null;
+
+			if( seaRect && cc.rectContainsPoint(seaRect, {x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET}) ) {
+				if( !this._imIn ) {
+					this._imIn = true;
+					this.getCrosshair().runAction(cc.fadeIn(0.22));
+					this.runAction(cc.fadeOut(0.22));
+				}
+				dpos.x = Math.floor((dpos.x-seaRect.x)/_B_SQUARE_SIZE)*_B_SQUARE_SIZE + seaRect.x + _B_SQUARE_SIZE/2;
+				dpos.y = Math.floor((dpos.y-seaRect.y)/_B_SQUARE_SIZE)*_B_SQUARE_SIZE + seaRect.y + _B_SQUARE_SIZE/2;
+
+				var ships = this._sea.getChildren(),
+					letter = null;
+				for( var i=0 ; i<ships.length ; i++ ) if( letter = ships[i].getLetterAtPosition({x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET}) ) break;
+				if( letter && !this._imAboveALetter ) {
+					this.runAction(cc.fadeTo(0.22,100));
+					this._imAboveALetter = true;
+				} else if( !letter && this._imAboveALetter ) {
+					this.runAction(cc.fadeOut(0.22));
+					this._imAboveALetter = false;
+				}
+			} else {
+				if( this._imIn ) {
+					this._imIn = false;
+					this._imAboveALetter = false;
+					this.getCrosshair().runAction(cc.fadeOut(0.22));
+					this.runAction(cc.fadeIn(0.22));
+				}
+			}
+
+			this.getBody().setVel(cp.v((dpos.x-pos.x)*10,(dpos.y-pos.y+_B_CROSSHAIR_Y_OFFSET)*10));
+			this._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
+		}
+	},
+	
+	land: function(cb) {
+		var self = this,
+			parent = this.getParent();	
+
+		if( !this._imIn || !parent ) {
+			if( typeof cb === "function" ) cb();
+			return;
+		}
+
+		var	dpos = this.draggingPos,
+			seaRect = this._sea.getBoundingBox(),
+			letter = null;
+		
+		for( var i=0 ; i<ships.length ; i++ ) {
+			var ship = ships[i];
+			if( letter = ship.getLetterAtPosition({x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET}) ) break;
+		}
+		if( letter ) {
+			var	sea = this._sea,
+				word = ship.getWord(),
+				layer = this.getParent(), 
+				input = new TextInputLayer(10, function(text) {
+					if( input ) { // this is a work around, as this callback gets called after input is set to null within this callback
+						self._crossHairStatic = false;
+						self._imIn = false;
+						self._imAboveALetter = false;
+						self.getCrosshair().runAction(cc.fadeOut(0.22));
+						self.runAction(cc.fadeIn(0.22));
+
+						self.getParent().removeChild(input);
+						_b_release(input);
+						input = null;
+
+						layer.eachObject(function(i, obj) { 
+							if( obj.resumeTimer ) obj.resumeTimer();
+						});
+
+						if( typeof self._finalCallback === "function" ) self._finalCallback(ship, text);
+
+						cc.log("We have a text: "+text);
+					}
+				});
+
+			this._crossHairStatic = true;
+
+			this.getParent().addChild(input,20);
+			_b_retain(input, "Input field");
+
+			cc.assert(layer.eachObject, "Parent layer must have a object management (fairyLayer does).");
+
+			layer.eachObject(function(i, obj) { 
+				if( obj.pauseTimer ) obj.pauseTimer();
+			});
+		} else {
+			this._imIn = false;
+			this._imAboveALetter = false;
+			this.getCrosshair().runAction(cc.fadeOut(0.22));
+			this.runAction(cc.fadeIn(0.22));	
+		}
+
+		//$b.sendMessage({ message: "bomb", pos: cc.p(dpos.x-seaRect.x, dpos.y+_B_CROSSHAIR_Y_OFFSET-seaRect.y) });	
+
+		if( typeof cb === "function" ) cb();
+	},
+
+	containsPoint: function(point) {
+		var rect = this.getBoundingBox();
+
+		if( rect && cc.rectContainsPoint(rect, point) ) return true;
+		else return false;
+	},
+
+	update: function(dt) {
+		if( this._crossHairStatic ) {
+			this.dragging();
+		}
+	},
+
+	exit: function() {
+		this.onExit();
+		
+		var shape = this._shape;
+			body = this.getBody();
+
+		if( shape ) this._space.removeShape(shape);
+		if( body ) this._space.removeBody(body);
+		this.getParent().removeObject(this);
+	}	
+});
+
 
 
 var WordBattleScene = cc.Scene.extend({

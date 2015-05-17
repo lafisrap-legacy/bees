@@ -217,6 +217,12 @@ var FairyLayer = cc.Layer.extend({
 		}
 		else cc.assert(false, "Couldn't find fairy object in list.");
 	},
+
+	eachObject: function(cb) {
+		var objs = this._objects;
+
+		for( var i=0 ; i<objs.length ; i++ ) cb(i, objs[i]);
+	},
 	
 	// initListeners start the event handling
 	initListeners: function() {
@@ -238,7 +244,7 @@ var FairyLayer = cc.Layer.extend({
 					var o = objs[i],
 						pos = o.getPosition();
 						
-					if( cp.v.dist(pos, loc) < o.width/2 && self._objectLanding != o) {
+					if( o.containsPoint(loc) && self._objectLanding != o) {
 				//       var drawNode = cc.DrawNode.create();
 				//		drawNode.clear();
 				//		drawNode.drawCircle(cc.p(pos.x,pos.y),o.width/2,0,32,false,1,new cc.Color(255,0,0,100));
@@ -291,6 +297,7 @@ var FairyLayer = cc.Layer.extend({
 					self._objectLanding = dob;
 					self._draggedObject.land(function() {
 						self._objectLanding = null;
+						dob._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
 					});
 					self._draggedObject = null;
 				}
@@ -304,7 +311,6 @@ var FairyLayer = cc.Layer.extend({
 	stopListeners: function() {
         if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
         cc.log("FairyLayer: Stop listening!");
-
     },    
     
     // chipmonk addons
