@@ -746,6 +746,21 @@ var GameFairy = FairyLayer.extend({
         		height: 300,
         		fontsize: 48,
         	},
+        },{
+        	sprite: "gamefairy3.png",
+        	x: 340,
+        	y: 160,
+        	width: 251,
+        	height: 320,
+        	orientation: _B_FAIRY_LEFT,
+        	bubble: {
+        		type: "strong",
+        		x: 340,
+        		y: 260,
+        		width: 500,
+        		height: 300,
+        		fontsize: 48,
+			},
         }]);
 	},
 	

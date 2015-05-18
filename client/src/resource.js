@@ -30,6 +30,7 @@ var res = {
 	// textinput view
 	textinput_png : "res/textinput/textinput.png",
     textinput_plist : "res/textinput/textinput.plist",
+	texttyping_mp3 : "res/sounds/wort_schreiben_loop00,05.mp3",
 
 	// global
 	names_json : "res/global/names.json"

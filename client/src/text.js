@@ -10,8 +10,9 @@ _b_text = {
         	"lets_go":	"3 .. 2 .. 1 .. 0.\nUnd los geht's!",
 			"ceasefire": "FEUERPAUSE!",
 			"results": "Die Ergebnisse dieser Runde!!",
-			"ready": "Bereit für die nächste Runde?"
-
+			"ready": "Bereit für die nächste Runde?",
+			"word_won": "RICHTIG!",
+			"word_lost": "Falsch.",
         },
 		"textinput": {
 			"insert_text": "..."

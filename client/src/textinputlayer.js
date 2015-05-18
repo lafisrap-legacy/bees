@@ -55,6 +55,8 @@ var TextInputLayer = cc.Layer.extend({
         this._action = false;
 
 		textField.attachWithIME();
+		cc.audioEngine.setMusicVolume(0.5);
+		cc.audioEngine.playMusic(res.texttyping_mp3,true);
     },
 
 	onExit: function() {

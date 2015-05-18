@@ -390,7 +390,10 @@ var WordBattleLayer = cc.Layer.extend({
 					ship.setRotation(tile.rotation);							
 				}
 
-				cc.audioEngine.stopAllMusic();
+				cc.audioEngine.fadeOut(2);
+				setTimeout(function() {
+					cc.audioEngine.stopAllMusic();
+				}, 2000);
 
 				self.playRound();
 			});
@@ -431,14 +434,27 @@ var WordBattleLayer = cc.Layer.extend({
 */
 				if(ship.getWord().toLowerCase() === word.toLowerCase()) {
 					ship.setFullDamage();
+					cc.audioEngine.playMusic(gRes.textright_mp3,false);
+					fairy.show(6);
+					fairy.say(0, 2, _b_t.fairies.word_won);
+					setTimeout(function() {
+						fairy.hide();
+					}, 2500)
+					
 				} else {
 					// word wrong: let all bombs explode
+					cc.audioEngine.playMusic(gRes.textwrong_mp3,false);
 					fairy.eachObject(function(i, obj) { 
 						if( obj.resumeTimer ) {
 							obj.resumeTimer();
 							obj.setTimer(0);
 						}
 					});
+					fairy.show(6);
+					fairy.say(0, 2, _b_t.fairies.word_lost);
+					setTimeout(function() {
+						fairy.hide();
+					}, 2500)
 				}
 			},
 			typewriter = new TypeWriter(fairy, cc.p(60,500), self._otherSea, afterTyping);
