@@ -366,8 +366,10 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 		cmd.dataChan <- []Cmd_data{}
 
 	//---
-	// GAME COMMAND updateGame
+	// GAME COMMAND updateGame and sendMessage
 	//---
+	case "sendMessage":
+		fallthrough
 	case "updateGame":
 		data, ok := cmd.parameter["data"]
 		if !ok {
@@ -393,16 +395,24 @@ func commandInterpreter(cmd Command, requestChan chan Db_request) {
 			return
 		}
 
+		command := ""
+		if cmd.command == "updateGame" {
+			command = "gameUpdate"
+		} else {
+			command = "message"
+		}
+
 		// send the update to all players but the current
 		for s := range ag.players {
 			if s != session.sha1Sid {
 
-				sendNote( ag.players[s], "gameUpdate", data)
+				fmt.Println("Send",command,"with",data)
+				sendNote( ag.players[s], command, data)
 			}
 		}
 		// ... and to all spectators
 		for s := range ag.spectators {
-			sendNote( ag.spectators[s], "gameUpdate", data)
+			sendNote( ag.spectators[s], command, data)
 		}
 
 		cmd.dataChan <- []Cmd_data{}
