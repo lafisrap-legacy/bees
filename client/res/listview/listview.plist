@@ -1,169 +1,139 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>frames</key>
-	<dict>
-		<key>bar</key>
-		<dict>
-			<key>frame</key>
-			<string>{{0, 0}, {550, 115}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 0}, {550, 115}}</string>
-			<key>sourceSize</key>
-			<string>{550, 115}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>listviewitem1</key>
-		<dict>
-			<key>frame</key>
-			<string>{{550, 0}, {376, 78}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 0}, {376, 78}}</string>
-			<key>sourceSize</key>
-			<string>{376, 78}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>listviewitem2</key>
-		<dict>
-			<key>frame</key>
-			<string>{{550, 78}, {380, 73}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 0}, {373, 69}}</string>
-			<key>sourceSize</key>
-			<string>{380, 73}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>listviewitem3</key>
-		<dict>
-			<key>frame</key>
-			<string>{{0, 115}, {380, 84}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 2}, {374, 81}}</string>
-			<key>sourceSize</key>
-			<string>{380, 84}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>listviewitem4</key>
-		<dict>
-			<key>frame</key>
-			<string>{{380, 151}, {380, 90}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 0}, {378, 87}}</string>
-			<key>sourceSize</key>
-			<string>{380, 90}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>listviewitem5</key>
-		<dict>
-			<key>frame</key>
-			<string>{{0, 199}, {380, 97}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 1}, {378, 95}}</string>
-			<key>sourceSize</key>
-			<string>{380, 97}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>listviewitem6</key>
-		<dict>
-			<key>frame</key>
-			<string>{{380, 241}, {374, 84}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{0, 0}, {374, 84}}</string>
-			<key>sourceSize</key>
-			<string>{374, 84}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>invited</key>
-		<dict>
-			<key>frame</key>
-			<string>{{930, 0}, {90, 90}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{27, 1}, {40, 88}}</string>
-			<key>sourceSize</key>
-			<string>{90, 90}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		<key>inviting</key>
-		<dict>
-			<key>frame</key>
-			<string>{{930, 90}, {90, 90}}</string>
-			<key>offset</key>
-			<string>{0, 0}</string>
-			<key>rotated</key>
-			<false/>
-			<key>sourceColorRect</key>
-			<string>{{27, 2}, {38, 86}}</string>
-			<key>sourceSize</key>
-			<string>{90, 90}</string>
-			<key>aliases</key>
-			<array>
-
-			</array>
-		</dict>
-		</dict>
-		<key>metadata</key>
-		<dict>
-		<key>format</key>
-		<integer>2</integer>
-		<key>textureFileName</key>
-		<string>listview.png</string>
-		<key>size</key>
-		<string>{1024, 1024}</string>
-	</dict></dict></plist>
+    <dict>
+        <key>frames</key>
+        <dict>
+            <key>bar.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{950,88},{550,115}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{550,115}}</string>
+                <key>sourceSize</key>
+                <string>{550,115}</string>
+            </dict>
+            <key>invited.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{2,88},{90,90}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{90,90}}</string>
+                <key>sourceSize</key>
+                <string>{90,90}</string>
+            </dict>
+            <key>inviting.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{476,88},{90,90}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{90,90}}</string>
+                <key>sourceSize</key>
+                <string>{90,90}</string>
+            </dict>
+            <key>listviewitem1.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{384,2},{376,78}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{376,78}}</string>
+                <key>sourceSize</key>
+                <string>{376,78}</string>
+            </dict>
+            <key>listviewitem2.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{2,2},{380,73}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{380,73}}</string>
+                <key>sourceSize</key>
+                <string>{380,73}</string>
+            </dict>
+            <key>listviewitem3.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{762,2},{380,84}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{380,84}}</string>
+                <key>sourceSize</key>
+                <string>{380,84}</string>
+            </dict>
+            <key>listviewitem4.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{94,88},{380,90}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{380,90}}</string>
+                <key>sourceSize</key>
+                <string>{380,90}</string>
+            </dict>
+            <key>listviewitem5.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{568,88},{380,97}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{380,97}}</string>
+                <key>sourceSize</key>
+                <string>{380,97}</string>
+            </dict>
+            <key>listviewitem6.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{1144,2},{374,84}}</string>
+                <key>offset</key>
+                <string>{0,0}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,0},{374,84}}</string>
+                <key>sourceSize</key>
+                <string>{374,84}</string>
+            </dict>
+        </dict>
+        <key>metadata</key>
+        <dict>
+            <key>format</key>
+            <integer>2</integer>
+            <key>realTextureFileName</key>
+            <string>listview.png</string>
+            <key>size</key>
+            <string>{1520,205}</string>
+            <key>smartupdate</key>
+            <string>$TexturePacker:SmartUpdate:2db598bbee448a5262098916bb7f37f5:b6dfd2b5661885d0f3a9c90e7dc508e0:28b13c4314302dc88caa4d59b6d7b02f$</string>
+            <key>textureFileName</key>
+            <string>listview.png</string>
+        </dict>
+    </dict>
+</plist>

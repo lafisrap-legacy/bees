@@ -8,7 +8,7 @@
     "renderMode" : 0,
     "engineDir":"frameworks/cocos2d-html5",
 
-    "modules" : ["cocos2d"],
+    "modules" : ["cocos2d", "external"],
 
     "jsList" : [
         "src/resource.js",
@@ -16,9 +16,11 @@
         "src/weblayer.js",
         "src/menulayer.js",
         "src/listviewlayer.js",
+        "src/fairylayer.js",
         "src/text.js",
+		"src/textinputlayer.js",
         
         "src/games/wordbattle/src/resource.js",
-        "src/games/wordbattle/src/app.js"
+        "src/games/wordbattle/src/wordbattle.js"
     ]
 }

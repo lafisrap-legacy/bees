@@ -51,6 +51,7 @@ var TitleLayer = cc.Layer.extend({
 
 				// ignore location, hide anyway
 				self.stopListeners();
+
 				$b.showMenu([{
 					label: "Worte versenken",
 					cb: function() { 
@@ -113,21 +114,25 @@ var BeesScene = cc.Scene.extend({
     onEnter:function () {
         this._super();
         
+        cc.log("Starting main scene ...");
         this.weblayer = new WebLayer();
         var title = new TitleLayer();
         this.addChild(title);
         this.menuLayer = new MenuLayer();
         _b_retain(this.menuLayer,"BeesScene, menuLayer");
-        this.selectPlayerLayer = new SelectPlayerLayer();
-        _b_retain(this.selectPlayerLayer,"BeesScene, selectPlayerLayer");
         
         cc.width = cc.winSize.width;
-        cc.height = cc.winSize.height;
+        cc.height = cc.winSize.height;	
+        
+        cc.LoaderScene.preload(_b_getResources("wordbattle","Das Eselein"), function () {
+			cc.director.runScene(new WordBattleScene("Das Eselein"));
+		}, this);
     },
     
     onExit: function() {
+        this._super();
+
     	_b_release(this.menuLayer);
-    	_b_release(this.selectPlayerLayer);
     },
     
     // showMenu parameter
@@ -139,10 +144,32 @@ var BeesScene = cc.Scene.extend({
 		this.addChild(this.menuLayer);
 		this.menuLayer.show(labelsAndCallbacks,fcb);
     },
-    
+
+    // Common Bees Game Interface
+    //
+    /////// General
+ 	// sendCommand
+ 	// getState
+ 	// saveState 
+ 	//
+ 	/////// before the game
+ 	// registerVariation
+    // connectPlayer
+    //
+    /////// in the game
+ 	// sendUpdate
+ 	// sendMessage
+ 	// receiveMessage
+ 	//
+    /////// internally used
+ 	// acceptInvitations 
+ 	// invitePlayer
+ 	// disinvitePlayer
+ 	//    
     connectPlayer: function(connectCb, updateCb, baseLayer) {
-		this.selectPlayerLayer.show([], function(player) { connectCb(player); }, updateCb);		
-        (baseLayer || this).addChild(this.selectPlayerLayer,5);
+    	var layer = new SelectPlayerLayer();
+		layer.show([], function(player) { connectCb(player); }, updateCb);		
+        (baseLayer || this).addChild(layer,5);
     },
     
     getState: 			function() 			 	  { return this.gameState; },
@@ -152,6 +179,9 @@ var BeesScene = cc.Scene.extend({
     acceptInvitations: 	function(cb) 		 	  { return this.weblayer.acceptInvitations(cb); },
     invitePlayer:		function(invitee,cb1,cb2) { return this.weblayer.invitePlayer(invitee, cb1, cb2); },
     sendUpdate:			function(data) 			  { return this.weblayer.sendUpdate(data); },    
+    sendMessage:		function(data) 			  { return this.weblayer.sendMessage(data); },    
+    receiveMessage:		function(message,cb) 	  { return this.weblayer.receiveMessage(message,cb); },    
+    stopMessage:		function(message) 	  	  { return this.weblayer.stopMessage(message); },    
     disinvitePlayer:	function(invitee)	 	  { return this.weblayer.disinvitePlayer(invitee); },
 });
 
@@ -169,14 +199,20 @@ var _b_retained = []
 
 var _b_retain = function(obj,name) {
 	obj.retain();
-    _b_retained[obj.__instanceId] = name;
+	
+	obj.__retainId = _b_getId();
+	
+    _b_retained[obj.__retainId] = name;
+	//cc.log("Retaining "+obj.__retainId+": '"+_b_retained[obj.__retainId]+"'");
 }
 
 var _b_release = function(obj) {
 
-	cc.assert(obj && _b_retained[obj.__instanceId], "_b_release: Object not valid or not in retained array.");
+	cc.assert(obj && _b_retained[obj.__retainId], "_b_release: Object '"+obj.__retainId+"' not valid or not in retained array...");
 	obj.release();		
-	delete _b_retained[obj.__instanceId];
+	//cc.log("Releasing "+obj.__retainId+": '"+_b_retained[obj.__retainId]+"'");
+
+	delete _b_retained[obj.__retainId];
 }
 
 var _b_getResources = function(game, variation) {
@@ -189,6 +225,148 @@ var _b_getResources = function(game, variation) {
 	}
 	return g_resources;
 }
+
+var _b_IdFactory = function() {
+	var id = 1000;
+
+	return function() {
+		return ++id;
+	}
+}
+var _b_getId = _b_IdFactory();
+
+var _b_getFontName = function(resource) {
+    if (cc.sys.isNative) {
+        return resource.srcs[0];
+    } else {
+        return resource.name;
+    }
+}
+
+var _b_recall = function() {
+	try {
+		var textMemory = JSON.parse(cc.sys.localStorage.getItem('textMemory') || []);
+	} catch(e) {
+		var textMemory = [];
+	}
+
+	return function(text) {
+		if( textMemory.indexOf(text) >= 0 ) return true;
+		
+		textMemory.push(text);
+		cc.sys.localStorage.setItem('textMemory', JSON.stringify(textMemory));
+		return false;
+	}
+}
+var _b_remember = _b_recall();
+
+var _b_in_seconds = /^in_([\d\.]+)_seconds$/;
+
+var _b_one = function(events, cb) {
+	_b_on(events, cb, true);
+};
+
+var _b_on = function(events, cb, justOne) {
+	if( typeof events === "string" ) events = [events];
+	cc.assert(typeof events === "object", "I need an array of event string or a single event string.");
+	
+	for( var i=0, listeners=[] ; i<events.length ; i++ ) {
+		var event = events[i],
+			res = _b_in_seconds.exec(event);
+
+		var seconds;
+		if( seconds = parseFloat(event)) {
+			var e = event;
+
+			setTimeout(function() {
+				cc.eventManager.dispatchCustomEvent(e, seconds);
+			}, seconds * 1000);		
+		} else if( res ) {
+			seconds = parseFloat(res[1]),
+				e = event;
+
+			setTimeout(function() {
+				cc.eventManager.dispatchCustomEvent(e, seconds);
+			}, seconds * 1000);		
+		}
+		
+		
+		listeners.push(cc.eventManager.addCustomListener(event, function(event) {
+			if( justOne ) for( var i=0 ; i<listeners.length ; i++ ) cc.eventManager.removeListener(listeners[i]);
+			cb(event);
+		}));
+	}
+	
+	return listeners;
+};
+
+var _b_off = function(listeners) {
+	cc.assert(typeof listeners === "array", "I need an array of cc.EventListener objects.");
+	
+	for( var i=0 ; i<listeners.length ; i++ ) cc.eventManager.removeListener(listeners[i]);
+};
+
+var _b_clear = function(events) {
+	if( typeof events === "string" ) events = [events];
+
+	for( var i=0 ; i<events.length ; i++ ) cc.eventManager.removeCustomListeners(events[i]);
+}
+
+// audio enhancements
+var _b_audio = function() {
+
+	var musicToPlay = [],
+		fadeTime = 0,
+		fadePerSec = 0;
+	
+	cc.audioEngine.step = function(dt) {
+		if( fadeTime ) {
+			var volume = cc.audioEngine.getMusicVolume() + fadePerSec*dt;
+			cc.audioEngine.setMusicVolume(volume);
+
+			fadeTime -= dt;
+			if( fadeTime < 0 ) fadeTime = 0;
+		}
+
+		if( musicToPlay.length > 0 ) {	
+			if( !cc.audioEngine.isMusicPlaying() ) {
+				var music = musicToPlay.splice(0,1)[0];
+
+				cc.audioEngine.playMusic(music.url, music.loop);
+			}
+		}
+	};
+
+	cc.audioEngine.fadeTo = function(time, targetVolume) {
+		var currentVolume = cc.audioEngine.getMusicVolume(),
+			diff = targetVolume - currentVolume;
+
+		fadeTime = time;
+		fadePerSec = diff / time;
+	};
+
+	cc.audioEngine.fadeOut = function(time) {
+		this.fadeTo(time,0);
+	};
+
+	cc.audioEngine.fadeIn = function(time) {
+		this.fadeTo(time,1);
+	};
+
+	cc.audioEngine.addMusic = function(url, loop) {
+		musicToPlay.push({
+			url: url,
+			loop: loop
+		});
+	};
+
+	cc.audioEngine.stopAllMusic = function() {
+		cc.audioEngine.stopMusic();
+		musicToPlay = [];
+	};
+};
+_b_audio();
+
 
 
 

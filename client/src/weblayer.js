@@ -3,6 +3,7 @@
 // _B_SERVER_ADDRESS: websocket address of bee server
 // _B_RECONNECT_TIME: Seconds after a reconnected is tried, if there is no connection 
 //
+//var _B_SERVER_ADDRESS = "ws://192.168.43.126:4000/socket",
 var _B_SERVER_ADDRESS = "ws://192.168.178.41:4000/socket",
 //var _B_SERVER_ADDRESS = "ws://localhost:4000/socket",
 	_B_RECONNECT_TIME = 10;
@@ -37,6 +38,8 @@ var WebLayer = cc.Class.extend({
 	_playerlistCb: null,
 	_connectPlayerCb: null,
 	_updateGameCb: null,
+	_messageCbs: [],
+	_messageStorage: [],
 	
     ctor:function () {
     	var self = this;
@@ -70,40 +73,45 @@ var WebLayer = cc.Class.extend({
     },
 
     login: function() {
-    	this.sid = null;
+    	if( this.sid === null ) {
 
-    	this.playerId = cc.sys.localStorage.getItem('playerId');
-    	this.playerName = cc.sys.localStorage.getItem('playerName');
+			this.playerId = cc.sys.localStorage.getItem('playerId');
+			this.playerName = cc.sys.localStorage.getItem('playerName');
 		
-		if( !this.playerName ) {
-			n = cc.loader.getRes(res.names_json);
-			this.playerName = n[Math.trunc(Math.random()*n.length)].name;
-	    	cc.sys.localStorage.setItem('playerName',this.playerName);
-		}
+			if( !this.playerName ) {
+				n = cc.loader.getRes(res.names_json);
+				this.playerName = n[Math.trunc(Math.random()*n.length)].name;
+				cc.sys.localStorage.setItem('playerName',this.playerName);
+			}
 
-	    if( this.playerId ) {
-		    this.ws.send('{"command":"login", "playerId":"'+this.playerId+'", "playerName":"'+this.playerName+'"}');
-		    // the server reply is collected in OnMessage / case: "login"
+			if( this.playerId ) {
+				this.ws.send('{"command":"login", "playerId":"'+this.playerId+'", "playerName":"'+this.playerName+'"}');
+				// the server reply is collected in OnMessage / case: "login"
+			} else {
+				// if it is a browser, ask for magic spell, signup with this
+					// if there is no bee server reachable, game cannot start
+				this.ws.send('{"command":"signup"}');
+				// the server reply is collected in OnMessage / case: "signup"
+			}
 		} else {
-			// if it is a browser, ask for magic spell, signup with this
-				// if there is no bee server reachable, game cannot start
-		    this.ws.send('{"command":"signup"}');
-		    // the server reply is collected in OnMessage / case: "signup"
+			cc.log("Didn't login. You are already logged in.");
 		}
     },
     
     registerVariation: function( variation ) {
     	var self = this;
     	self.whenReady(function() {
+ 		   	cc.log("registerVariation: My sid is "+self.sid);
 	    	self.ws.send('{"command":"registerVariation", "sid":"'+self.sid+'", "variation":"'+variation+'"}');		
 	    });
     },
     
 	sendCommand: function(command) {
     	var self = this;
-		command["sid"] = self.sid
 		
     	self.whenReady(function() {
+			command["sid"] = self.sid
+ 		   	//cc.log("Sending "+JSON.stringify(command));
 	    	self.ws.send(JSON.stringify(command));		
 	    });
 	},
@@ -141,6 +149,49 @@ var WebLayer = cc.Class.extend({
 	    });		
 	},
  
+	sendMessage: function(data) {
+		var self = this;
+    	self.whenReady(function() {
+			cc.log("Send message: "+JSON.stringify(data));
+	    	self.ws.send('{"command":"sendMessage", "sid":"'+self.sid+'", "data":"'+JSON.stringifyWithEscapes(data)+'"}');		
+	    });
+	},
+
+	receiveMessage: function(message, cb) {
+		var self = this,
+			ms = self._messageStorage,
+			found = false;
+
+		for( var i=0 ; i<ms.length ; i++ ) {
+			if( ms[i].message === message ) {
+				found = true;
+				break;
+			}
+		}
+
+		if( found ) {
+			var msg = self._messageStorage.splice(i,1)[0];
+			cc.log("Receive message: Message was already waiting: "+JSON.stringify(msg));
+			cb(msg);
+		} else {
+			cc.log("Receive message: Storing message: '"+message+"'");
+			self._messageCbs.push({ message: message, cb: cb});
+		}
+	},
+
+	stopMessage: function(message) {
+		var ms = self._messageStorage,
+			mcb = self._messageCbs;
+
+		for( var i=0 ; i<ms.length ; i++ ) {
+			if( ms[i].message === message ) ms.splice(i,1);
+		}
+
+		for( var i=0 ; i<mcb.length ; i++ ) {
+			if( mcb[i].message === message ) mcb.splice(i,1);
+		}
+	},
+ 
     saveState: function(state) {
     	self = this;
     	self.whenReady(function() {
@@ -153,14 +204,14 @@ var WebLayer = cc.Class.extend({
     },
 
 	onMessage : function(evt) {
-		
+		var self = this;
 		try {
 			var data = JSON.parse(evt.data);
 		} catch (e) {
 			throw "load json [" + url + "] failed : " + e;
 		}
 
-		cc.log("Received JSON: " + JSON.stringify(data));
+		//cc.log("Received JSON: " + JSON.stringify(data));
 
 		ret = data.data.length && data.data[0] || {};
 		if( ret.error ) {
@@ -170,10 +221,12 @@ var WebLayer = cc.Class.extend({
 		switch( data.command ) {
 		case "login":
 			this.sid = ret.sid;
+			cc.log("Login: Setting sid to "+this.sid);
 			cc.assert(this.sid != null && typeof this.sid === "string","onmessage 'login': Received bad sid.");
 
 			// We are logged in, so we call the waiting commands
 			for( var i=0 ; i<this.sidCbs.length ; i++ ) {
+				cc.log("Login: Calling waiting message functions."+this.sid);
 				cc.assert(typeof this.sidCbs[i] === "function", "onmessage 'login': Bad sid callback.");
 				this.sidCbs[i]();
 			}
@@ -203,6 +256,28 @@ var WebLayer = cc.Class.extend({
 			cc.assert(self._connectPlayerCb != null, "No callback available for notification from server.");
 
 			self._updateGameCb(data.data);
+			break;			
+		case "message":	
+			try {
+				var data = JSON.parse(data.data[0].data),
+					mcb = self._messageCbs,
+					found = false;
+			} catch(e) {
+				cc.log("Couldn't parse JSON data: "+e.message);
+			}
+
+			cc.log("Received message: "+JSON.stringify(data)+"....."+JSON.stringify(mcb));
+			for( var i=0 ; i<mcb.length ; i++ ) {
+				if( mcb[i].message === data.message ) {
+					found = true;
+					break;
+				}
+			}
+			if( found ) {
+				self._messageCbs.splice(i,1)[0].cb(data);
+			} else {
+				self._messageStorage.push(data);
+			}
 			break;			
 		default:
 			if( data.data[0] && data.data[0].error ) {

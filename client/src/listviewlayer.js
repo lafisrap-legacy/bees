@@ -5,14 +5,14 @@
 
 // ListviewLayer Constants
 //
-// _B_MAX_LISTVIEW_ENTRIES: maximum number of menu entries (depends on available pngs)
-// _B_MAX_LISTVIEW_PADDING: standard padding of menu pngs
-// _B_LISTVIEW_Y_OFFSETS: modifications of standard padding
+// _B_MAX_LISTVIEW_ENTRIES: 
+// _B_MAX_LISTVIEW_PADDING:
+// _B_LISTVIEW_Y_OFFSETS: 
 //
-var _B_MAX_LISTVIEW_ENTRIES = 6,
-	_B_MAX_LISTVIEW_PADDING = -10,
-	_B_LISTVIEW_Y_OFFSETS = [-4, -5, 2, 4, 8, 15],
-	_B_BEESFONT_Y_OFFSET = -20;
+var _B_MAX_LISTVIEW_ENTRIES = 6, // maximum number of menu entries (depends on available pngs)
+	_B_MAX_LISTVIEW_PADDING = -10, //  standard padding of menu pngs
+	_B_LISTVIEW_Y_OFFSETS = [-4, -5, 2, 4, 8, 15], // modifications of standard padding
+	_B_BEESFONT_Y_OFFSET = -20; // y correction of beesfont (should be done in beest cf someday)
 	
 cc.assert(_B_LISTVIEW_Y_OFFSETS.length === _B_MAX_LISTVIEW_ENTRIES, "ListviewLayer: Array size of _B_MENU_Y_OFFSETS must match _B_MAX_MENU_ENTRIES.") 
 
@@ -52,21 +52,35 @@ var SelectPlayerLayer = cc.Layer.extend({
 	
 	// show displays bar and player list
 	//
-	// selectPlayerCb is called when a player pair is found or on abort
+	// Parameter:
+	//
 	// players is a list with the currently available players in current game variation
+	// selectPlayerCb is a callback that is called when a player pair is found or on abort
+	// updateGameCb is a callback over which the game communication will happen
 	//
 	show: function(players, selectPlayerCb, updateGameCb) {
 		var self = this;
 		
+		cc.log("SelectPlayerLayer show ..........");
+
+        //////////////////////////////
+        // Set the callback functions
 		this._selectPlayerCb = selectPlayerCb;
 		this._updateGameCb = updateGameCb;
 	    cc.assert( this._selectPlayerCb && typeof this._selectPlayerCb == "function", "this._selectPlayerCb should be a function.")
 	    cc.assert( this._updateGameCb && typeof this._updateGameCb == "function", "this._updateGameCb should be a function.")
 
+		cc.log("before init listeners ..........");
+
+        //////////////////////////////
+        // Start event handling
 	    this.initListeners();
+
+		cc.log("after init listeners ..........");
 		
+        //////////////////////////////
 		// Create, adjust and animate main bar
-		var bar = this._bar = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bar"),cc.rect(0,0,550,115));
+		var bar = this._bar = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("bar.png"),cc.rect(0,0,550,115));
 		bar.setPosition(cc.p(cc.width/2,cc.height+50));
 		bar.setScale(2);
 		bar.runAction(
@@ -77,13 +91,14 @@ var SelectPlayerLayer = cc.Layer.extend({
 				cc.scaleTo(0.33,1)
 			)
 		);
-		var bl = this._BarLabel = cc.LabelBMFont.create( _b_t.playerlist.noplayers , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
+		var bl = this._BarLabel = new cc.LabelBMFont( _b_t.playerlist.noplayers , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
 		bl.setPosition(cc.p(275,75+_B_BEESFONT_Y_OFFSET));
 		bar.addChild(bl, 5);	
         this.addChild(bar,0);
 		_b_retain(this._BarLabel,"SelectPlayerLayer, show, _BarLabel");
 		_b_retain(this._bar,"SelectPlayerLayer, show, _bar");
 		
+        //////////////////////////////
 		// Create menu items from object and animate them
 		this.drawListview(players);
 		var lv = this._listview;
@@ -170,7 +185,9 @@ var SelectPlayerLayer = cc.Layer.extend({
 			_b_release(self._BarLabel);
 			_b_release(self._bar);
 		}, 2000);
-		    	
+		
+		cc.audioEngine.fadeOut(2);
+    	
 	    this.stopListeners();	    
 
 		$b.sendCommand({command: "stopInvitations"}); 
@@ -228,20 +245,20 @@ var SelectPlayerLayer = cc.Layer.extend({
 
 		// set the bar label
     	if( players.length == 0 ) {
-    		this._BarLabel.setCString(_b_t.playerlist.noplayers);
+    		this._BarLabel.setString(_b_t.playerlist.noplayers);
     		return
     	} else {
-    		this._BarLabel.setCString(_b_t.playerlist.choose);
+    		this._BarLabel.setString(_b_t.playerlist.choose);
     	}
     	
     	// build up the players list
 		for( var i=0 ; i<Math.min(players.length, _B_MAX_LISTVIEW_ENTRIES) ; i++ ) {
-			var frame = cc.spriteFrameCache.getSpriteFrame("listviewitem"+(i+1)),
+			var frame = cc.spriteFrameCache.getSpriteFrame("listviewitem"+(i+1)+".png"),
 	    		spritesNormal = cc.Sprite.create(frame,cc.rect(0,0,380,100)),
 	    		spritesSelected =cc.Sprite.create(frame,cc.rect(0,0,380,100)),
 	    		spritesDisabled =cc.Sprite.create(frame,cc.rect(0,0,380,100));
 
-			var label = cc.LabelBMFont.create( players[i].name , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
+			var label = new cc.LabelBMFont( players[i].name , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
 			label.setPosition(cc.p(190,label.getContentSize().height+_B_BEESFONT_Y_OFFSET));
 			label.setColor(cc.color(200,130,140,255));
 			spritesNormal.addChild(label, 5);	
@@ -249,8 +266,8 @@ var SelectPlayerLayer = cc.Layer.extend({
 			//spritesSelected.addChild(label, 5);	
 			//spritesDisabled.addChild(label, 5);	
 			
-			var icon1 = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("invited"),cc.rect(0,0,64,64)),
-				icon2 = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("inviting"),cc.rect(0,0,64,64));
+			var icon1 = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("invited.png"),cc.rect(0,0,64,64)),
+				icon2 = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("inviting.png"),cc.rect(0,0,64,64));
 			icon1.setPosition(cc.p(50,50));
 			icon1.setScale(0.0)
 			icon2.setPosition(cc.p(330,50));

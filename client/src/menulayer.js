@@ -1,12 +1,8 @@
 // MenuLayer Constants
 //
-// _B_MAX_MENU_ENTRIES: maximum number of menu entries (depends on available pngs)
-// _B_MAX_MENU_PADDING: standard padding of menu pngs
-// _B_MENU_Y_OFFSETS: modifications of standard padding
-//
-var _B_MAX_MENU_ENTRIES = 6,
-	_B_MAX_MENU_PADDING = -10,
-	_B_MENU_Y_OFFSETS = [-4, -5, 2, 4, 8, 15];
+var _B_MAX_MENU_ENTRIES = 6,					// maximum number of menu entries (depends on available pngs)
+	_B_MAX_MENU_PADDING = -10,					// standard padding of menu pngs
+	_B_MENU_Y_OFFSETS = [-4, -5, 2, 4, 8, 15];	// modifications of standard padding
 	
 cc.assert(_B_MENU_Y_OFFSETS.length === _B_MAX_MENU_ENTRIES, "MenuLayer: Array size of _B_MENU_Y_OFFSETS must match _B_MAX_MENU_ENTRIES.") 
 
@@ -94,12 +90,12 @@ var MenuLayer = cc.Layer.extend({
 		// Create menu items from object
 		var items = [];
 		for( var i=0 ; i<Math.min(labelsAndCallbacks.length,_B_MAX_MENU_ENTRIES) ; i++ ) {
-			var frame = cc.spriteFrameCache.getSpriteFrame("item"+(i+1)),
+			var frame = cc.spriteFrameCache.getSpriteFrame("item"+(i+1)+".png"),
 	    		spritesNormal = cc.Sprite.create(frame,cc.rect(0,0,380,100)),
 	    		spritesSelected =cc.Sprite.create(frame,cc.rect(0,0,380,100)),
 	    		spritesDisabled =cc.Sprite.create(frame,cc.rect(0,0,380,100));
 
-			var label = cc.LabelBMFont.create( labelsAndCallbacks[i].label , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
+			var label = new cc.LabelBMFont( labelsAndCallbacks[i].label , "res/fonts/bees50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER, cc.p(0, 0) );
 			label.setPosition(cc.p(190,label.getContentSize().height-20));
 			label.setColor(cc.color(222,160,160));
 			spritesNormal.addChild(label, 5);	
@@ -131,7 +127,7 @@ var MenuLayer = cc.Layer.extend({
 		));
 
 		// Create, adjust and animate gate
-		this.gate = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("gate"),cc.rect(0,0,1136,640)),
+		this.gate = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("gate.png"),cc.rect(0,0,1136,640)),
 		this.gate.setPosition(cc.p(1136*1.5,370));
 		this.gate.setScale(1.15);
 		this.gate.runAction(cc.EaseSineOut.create(

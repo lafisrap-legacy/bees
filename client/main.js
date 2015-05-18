@@ -53,8 +53,10 @@ cc.game.onStart = function(){
     cc.view.setDesignResolutionSize(1136, 640, cc.ResolutionPolicy.SHOW_ALL);
     cc.view.resizeWithBrowserSize(true);
     //load resources
+	$b = new BeesScene()
+	_b_retain($b,"BeesScene, new BeesScene()");
+	
     cc.LoaderScene.preload(g_resources, function () {
-    	$b = new BeesScene()
         cc.director.runScene($b);
     }, this);
 };
