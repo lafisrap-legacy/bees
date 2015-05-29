@@ -66,9 +66,8 @@ var FairyLayer = cc.Layer.extend({
         // debug
                 
         this.scheduleUpdate();
-        
-		this.initListeners();
-        
+       	this.initListeners();
+
 		this.cp_addWorldObjects();
 	},
 	
@@ -166,6 +165,7 @@ var FairyLayer = cc.Layer.extend({
 		var self = this,
 			g = this._gestures[this._currentGesture];
 		
+		cc.log("Saying: '"+text+"' now!");
 		this._timeout = setTimeout(function() {
 
 			if(self._bubble) {
@@ -235,6 +235,7 @@ var FairyLayer = cc.Layer.extend({
 	
 		this._touchListener = cc.EventListener.create({
 			event: cc.EventListener.TOUCH_ALL_AT_ONCE,
+			swallowTouches: true,
 			onTouchesBegan: function(touches, event) {
 				var touch = touches[0],
 					loc = touch.getLocation(),
@@ -264,9 +265,11 @@ var FairyLayer = cc.Layer.extend({
 						};
 						 o._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
 						//cc.log("FairyLayer: Start dragging bomb "+i+". offset.x:"+offset.x+", offset.y:"+offset.y);
-						break;
+						return true; // swallow touches (don't let other listeners get the event)
 					}					
 				}
+
+				return false;
 			},
 			onTouchesMoved: function(touches, event) {
 				var touch = touches[0],
@@ -310,6 +313,7 @@ var FairyLayer = cc.Layer.extend({
 	// stopListeners stops the event handling
 	stopListeners: function() {
         if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
+		this._touchListener = null;
         cc.log("FairyLayer: Stop listening!");
     },    
     

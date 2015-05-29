@@ -175,7 +175,6 @@ var WordBattleLayer = cc.Layer.extend({
         s1.addChild(drawNode,20);*/
         
 		this._mode = _B_MODE_TITLE;	
-		//this.initListeners();
 		
 		this._fairy = new GameFairy();
         this.addChild(this._fairy,10);
@@ -424,40 +423,42 @@ var WordBattleLayer = cc.Layer.extend({
 		}
 
 		var afterTyping = function(ship, word) {
-				typewriter.exit();
-				typewriter = null;
-/*
-				if( word == "" ) {
-					typewriter = new TypeWriter(fairy, cc.p(60,500), self._otherSea, afterTyping);
-					return;
-				}
-*/
-				if(ship.getWord().toLowerCase() === word.toLowerCase()) {
-					ship.setFullDamage();
-					cc.audioEngine.playMusic(gRes.textright_mp3,false);
-					fairy.show(6);
-					fairy.say(0, 2, _b_t.fairies.word_won);
-					setTimeout(function() {
-						fairy.hide();
-					}, 2500)
+		    if( word == "" ) {
+				typewriter = new TypeWriter(fairy, cc.p(60,500), self._otherSea, afterTyping);
+				return;
+			}
+
+			// get rid of type writer
+			typewriter.exit();
+			typewriter = null;
+
+			cc.log("Check if word is correct ...");
+			// check if word is correct
+			if(ship.getWord().toLowerCase() === word.toLowerCase()) {
+			    cc.log("Word is correct.");
+				ship.setFullDamage();
+				cc.audioEngine.playMusic(gRes.textright_mp3,false);
+				fairy.show(6);
+				fairy.say(0, 2, _b_t.fairies.word_won);
+				setTimeout(function() {
+					fairy.hide();
+				}, 2500)
 					
-				} else {
-					// word wrong: let all bombs explode
-					cc.audioEngine.playMusic(gRes.textwrong_mp3,false);
-					fairy.eachObject(function(i, obj) { 
-						if( obj.resumeTimer ) {
-							obj.resumeTimer();
-							obj.setTimer(0);
-						}
-					});
-					fairy.show(6);
-					fairy.say(0, 2, _b_t.fairies.word_lost);
-					setTimeout(function() {
-						fairy.hide();
-					}, 2500)
-				}
-			},
-			typewriter = new TypeWriter(fairy, cc.p(60,500), self._otherSea, afterTyping);
+			} else {
+			    cc.log("Word is not correct. Right would be: "+ship.getWord());
+				// word wrong: let all bombs explode
+				cc.audioEngine.playMusic(gRes.textwrong_mp3,false);
+				fairy.eachObject(function(i, obj) { 
+					obj.setTimer(0);
+				});
+				fairy.show(6);
+				fairy.say(0, 2, _b_t.fairies.word_lost);
+				setTimeout(function() {
+					fairy.hide();
+				}, 2500)
+			}
+		},
+		typewriter = new TypeWriter(fairy, cc.p(60,500), self._otherSea, afterTyping);
 
 		fairy.addObject(typewriter);
 
@@ -632,6 +633,7 @@ var WordBattleLayer = cc.Layer.extend({
 	
 		this._touchListener = cc.EventListener.create({
 			event: cc.EventListener.TOUCH_ALL_AT_ONCE,
+			swallowTouches: true,
 			onTouchesBegan: function(touches, event) {
 				var touch = touches[0],
 				start = touch.getLocation();
@@ -652,11 +654,12 @@ var WordBattleLayer = cc.Layer.extend({
 								x: start.x - pos.x,
 								y: start.y - pos.y
 							};
-							cc.log("Found it on position "+JSON.stringify(draggedShip._coords));
-							return
+							return true;
 						} 
 					}		
 				}
+
+				return false;
 			},
 			onTouchesMoved: function(touches, event) {
 				var touch = touches[0],
@@ -1433,6 +1436,7 @@ var Bomb = cc.PhysicsSprite.extend({
 		var self = this,
 			parent = this.getParent();	
 
+		// if not over a sea or not attached to one, leave ...
 		if( !this._imIn || !parent ) {
 			if( typeof cb === "function" ) cb();
 			return;
@@ -1520,6 +1524,9 @@ var Bomb = cc.PhysicsSprite.extend({
 		
 		if( this._shape ) this._space.removeShape(this._shape);
 		if( this._bomb ) this._space.removeBody(this._bomb);
+		this.unscheduleUpdate();
+		_b_release(this._label);	
+		_b_release(this._crosshair);	
 		this.getParent().removeObject(this);
 		this._timer = null;
 	}	
@@ -1713,7 +1720,7 @@ var TypeWriter = cc.PhysicsSprite.extend({
 		if( letter ) {
 			var	sea = this._sea,
 				word = ship.getWord(),
-				layer = this.getParent(), 
+				layer = this.getParent(),
 				input = new TextInputLayer(10, function(text) {
 					if( input ) { // this is a work around, as this callback gets called after input is set to null within this callback
 						self._crossHairStatic = false;
@@ -1722,7 +1729,7 @@ var TypeWriter = cc.PhysicsSprite.extend({
 						self.getCrosshair().runAction(cc.fadeOut(0.22));
 						self.runAction(cc.fadeIn(0.22));
 
-						self.getParent().removeChild(input);
+						layer.removeChild(input);
 						_b_release(input);
 						input = null;
 
@@ -1730,15 +1737,16 @@ var TypeWriter = cc.PhysicsSprite.extend({
 							if( obj.resumeTimer ) obj.resumeTimer();
 						});
 
-						if( typeof self._finalCallback === "function" ) self._finalCallback(ship, text);
+						layer.initListeners();
 
 						cc.log("We have a text: "+text);
+						if( typeof self._finalCallback === "function" ) self._finalCallback(ship, text);
 					}
 				});
 
 			this._crossHairStatic = true;
 
-			this.getParent().addChild(input,20);
+			layer.addChild(input,20);
 			_b_retain(input, "Input field");
 
 			cc.assert(layer.eachObject, "Parent layer must have a object management (fairyLayer does).");
@@ -1746,6 +1754,8 @@ var TypeWriter = cc.PhysicsSprite.extend({
 			layer.eachObject(function(i, obj) { 
 				if( obj.pauseTimer ) obj.pauseTimer();
 			});
+
+			layer.stopListeners();	
 		} else {
 			this._imIn = false;
 			this._imAboveALetter = false;
@@ -1779,6 +1789,8 @@ var TypeWriter = cc.PhysicsSprite.extend({
 
 		if( shape ) this._space.removeShape(shape);
 		if( body ) this._space.removeBody(body);
+		_b_release(this._crosshair);
+		cc.log("TypeWriter.exit: removing Object...");
 		this.getParent().removeObject(this);
 	}	
 });

@@ -9,28 +9,44 @@ var _b_textInputGetRect = function(node) {
 
 var TextInputLayer = cc.Layer.extend({
 	_textField: null,
-    _beginPos:null,
+    _beginPos: null,
 	_charLimit: 10,
 	_finalCallback: null,
 
     ctor:function (size, cb) {
         this._super();
-/*
-        if( 'touches' in cc.sys.capabilities ) {
-            cc.eventManager.addListener({
-                event: cc.EventListener.TOUCH_ALL_AT_ONCE,
-                onTouchesEnded: this.onTouchesEnded
-            }, this);
-        } else if ('mouse' in cc.sys.capabilities ) {
-            cc.eventManager.addListener({
-                event: cc.EventListener.MOUSE,
-                onMouseUp: this.onMouseUp
-            }, this);
-		}
-*/
+
+        this._touchListener = cc.EventListener.create({
+			event: cc.EventListener.TOUCH_ALL_AT_ONCE,
+			onTouchesBegan: function(touches, event) {},
+			onTouchesMoved: function(touches, event) {},
+			onTouchesEnded: function(touches, event) {
+
+				cc.log("OnTouchesEnded: Entering ...");
+				var target = event.getCurrentTarget();
+				if (!target._textField)
+					return;
+
+				// grab first touch
+				if(touches.length == 0)
+					return;
+
+				var touch = touches[0];
+				var point = touch.getLocation();
+
+				var rect = _b_textInputGetRect(target._textField);
+
+				target.onClickTrackNode(cc.rectContainsPoint(rect, point));
+			}
+		});
+
+		cc.eventManager.addListener(this._touchListener, this);
+
 		if( size ) this._charLimit = size;
 		if( cb ) this._finalCallback = cb;
 	    cc.spriteFrameCache.addSpriteFrames(res.textinput_plist);
+
+		cc.log("TextInputLayer: ctor finished.");
     },
 
     onEnter: function() {
@@ -41,12 +57,14 @@ var TextInputLayer = cc.Layer.extend({
 		this.addChild(textBackground);
 
         // add CCTextFieldTTF
-        var textField = this._textField = new cc.TextFieldTTF(_b_t.textinput.click_here,_b_getFontName(res.indieflower_ttf), 100);
+        var textField = this._textField = new cc.TextFieldTTF(_b_t.textinput.insert_text,_b_getFontName(res.indieflower_ttf), 100);
         this.addChild(textField,1);
 		_b_retain(textField, "Text field of text input layer");
 		textField.setPosition(cc.p(600, 455));
 		textField.setTextColor(cc.color(64,0,0));
 		textField.setDelegate(this);
+
+		cc.log("onEnter: TextField created with "+_b_t.textinput.insert_text+".");
 
         this._textFieldAction = cc.sequence(
             cc.fadeOut(0.25),
@@ -55,17 +73,21 @@ var TextInputLayer = cc.Layer.extend({
         this._action = false;
 
 		textField.attachWithIME();
+
 		cc.audioEngine.setMusicVolume(0.5);
 		cc.audioEngine.playMusic(res.texttyping_mp3,true);
+
+		cc.log("TextInputLayer: onEnter finished.");
     },
 
 	onExit: function() {
 		this._super();
 
-		//this._textField.removeDelegate();
+		this._textField.removeDelegate();
 		this.removeAllChildren();
 		_b_release(this._textField);
 		cc.eventManager.removeListeners(this);
+		cc.log("TextInputLayer: onExit finished.");
 	},
 
     onClickTrackNode: function(clicked) {
@@ -73,10 +95,11 @@ var TextInputLayer = cc.Layer.extend({
         if (clicked) {
             // TextFieldTTFTest be clicked
             cc.log("TextFieldTTFDefaultTest:CCTextFieldTTF attachWithIME");
-            textField.attachWithIME();
+			//if( !textField._delegateWithIme ) textField.attachWithIME();
         } else {
             // TextFieldTTFTest not be clicked
             cc.log("TextFieldTTFDefaultTest:CCTextFieldTTF detachWithIME");
+			textField.setString("");
             textField.detachWithIME();
         }
     },
@@ -109,6 +132,7 @@ var TextInputLayer = cc.Layer.extend({
     },
 
     onTouchesEnded:function (touches, event) {
+        cc.log("OnTouchesEnded: Entering ...");
         var target = event.getCurrentTarget();
         if (!target._textField)
             return;
@@ -121,10 +145,10 @@ var TextInputLayer = cc.Layer.extend({
         var point = touch.getLocation();
 
         // decide the trackNode is clicked.
-        cc.log("KeyboardNotificationLayer:clickedAt(" + point.x + "," + point.y + ")");
+        cc.log("OnTouchesEnded:clickedAt(" + point.x + "," + point.y + ")");
 
         var rect = _b_textInputGetRect(target._textField);
-        cc.log("KeyboardNotificationLayer:TrackNode at(origin:" + rect.x + "," + rect.y
+        cc.log("onTouchesEnded:TrackNode at(origin:" + rect.x + "," + rect.y
             + ", size:" + rect.width + "," + rect.height + ")");
 
         target.onClickTrackNode(cc.rectContainsPoint(rect, point));
@@ -139,10 +163,10 @@ var TextInputLayer = cc.Layer.extend({
         var point = event.getLocation();
 
         // decide the trackNode is clicked.
-        cc.log("KeyboardNotificationLayer:clickedAt(" + point.x + "," + point.y + ")");
+        cc.log("onMouseUp:clickedAt(" + point.x + "," + point.y + ")");
 
         var rect = _b_textInputGetRect(target._textField);
-        cc.log("KeyboardNotificationLayer:TrackNode at(origin:" + rect.x + "," + rect.y
+        cc.log("onMouseUp:TrackNode at(origin:" + rect.x + "," + rect.y
             + ", size:" + rect.width + "," + rect.height + ")");
 
         target.onClickTrackNode(cc.rectContainsPoint(rect, point));
@@ -151,6 +175,7 @@ var TextInputLayer = cc.Layer.extend({
 
 
     onTextFieldAttachWithIME:function (sender) {
+		cc.log("onTextFieldAttachWithIME, in!");
         if (!this._action) {
             this._textField.runAction(this._textFieldAction);
             this._action = true;
@@ -160,6 +185,8 @@ var TextInputLayer = cc.Layer.extend({
 
 
     onTextFieldDetachWithIME:function (sender) {
+		cc.log("onTextFieldDetachWithIME, out!");
+		// this function is called also after attach ... test by clicking into text field ...
         if (this._action) {
             this._textField.stopAction(this._textFieldAction);
             this._textField.opacity = 255;
@@ -171,7 +198,17 @@ var TextInputLayer = cc.Layer.extend({
 	},
 
 
+	didAttachWithIME: function() {
+		cc.log("didAttachWithIME!!");
+	},
+
+	didDetachWithIME: function() {
+		cc.log("didDetachWithIME!!");
+	},
+
+
     onTextFieldInsertText: function(sender, text, len) {
+		cc.log("onTextFieldInsertText: in!");
         // if insert enter, treat as default to detach with ime
         if('\n' == text) {
             return false;
