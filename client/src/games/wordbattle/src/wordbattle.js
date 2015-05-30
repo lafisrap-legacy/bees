@@ -60,10 +60,6 @@ var WordBattleLayer = cc.Layer.extend({
 	_bigShipMoving: false,
 	_bigShipQueue: [],
 	
-	// event callbacks
-	_onShipMovementCb: null,  // called if a ship is dragged or turned
-
-	
     ctor:function () {
     	var self = this;
     
@@ -412,7 +408,7 @@ var WordBattleLayer = cc.Layer.extend({
 
 		// start always with three bombs and one typewriter
 		for( var i=0 ; i<3 ; i++ ) {	
-			self._bombs[i] = new Bomb(fairy, cc.p(100+80*i,500+(i%2)*100),self._otherSea, function(pos) {
+			self._bombs[i] = new Bomb(fairy, cc.p(-90+90*i,300+(i%2)*100),self._otherSea, function(pos) {
 				if( typewriter ) {
 					typewriter.exit();
 					typewriter = null;
@@ -459,7 +455,7 @@ var WordBattleLayer = cc.Layer.extend({
 				}, 2500)
 			}
 		},
-		typewriter = new TypeWriter(fairy, cc.p(60,500), self._otherSea, afterTyping);
+		typewriter = new TypeWriter(fairy, cc.p(0,700), self._otherSea, afterTyping);
 
 		fairy.addObject(typewriter);
 
@@ -1454,7 +1450,7 @@ var Bomb = cc.PhysicsSprite.extend({
 			flyingBomb.land(cc.p(dpos.x, dpos.y+_B_CROSSHAIR_Y_OFFSET), function(hit) {
 				if( self.getParent() ) {
 					if(hit) {	
-						var bomb = new Bomb(parent, cc.p(180,600),self._sea);
+						var bomb = new Bomb(parent, cc.p(-90,300),self._sea);
 						bomb.getBody().applyImpulse(cp.v(30,100),cp.v(300,0));
 						bomb.setTimer(self.getTimer());
 						parent.addObject(bomb);

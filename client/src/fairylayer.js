@@ -321,29 +321,29 @@ var FairyLayer = cc.Layer.extend({
 	cp_addWorldObjects: function() {
         var self = this,
 			space = this._space;
-        var floorLeft = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(0, 40), cp.v(668, 0), 0));
-        floorLeft.setElasticity(0.2);
-        floorLeft.setFriction(0.2);
-        floorLeft.setLayers(_B_NOT_GRABABLE_MASK);
-		floorLeft.setCollisionType(1);
-        
-        var floorRight = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(668, 0), cp.v(1136, 0), 0));        
-        floorRight.setFriction(0.1);
-        floorRight.setElasticity(0.2);
-        floorRight.setLayers(_B_NOT_GRABABLE_MASK);
-		floorRight.setCollisionType(1);
-        
-		var stopperLeft = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(0, 0), cp.v(0, 640), 0));        
-        stopperLeft.setFriction(0.1);
-        stopperLeft.setElasticity(0.2);
-        stopperLeft.setLayers(_B_NOT_GRABABLE_MASK);
-		stopperLeft.setCollisionType(1);
 
-        var stopperRight = space.addShape(new cp.SegmentShape(space.staticBody, cp.v(1136, 0), cp.v(1136, 640), 0));        
-        stopperRight.setFriction(0.1);
-        stopperRight.setElasticity(0.2);
-        stopperRight.setLayers(_B_NOT_GRABABLE_MASK);
-		stopperRight.setCollisionType(_B_COLL_TYPE_STATIC);
+		var addwo = function(from, to) {
+		    var obj = space.addShape(new cp.SegmentShape(space.staticBody, from, to, 0));
+		    obj.setElasticity(0.1);
+		    obj.setFriction(0.2);
+		    obj.setLayers(_B_NOT_GRABABLE_MASK);
+		    obj.setCollisionType(1);
+		}
+
+		// canon line
+		addwo(cp.v(-100, 200), cp.v(300, 0));
+
+		// floor left
+		addwo(cp.v(0, 40), cp.v(668, 0));
+
+		// floor right
+		addwo(cp.v(668, 0), cp.v(1136, 0));
+
+		// stopper left 
+		addwo(cp.v(-100, 0), cp.v(-100, 10000));
+
+		// stopper right 
+		addwo(cp.v(1136, 0), cp.v(1136, 10000));
 
 		space.addCollisionHandler(_B_COLL_TYPE_OBJECT,_B_COLL_TYPE_OBJECT,function(arb, space, data) {
 			if( self._draggedObject ) {
