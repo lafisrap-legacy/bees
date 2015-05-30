@@ -424,7 +424,6 @@ var WordBattleLayer = cc.Layer.extend({
 
 		var afterTyping = function(ship, word) {
 		    if( word == "" ) {
-				typewriter = new TypeWriter(fairy, cc.p(60,500), self._otherSea, afterTyping);
 				return;
 			}
 
