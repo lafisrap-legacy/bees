@@ -452,7 +452,9 @@ var WordBattleLayer = cc.Layer.extend({
 				});
 				fairy.show(6);
 				fairy.say(0, 2, _b_t.fairies.word_lost);
+				_b_pause(); // wait with execution of next event until _b_resume() is called
 				setTimeout(function() {
+					_b_resume();
 					fairy.hide();
 				}, 2500)
 			}

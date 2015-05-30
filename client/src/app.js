@@ -260,7 +260,8 @@ var _b_recall = function() {
 }
 var _b_remember = _b_recall();
 
-var _b_in_seconds = /^in_([\d\.]+)_seconds$/;
+var _b_in_seconds = /^in_([\d\.]+)_seconds$/,
+	_b_waitingEvents = null;
 
 var _b_one = function(events, cb) {
 	_b_on(events, cb, true);
@@ -293,7 +294,14 @@ var _b_on = function(events, cb, justOne) {
 		
 		listeners.push(cc.eventManager.addCustomListener(event, function(event) {
 			if( justOne ) for( var i=0 ; i<listeners.length ; i++ ) cc.eventManager.removeListener(listeners[i]);
-			cb(event);
+			if( _b_waitingEvents ) {
+				_b_waitingEvents.push({
+					func: cb,
+					event: event
+				});
+			} else {
+			    cb(event);
+			}
 		}));
 	}
 	
@@ -310,7 +318,22 @@ var _b_clear = function(events) {
 	if( typeof events === "string" ) events = [events];
 
 	for( var i=0 ; i<events.length ; i++ ) cc.eventManager.removeCustomListeners(events[i]);
-}
+};
+
+var _b_pause = function() {
+	_b_waitingEvents = [];
+};
+
+var _b_resume = function() {
+	var we = _b_waitingEvents;
+
+	if( !we ) return;
+
+	for( var i=0 ; i<we.length ; i++ ) {
+		we[i].func(we[i].event);
+	}
+	_b_waitingEvents = null;
+}	
 
 // audio enhancements
 var _b_audio = function() {
