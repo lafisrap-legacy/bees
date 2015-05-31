@@ -95,6 +95,19 @@
                 <key>sourceSize</key>
                 <string>{260,284}</string>
             </dict>
+            <key>check.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{1140,564},{52,52}}</string>
+                <key>offset</key>
+                <string>{0,1}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{2,1},{52,52}}</string>
+                <key>sourceSize</key>
+                <string>{56,56}</string>
+            </dict>
             <key>crosshair.png</key>
             <dict>
                 <key>frame</key>
@@ -287,7 +300,7 @@
             <key>size</key>
             <string>{1988,996}</string>
             <key>smartupdate</key>
-            <string>$TexturePacker:SmartUpdate:605c098c9453ec3338d0739f29f69a8f:f267934f96df98dd7124efec7f1a483f:7becf5da526d24a235d4fba256143341$</string>
+            <string>$TexturePacker:SmartUpdate:f3fe4fba057be03d32aba7bccbe0e5da:d84c4062d3bdace504d55c6e33090998:7becf5da526d24a235d4fba256143341$</string>
             <key>textureFileName</key>
             <string>wordbattle.png</string>
         </dict>

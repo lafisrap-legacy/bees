@@ -1,7 +1,17 @@
 # To Do
 
 ## Next
-* 
+* Leave a trace at sunk ships, and at already hit places
+* make borders thick
+* Lets hit parts only turn 90 degrees
+* Turn all hit parts black
+* set in new font from Dieter
+* Let a red ship go from left to right
+* find a solution for the hourglass
+* say some more results
+* work on text timing
+* set in fire, smoke and water effects
+* Input name, boy/girl
 
 ## Later
 * Auto-Logout
@@ -11,24 +21,16 @@
 	* Register computer player
 	* Modify connectPlayer to support it
 	* Modify sendUpdate to support it
-* Badges
-	* Longest ship
-	* 7 Hits in one move
-	* 
 * Internet/No Internet
 	* Test different scenarios
 	* Reconnecting games
 	* "Player lost ..."
 	* Server is started while clients are running, how do they 
 	* Display a connection sign
-recover?
+	* recover?
 * Invite multiple players
 * nmp for jsfmt (jslint?)
 * Choose player on web (add local password)
-* Testing Spine: Yaylas Wiese animation
-* Input name, boy/girl
-* Utilities
-	* Read md-texts into database (paragraphs, w/ image urls) Update or 
 
 
 ## rebuild 

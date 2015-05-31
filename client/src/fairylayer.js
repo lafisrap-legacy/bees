@@ -165,7 +165,6 @@ var FairyLayer = cc.Layer.extend({
 		var self = this,
 			g = this._gestures[this._currentGesture];
 		
-		cc.log("Saying: '"+text+"' now!");
 		this._timeout = setTimeout(function() {
 
 			if(self._bubble) {
@@ -340,10 +339,10 @@ var FairyLayer = cc.Layer.extend({
 		addwo(cp.v(668, 0), cp.v(1136, 0));
 
 		// stopper left 
-		addwo(cp.v(-100, 0), cp.v(-100, 10000));
+		addwo(cp.v(-100, 0), cp.v(-100, 2000));
 
 		// stopper right 
-		addwo(cp.v(1136, 0), cp.v(1136, 10000));
+		addwo(cp.v(1136, 0), cp.v(1136, 2000));
 
 		space.addCollisionHandler(_B_COLL_TYPE_OBJECT,_B_COLL_TYPE_OBJECT,function(arb, space, data) {
 			if( self._draggedObject ) {

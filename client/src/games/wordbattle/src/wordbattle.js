@@ -287,29 +287,28 @@ var WordBattleLayer = cc.Layer.extend({
 		for( var i=0; i<own.children.length ; i++ ) {
 			var ship = own.children[i];
 	
-			ship.setOpacity(0);
-			ship.setRotation(ship.getRotation()+180);
-			ship.setScale(0.6);
-			ship.runAction(
-				cc.sequence(
-					cc.EaseSineOut.create(
-						cc.spawn(
-							cc.scaleTo(1.4,0.5),
-							cc.rotateBy(1.4,180),
-							cc.fadeIn(1.4)
-						)
-					)
-				)
-			);
+			if( ship._isShip ) {
+			    ship.setOpacity(0);
+			    ship.setRotation(ship.getRotation()+180);
+			    ship.setScale(0.6);
+			    ship.runAction(
+				    cc.sequence(
+					    cc.EaseSineOut.create(
+						    cc.spawn(
+							    cc.scaleTo(1.4,0.5),
+							    cc.rotateBy(1.4,180),
+							    cc.fadeIn(1.4)
+						    )
+					    )
+				    )
+			    );
+			}
 		}		
 	
 		self.letShipsBeMoved();
 	
 		var fairy = self._fairy;
 	
-		// set the right rects, after first they were set while the ships were moving (yes, that's a hack ...)
-		//for( var i=0; i<own.children.length ; i++ ) own.children[i].setRCPosition();	
-				
 		fairy.show(0);
 		fairy.say(_b_remember("fairies.move_ships")?10:2, 5, _b_t.fairies.move_ships);
 		_b_one(["in_20_seconds"], function(data) {
@@ -337,8 +336,8 @@ var WordBattleLayer = cc.Layer.extend({
 		var own = this._ownSea,
 			other = this._otherSea;
 
-		for( var i=0 ; i<own.children.length ; i++ ) _b_release(own.chldren[i]);
-		for( var i=0 ; i<other.children.length ; i++ ) _b_release(other.chldren[i]);
+		for( var i=0 ; i<own.children.length ; i++ ) if( own.children[i]._isShip ) _b_release(own.children[i]);
+		for( var i=0 ; i<other.children.length ; i++ ) if( own.children[i]._isShip )_b_release(other.children[i]);
 
 		own.removeAllChildren();
 		other.removeAllChildren();
@@ -360,7 +359,7 @@ var WordBattleLayer = cc.Layer.extend({
 			for( var i=0 ; i<own.children.length ; i++ ) {
 				var tile = own.children[i];
 			
-				if( tile._isTile ) {
+				if( tile._isShip ) {
 					tiles.push({
 						word: tile.getWord(),
 						coords: tile.getRCPosition(),
@@ -455,9 +454,12 @@ var WordBattleLayer = cc.Layer.extend({
 				}, 2500)
 			}
 		},
-		typewriter = new TypeWriter(fairy, cc.p(0,700), self._otherSea, afterTyping);
+		typewriter;
 
-		fairy.addObject(typewriter);
+		setTimeout(function() {
+		    typewriter = new TypeWriter(fairy, cc.p(-50,450), self._otherSea, afterTyping);
+		    fairy.addObject(typewriter);
+		}, 1000);
 
 		var canon = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("canon.png"),cc.rect(0,0,260,284)),
 			canonAction = cc.EaseSineOut.create(cc.moveTo(1.66, _B_CANON_POS));
@@ -523,7 +525,8 @@ var WordBattleLayer = cc.Layer.extend({
 								var i=0,
 									shipSunk = false,
 									interval = setInterval(function() {
-										if( ships[i]._isTile ) shipSunk = ships[i].progressDamage()? true: shipSunk;
+										while( i < ships.length && !ships[i]._isShip ) i++; 
+										if( i < ships.length ) shipSunk = ships[i].progressDamage()? true: shipSunk;
 										if( ++i >= ships.length ) {
 											clearInterval(interval);
 											if( dispatchEvent ) {
@@ -641,6 +644,8 @@ var WordBattleLayer = cc.Layer.extend({
 					cc.log("Looking for ship to drag or turn ...");
 					var ships = self._ownSea.getChildren();
 					for( var i=0 ; i<ships.length ; i++ ) {
+						if( !ships[i]._isShip ) continue;
+
 						var rect = ships[i].getRect && ships[i].getRect() || cc.rect(0,0,0,0),
 							pos = ships[i].getPosition(),
 							tp = cc.p(start.x - rect.x, start.y - rect.y);
@@ -777,7 +782,7 @@ var Battleship = cc.Node.extend({
 	_rect: null,
 	_rotation: 0, // 0 or 90
 	_coords: null,
-	_isTile: true,
+	_isShip: true,
 	
 	ctor: function(word, hidden) {
 	
@@ -1565,7 +1570,8 @@ var FlyingBomb = cc.Sprite.extend({
 
 	land: function(pos, cb) {
 		var self = this,
-			seaRect = this._sea.getBoundingBox(),
+			sea = this._sea,
+			seaRect = sea.getBoundingBox(),
 			xStart = seaRect.x + this._incoming?seaRect.width:0,
 			distance = Math.abs(pos.x - xStart);
 
@@ -1589,6 +1595,23 @@ var FlyingBomb = cc.Sprite.extend({
 						hit = false;
 					for( var i=0 ; i<ships.length ; i++ ) {
 						if( ships[i].dropBomb ) if( hit = ships[i].dropBomb(pos) ) break;
+					}
+					
+					if( !hit && !self._incoming ) {
+						var checkX = Math.floor((pos.x - seaRect.x)/_B_SQUARE_SIZE)*_B_SQUARE_SIZE+_B_SQUARE_SIZE/2,
+							checkY = Math.floor((pos.y - seaRect.y)/_B_SQUARE_SIZE)*_B_SQUARE_SIZE+_B_SQUARE_SIZE/2,
+							check = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("check.png"),cc.rect(0,0,_B_SQUARE_SIZE,_B_SQUARE_SIZE));
+						check.setPosition(cc.p(checkX, checkY));
+						check.setScale(0);
+						sea.addChild(check,10);
+						_b_retain(check,"Sea: Check field");	
+
+						check.runAction(
+							cc.spawn(
+								cc.scaleTo(0.33,1,1),
+								cc.fadeTo(0.33,100)
+							)
+						);
 					}
 					
 					if( hit ) cc.audioEngine.playEffect(gRes.bomb_on_ship_mp3);
@@ -1675,7 +1698,7 @@ var TypeWriter = cc.PhysicsSprite.extend({
 
 				var ships = this._sea.getChildren(),
 					letter = null;
-				for( var i=0 ; i<ships.length ; i++ ) if( letter = ships[i].getLetterAtPosition({x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET}) ) break;
+				for( var i=0 ; i<ships.length ; i++ ) if( ships[i].getLetterAtPosition && (letter = ships[i].getLetterAtPosition({x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET})) ) break;
 				if( letter && !this._imAboveALetter ) {
 					this.runAction(cc.fadeTo(0.22,100));
 					this._imAboveALetter = true;
