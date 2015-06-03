@@ -68,7 +68,7 @@ var FairyLayer = cc.Layer.extend({
         this.scheduleUpdate();
        	this.initListeners();
 
-		this.cp_addWorldObjects();
+		this.addWorldObjects();
 	},
 	
 	onExit: function() {
@@ -317,16 +317,16 @@ var FairyLayer = cc.Layer.extend({
     },    
     
     // chipmonk addons
-	cp_addWorldObjects: function() {
+	addWorldObjects: function() {
         var self = this,
 			space = this._space;
 
-		var addwo = function(from, to) {
-		    var obj = space.addShape(new cp.SegmentShape(space.staticBody, from, to, 0));
+		var addwo = function(from, to, thinkness) {
+		    var obj = space.addShape(new cp.SegmentShape(space.staticBody, from, to, thinkness || 0));
 		    obj.setElasticity(0.1);
 		    obj.setFriction(0.2);
 		    obj.setLayers(_B_NOT_GRABABLE_MASK);
-		    obj.setCollisionType(1);
+		    obj.setCollisionType(_B_COLL_TYPE_STATIC);
 		}
 
 		// canon line
@@ -339,10 +339,10 @@ var FairyLayer = cc.Layer.extend({
 		addwo(cp.v(668, 0), cp.v(1136, 0));
 
 		// stopper left 
-		addwo(cp.v(-100, 0), cp.v(-100, 2000));
+		addwo(cp.v(-100, 0), cp.v(-150, 2000), 100);
 
 		// stopper right 
-		addwo(cp.v(1136, 0), cp.v(1136, 2000));
+		addwo(cp.v(1136, 0), cp.v(1136+50, 2000), 100);
 
 		space.addCollisionHandler(_B_COLL_TYPE_OBJECT,_B_COLL_TYPE_OBJECT,function(arb, space, data) {
 			if( self._draggedObject ) {

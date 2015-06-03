@@ -1,12 +1,11 @@
 # To Do
 
 ## Next
-* Leave a trace at sunk ships, and at already hit places
-* make borders thick
-* Lets hit parts only turn 90 degrees
-* Turn all hit parts black
+* let the cross hair shrink longer
+* let the middle bomb come in more randomly
+* set word on ship after big ship left
+
 * set in new font from Dieter
-* Let a red ship go from left to right
 * find a solution for the hourglass
 * say some more results
 * work on text timing
