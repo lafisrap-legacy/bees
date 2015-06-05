@@ -17,11 +17,12 @@ var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_MODE_MOVING = 2,
 	_B_MODE_BOMBING = 3,
 	_B_MODE_WATCHING = 4,
+	_B_NEXT_BIG_SHIP = 1,
+	_B_BIG_SHIP_LEFT = 2,
 
 // Regular Expressions
 //
-_b_plainWords = /\b[\wäöüÄÖÜß]{2,}/g;
-_b_WordsWithPunctuation = /\s*„?\b[\wäöüÄÖÜß]{2,}[^\wäöüÄÖÜß\„]*/g;  // currently only German umlauts
+_b_selectedWords = /\{([\wäöüÄÖÜß]{2,})\}/g;
 
 // WordBattleLayer is the main layer for the word battle game
 //
@@ -37,8 +38,6 @@ _b_WordsWithPunctuation = /\s*„?\b[\wäöüÄÖÜß]{2,}[^\wäöüÄÖÜß\„
 // _otherSea is a array containing ships and status of the opponent
 // _text is the full text of the fairytale
 // _sphinx are the sphinx questions
-// _pureWords is an array with all words of the current paragraph/episode without punctuation
-// _fullWords is an array with all words of the current paragraph/episode with punctuation
 // _rounds is an arrayarray containing the word ids for every round
 // _round is the current round
 //
@@ -51,8 +50,7 @@ var WordBattleLayer = cc.Layer.extend({
 	_text: null,
 	_sphinx: null,
 	_fairy: null,
-	_pureWords: null,
-	_fullWords: null,
+	_selectedWords: null,
 	_rounds: null,
 	_round: null,
 	_first: null,
@@ -220,13 +218,17 @@ var WordBattleLayer = cc.Layer.extend({
 	startEpisode: function(paragraph) {
 		var self = this;
 	
-		p = this._text[paragraph];
+		var p = this._text[paragraph];
 		
         //////////////////////////////
         // Get the single words out of the current paragraph, with and without punctuation
-		this._pureWords = p.match(_b_plainWords);
-		this._fullWords = p.match(_b_WordsWithPunctuation);
-		cc.assert(this._pureWords.length === this._fullWords.length, "Number of words doesn't match between _pureWords and _fullWords.");
+		var sw = this._selectedWords = [],
+			word;
+
+	   	while( (word=_b_selectedWords.exec(p)) != null ) {
+			sw.push(word[1]);
+		}
+		cc.assert(sw.length, "I didn't find any words in the current paragraph.")
 
         //////////////////////////////
         // Divide the words on different rounds and send it, or wait for the words from the other player
@@ -234,7 +236,7 @@ var WordBattleLayer = cc.Layer.extend({
         if( this._first ) {
 			var lotteryWheel = [],
 				rounds = [],
-				n = this._pureWords.length;
+				n = sw.length;
 			
 			for( var i=0 ; i<n ; i++ ) lotteryWheel.push(i);
 			for( var i=0 ; i < Math.floor((n-1)/_B_WORDS_PER_ROUND+1) ; i++ ) rounds.push([]);
@@ -268,9 +270,9 @@ var WordBattleLayer = cc.Layer.extend({
 	
 		for( var i=0; i<r.length ; i++ ) {
 
-			var word = self._pureWords[r[i]];
+			var word = self._selectedWords[r[i]];
 			if( word.length > _B_MAX_SHIP_LENGTH ) continue; // don't take words that don't fit ...
-			var ship = new Battleship(word);
+			var ship = new Battleship(word, false, self);
 			
 			own.addChild(ship,10);
 			_b_retain(ship,"WordBattleLayer: ship"+i);		
@@ -377,7 +379,7 @@ var WordBattleLayer = cc.Layer.extend({
 				// set the ships
 				for( var other=self._otherSea, i=0 ; i<otherBoard.tiles.length ; i++ ) {
 					var tile = otherBoard.tiles[i];
-					var ship = new Battleship(tile.word, true);
+					var ship = new Battleship(tile.word, true, self);
 					other.addChild(ship,10);
 					_b_retain(ship,"WordBattleLayer: other ship"+i);		
 					ship.setRCPosition(tile.coords);
@@ -407,7 +409,7 @@ var WordBattleLayer = cc.Layer.extend({
 
 		// start always with three bombs and one typewriter
 		for( var i=0 ; i<3 ; i++ ) {	
-			self._bombs[i] = new Bomb(fairy, cc.p(-60+90*i,300+(i%2)*100),self._otherSea, function(pos) {
+			self._bombs[i] = new Bomb(fairy, cc.p(-60+90*i+(i%2)*Math.random()*50,300+(i%2)*100),self._otherSea, function(pos) {
 				if( typewriter ) {
 					typewriter.exit();
 					typewriter = null;
@@ -579,20 +581,18 @@ var WordBattleLayer = cc.Layer.extend({
 							(function receiveShipDestroyed() {
 								$b.receiveMessage("ship_destroyed", function(data) {
 									var word = data.word,
-										own = self._ownSea,
-										other = self._otherSea;
+										ownShip = self._ownSea.getChildByName(word),
+										otherShip = self._otherSea.getChildByName(word);
 
-									var ship = own.getChildByName(word);
-									if( ship ) ship.showWord(false);
-									cc.assert(ship, "I wanted to show a word on a lost ship, but didn't find it.");
+									cc.assert(ownShip, "I wanted to show a word on a lost ship, but didn't find it.");
+									ownShip.moveBigShip(false, function() {
+										ownShip.showWord(false);
+									});
 
-
-									ship = other.getChildByName(word);
-									if( ship ) {
-										ship.moveBigShip(false);	
-										ship.destroyShip();
-										ship.getParent().removeChild(ship);
-										_b_release(ship);
+									if( otherShip ) {
+										otherShip.destroyShip();
+										otherShip.getParent().removeChild(otherShip);
+										_b_release(otherShip);
 									}
 
 									receiveShipDestroyed();
@@ -785,8 +785,9 @@ var Battleship = cc.Node.extend({
 	_rotation: 0, // 0 or 90
 	_coords: null,
 	_isShip: true,
+	_battleLayer: null,
 	
-	ctor: function(word, hidden) {
+	ctor: function(word, hidden, layer) {
 	
 	    cc.assert( word && word.length >=2 && word.length <= _B_MAX_SHIP_LENGTH , word+" is too short or too long. I need a word with a length between 2 and "+_B_MAX_SHIP_LENGTH );
     	
@@ -794,6 +795,7 @@ var Battleship = cc.Node.extend({
 		
 		this._word = word;
 		this._hidden = hidden;
+		this._battleLayer = layer;
 		this.buildShip();	
 		this.setName(word);
 
@@ -1101,7 +1103,7 @@ var Battleship = cc.Node.extend({
 
 		if( self.totalDamage() > _B_MAX_SHIP_DAMAGE && self._hidden ) {
 			setTimeout(function() {
-				var	battleLayer = self.getParent().getParent();
+				var	battleLayer = self._battleLayer;
 
 				// get rid of ship in a nice way... (to do)
 
@@ -1147,7 +1149,12 @@ var Battleship = cc.Node.extend({
 
 				setTimeout(function() {
 					
-					self.moveBigShip(true);
+					self.moveBigShip(true, function() {
+						var own = battleLayer._ownSea,
+							ship = own.getChildByName(self._word);
+						cc.assert(ship, "I wanted to show a word on a won ship, but didn't find it.");
+						ship.showWord(true);
+					});
 
 					// Get rid of old ship in this sea
 					if( self.getParent() && self.getParent().getChildByName(self._word) ) {
@@ -1156,12 +1163,6 @@ var Battleship = cc.Node.extend({
 						_b_release(self);
 					}
 
-					var own = battleLayer._ownSea,
-						ship = own.getChildByName(self._word);
-					cc.assert(ship, "I wanted to show a word on a won ship, but didn't find it.");
-					
-					ship.showWord(true);
-					
 					// Tell it to the other side, what happend
 					$b.sendMessage({ message: "ship_destroyed", word: self._word });
 
@@ -1174,9 +1175,9 @@ var Battleship = cc.Node.extend({
 		return false;
 	},
 
-	moveBigShip: function(win) {
+	moveBigShip: function(win, cb) {
 		var	self = this,
-			battleLayer = self.getParent().getParent();
+			battleLayer = this._battleLayer;
 
 		// Show big ship
 		var bigShip = new BigBattleShip(self._word, win);
@@ -1185,26 +1186,33 @@ var Battleship = cc.Node.extend({
 		_b_retain(bigShip, "Big Ship '"+self._word+"'");
 		if( !battleLayer._bigShipMoving ) {
 			(function bigShipMove(bigShip) {
-			battleLayer._bigShipMoving = true;
-				bigShip.move(win, function() {
-					battleLayer._bigShipMoving = false;
-					// look if other big ships are waiting in line
-					if( battleLayer._bigShipQueue.length ) {
-						bigShipMove(battleLayer._bigShipQueue.splice(0,1)[0]);
-					} else {
-						setTimeout( function() {
+				var lastShip = false;
+				battleLayer._bigShipMoving = true;
+				bigShip.ship.move(bigShip.win, function(e) {
+					var q = battleLayer._bigShipQueue;
+					if( e === _B_NEXT_BIG_SHIP ) {
+						// look if other big ships are waiting in line
+						if( q.length ) {
+							bigShipMove(q.splice(0,1)[0]);
+						} else {
+							lastShip = true;
+						}
+					} else if( e === _B_BIG_SHIP_LEFT ) {
+						// get rid of ship when it left the display
+						battleLayer._bigShipMoving = false;
+						battleLayer.removeChild(bigShip.ship);
+						_b_release(bigShip.ship);
+
+						if( typeof bigShip.cb === "function" ) bigShip.cb();
+
+						if( lastShip ) {
 							cc.eventManager.dispatchCustomEvent("last_ship_left");
-						},1136/_B_BIGSHIP_MOVING_SPEED*1000 ); 
+						}
 					}
-					// get rid of ship when it left the display
-					setTimeout( function() {
-						battleLayer.removeChild(bigShip);
-						_b_release(bigShip);
-					},1136/_B_BIGSHIP_MOVING_SPEED*1000 );
 				});
-			})(bigShip);
+			})({ship:bigShip, win:win, cb:cb});
 		} else {
-			battleLayer._bigShipQueue.push(bigShip);
+			battleLayer._bigShipQueue.push({ship:bigShip, win:win, cb:cb});
 		}
 	},	
 
@@ -1326,9 +1334,12 @@ var BigBattleShip = cc.Node.extend({
 			cc.sequence(
 				cc.moveTo(this.width/_B_BIGSHIP_MOVING_SPEED, cc.p(win? 1136-this.width/2-50 : this.width/2+50, 130)),
 				cc.callFunc(function() {
-					if(typeof cb === "function") cb();
+					if(typeof cb === "function") cb(_B_NEXT_BIG_SHIP);
 				}),
-				cc.moveTo(1136/_B_BIGSHIP_MOVING_SPEED, cc.p(win? -this.width/2-50 : 1136+this.width/2+50, 130))
+				cc.moveTo(1136/_B_BIGSHIP_MOVING_SPEED, cc.p(win? -this.width/2-50 : 1136+this.width/2+50, 130)),
+				cc.callFunc(function() {
+					if(typeof cb === "function") cb(_B_BIG_SHIP_LEFT);
+				})
 			)
 		);
 	}
