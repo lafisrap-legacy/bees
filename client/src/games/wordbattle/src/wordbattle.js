@@ -1472,48 +1472,57 @@ var Bomb = cc.PhysicsSprite.extend({
 		}
 
 		var	dpos = this.draggingPos,
-			seaRect = this._sea.getBoundingBox(),
-			flyingBomb = new FlyingBomb(this._sea, false);
-		
-		parent.addChild(flyingBomb,20);
-		_b_retain(flyingBomb,"WordBattleLayer: Flying Bomb");		
+			seaRect = this._sea.getBoundingBox();
 
-		flyingBomb.fire(function() {
-			flyingBomb.land(cc.p(dpos.x, dpos.y+_B_CROSSHAIR_Y_OFFSET), function(hit) {
-				if( self.getParent() ) {
-					if(hit) {	
-						var bomb = new Bomb(parent, cc.p(-90,300),self._sea);
-						bomb.getBody().applyImpulse(cp.v(30,100),cp.v(300,0));
-						bomb.setTimer(self.getTimer());
-						parent.addObject(bomb);
+		if( seaRect && cc.rectContainsPoint(seaRect, {x:dpos.x, y:dpos.y+_B_CROSSHAIR_Y_OFFSET}) ) {
+
+			var	flyingBomb = new FlyingBomb(this._sea, false);
+				
+			parent.addChild(flyingBomb,20);
+			_b_retain(flyingBomb,"WordBattleLayer: Flying Bomb");		
+
+			flyingBomb.fire(function() {
+				flyingBomb.land(cc.p(dpos.x, dpos.y+_B_CROSSHAIR_Y_OFFSET), function(hit) {
+					if( self.getParent() ) {
+						if(hit) {	
+							var bomb = new Bomb(parent, cc.p(-90,300),self._sea);
+							bomb.getBody().applyImpulse(cp.v(30,100),cp.v(300,0));
+							bomb.setTimer(self.getTimer());
+							parent.addObject(bomb);
+						}
+
+						parent.removeChild(flyingBomb);
+						_b_release(flyingBomb);
+						self._crossHairStatic = false;
+						self.exit();
+						if( typeof cb === "function" ) cb();
 					}
-
-					parent.removeChild(flyingBomb);
-					_b_release(flyingBomb);
-					self._crossHairStatic = false;
-					self.exit();
-					if( typeof cb === "function" ) cb();
-				}
+				});
 			});
-		});
 
-		cc.audioEngine.playEffect(self._incoming? gRes.other_bomb_flying_mp3 : gRes.own_bomb_flying_mp3);
-		self._crossHairStatic = true;
-		self.runAction(
-			cc.sequence(
-				cc.EaseSineIn.create(
-					cc.scaleTo(0.11,0.1)
-				),
-				cc.EaseSineOut.create(
-					cc.scaleTo(0.11,1.1)
-				),
-				cc.scaleTo(2,0.8)
-			)
-		);
+			cc.audioEngine.playEffect(self._incoming? gRes.other_bomb_flying_mp3 : gRes.own_bomb_flying_mp3);
+			self._crossHairStatic = true;
+			self.runAction(
+				cc.sequence(
+					cc.EaseSineIn.create(
+						cc.scaleTo(0.11,0.1)
+					),
+					cc.EaseSineOut.create(
+						cc.scaleTo(0.11,1.1)
+					),
+					cc.scaleTo(3,0.7)
+				)
+			);
 
-		var pos = cc.p(dpos.x-seaRect.x, dpos.y+_B_CROSSHAIR_Y_OFFSET-seaRect.y);
-		$b.sendMessage({ message: "bomb", pos: pos });
-		if( typeof self._finalCallback === "function" ) self._finalCallback(pos);
+			var pos = cc.p(dpos.x-seaRect.x, dpos.y+_B_CROSSHAIR_Y_OFFSET-seaRect.y);
+			$b.sendMessage({ message: "bomb", pos: pos });
+			if( typeof self._finalCallback === "function" ) self._finalCallback(pos);
+		} else {
+			this._imIn = false;
+			this.getCrosshair().runAction(cc.fadeOut(0.22));
+			this.runAction(cc.fadeIn(0.22));
+			if( typeof cb === "function" ) cb();
+		}
 	},
 	
 	containsPoint: function(point) {

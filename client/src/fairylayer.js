@@ -251,18 +251,18 @@ var FairyLayer = cc.Layer.extend({
 				//		self.addChild(drawNode,20);
 
 						cc.eventManager.dispatchCustomEvent("object_touches_began", o);
-						self._draggedObject = o;
-						o.draggingPos = {
+						var dob = self._draggedObject = o;
+						dob.draggingPos = {
 							x: loc.x,
 							y: loc.y
 						};
-						o.getBody().setAngVel(0.0);
-						o.getBody().setAngle(0.0);
+						dob.getBody().setAngVel(0.0);
+						dob.getBody().setAngle(0.0);
 						offset = {
 							x: loc.x - pos.x,
 							y: loc.y - pos.y
 						};
-						 o._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
+						dob._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
 						//cc.log("FairyLayer: Start dragging bomb "+i+". offset.x:"+offset.x+", offset.y:"+offset.y);
 						return true; // swallow touches (don't let other listeners get the event)
 					}					
@@ -279,6 +279,8 @@ var FairyLayer = cc.Layer.extend({
 				lastEvent = event;
 				
 				if(dob) {
+					dob.getBody().setAngVel(0.0);
+					dob.getBody().setAngle(0.0);
 					dob.draggingPos = {
 						x: loc.x-offset.x,
 						y: loc.y-offset.y
@@ -296,6 +298,7 @@ var FairyLayer = cc.Layer.extend({
 					if( fairyRect && cc.rectContainsPoint(fairyRect, loc) ) cc.eventManager.dispatchCustomEvent("fairy_is_clicked", this);					
 					if( bubbleRect && cc.rectContainsPoint(bubbleRect, loc) ) cc.eventManager.dispatchCustomEvent("bubble_is_clicked", this);	
 				} else {
+					dob.getBody().setAngVel(-0.4);
 					self._objectLanding = dob;
 					self._draggedObject.land(function() {
 						self._objectLanding = null;
@@ -345,8 +348,8 @@ var FairyLayer = cc.Layer.extend({
 		addwo(cp.v(1136, 0), cp.v(1136+50, 2000), 100);
 
 		space.addCollisionHandler(_B_COLL_TYPE_OBJECT,_B_COLL_TYPE_OBJECT,function(arb, space, data) {
-			if( self._draggedObject ) {
-				var body = self._draggedObject.getBody();
+			if( self._draggedObject || self._objectLanding ) {
+				var body = (self._draggedObject || self._objectLanding).getBody();
 
 				if( body === arb.body_a || body === arb.body_b ) return false;  // no collision if the dragged object collides with other objects
 			}
@@ -355,8 +358,8 @@ var FairyLayer = cc.Layer.extend({
 		},null,null,null);	
 
 		space.addCollisionHandler(_B_COLL_TYPE_OBJECT,_B_COLL_TYPE_STATIC,function(arb, space, data) {
-			if( self._draggedObject ) {
-				var body = self._draggedObject.getBody();
+			if( self._draggedObject || self._objectLanding ) {
+				var body = (self._draggedObject || self._objectLanding).getBody();
 
 				if( body === arb.body_a || body === arb.body_b ) return false;  // no collision if the dragged object collides with other objects
 			}
