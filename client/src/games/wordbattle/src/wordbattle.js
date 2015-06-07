@@ -173,6 +173,7 @@ var WordBattleLayer = cc.Layer.extend({
 		this._fairy = new GameFairy();
         this.addChild(this._fairy,10);
 		_b_retain(this._fairy, "Fairy");
+
 	/*	
 		for( var i=0 ; i<3 ; i++ ) {	
 			var bomb = new Bomb(this._fairy._space, cc.p(100+80*i,500+(i%2)*100),self._otherSea);
@@ -587,13 +588,13 @@ var WordBattleLayer = cc.Layer.extend({
 									cc.assert(ownShip, "I wanted to show a word on a lost ship, but didn't find it.");
 									ownShip.moveBigShip(false, function() {
 										ownShip.showWord(false);
-									});
 
-									if( otherShip ) {
-										otherShip.destroyShip();
-										otherShip.getParent().removeChild(otherShip);
-										_b_release(otherShip);
-									}
+										if( otherShip ) {
+											otherShip.destroyShip(true);
+											otherShip.getParent().removeChild(otherShip);
+											_b_release(otherShip);
+										}
+									});
 
 									receiveShipDestroyed();
 								});
@@ -760,6 +761,24 @@ var WordBattleLayer = cc.Layer.extend({
         	cc.eventManager.removeListener(this._touchListener);
         }
     },
+
+	checkSquare: function(pos) {
+		var sea = this._otherSea,
+	   		seaRect = sea.getBoundingBox(),
+			checkX = Math.floor((pos.x - seaRect.x)/_B_SQUARE_SIZE)*_B_SQUARE_SIZE+_B_SQUARE_SIZE/2,
+			checkY = Math.floor((pos.y - seaRect.y)/_B_SQUARE_SIZE)*_B_SQUARE_SIZE+_B_SQUARE_SIZE/2,
+			check = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("check.png"),cc.rect(0,0,_B_SQUARE_SIZE,_B_SQUARE_SIZE));
+		check.setPosition(cc.p(checkX, checkY));
+		check.setScale(0);
+		sea.addChild(check,10);
+
+		check.runAction(
+			cc.spawn(
+				cc.scaleTo(0.33,1,1),
+				cc.fadeTo(0.33,100)
+			)
+		);
+	},
     
     gameUpdate: function(data) {
     	
@@ -852,8 +871,14 @@ var Battleship = cc.Node.extend({
 		this.setScale(0.50);
     },
 
-	destroyShip: function() {
-		for( var i=0 ; i<this.children.length ; i++ ) _b_release(this.children[i]);
+	destroyShip: function(check) {
+		for( var i=0 ; i<this.children.length ; i++ ) {
+			var part = this.children[i];
+
+			if( check ) this._battleLayer.checkSquare(this.convertToWorldSpace(part.getPosition()));
+
+			_b_release(this.children[i]);
+		}
 		this.removeAllChildren();
 	},
     
@@ -1024,10 +1049,11 @@ var Battleship = cc.Node.extend({
 				part = this.children[i],
 				d = Math.min(++part._damage,_B_MAX_DAMAGE);
 
-			part.setOpacity(255);
-			this.markDamage(part);
-
-			return true;
+			if( !part._letterSprite ) {
+				part.setOpacity(255);
+				this.markDamage(part);
+				return true;
+			}
 		}
 		return false;
 	},
@@ -1158,7 +1184,7 @@ var Battleship = cc.Node.extend({
 
 					// Get rid of old ship in this sea
 					if( self.getParent() && self.getParent().getChildByName(self._word) ) {
-						self.destroyShip();
+						self.destroyShip(true);
 						self.getParent().removeChild(self);
 						_b_release(self);
 					}
@@ -1266,11 +1292,7 @@ var Battleship = cc.Node.extend({
     
     getRect: function() {
     	return this._rect;
-    },
-    
-    destroyShip: function(ship) {
-		//_b_release(this);
-    }
+    },    
 });
 
 
@@ -1611,8 +1633,6 @@ var FlyingBomb = cc.Sprite.extend({
 
 		this.setScale(0.0);
 
-		//if( this._incoming ) cc.audioEngine.playEffect(gRes.bomb_flying_mp3);
-
 		this.runAction(
 			cc.sequence(
 				cc.delayTime(3 - 0.66*distance/seaRect.width),
@@ -1631,32 +1651,16 @@ var FlyingBomb = cc.Sprite.extend({
 						if( ships[i].dropBomb ) if( hit = ships[i].dropBomb(pos) ) break;
 					}
 					
-					if( !hit && !self._incoming ) {
-						var checkX = Math.floor((pos.x - seaRect.x)/_B_SQUARE_SIZE)*_B_SQUARE_SIZE+_B_SQUARE_SIZE/2,
-							checkY = Math.floor((pos.y - seaRect.y)/_B_SQUARE_SIZE)*_B_SQUARE_SIZE+_B_SQUARE_SIZE/2,
-							check = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("check.png"),cc.rect(0,0,_B_SQUARE_SIZE,_B_SQUARE_SIZE));
-						check.setPosition(cc.p(checkX, checkY));
-						check.setScale(0);
-						sea.addChild(check,10);
-						_b_retain(check,"Sea: Check field");	
+					if( hit && !self._incoming ) { cc.audioEngine.playEffect(gRes.own_bomb_on_ship_mp3); }
+					else if( hit )               { cc.audioEngine.playEffect(gRes.other_bomb_on_ship_mp3); }
+					else if( !self._incoming )   { cc.audioEngine.playEffect(gRes.own_bomb_in_water_mp3); self._sea.getParent().checkSquare(pos); }
+					else 						 { cc.audioEngine.playEffect(gRes.other_bomb_in_water_mp3); }
 
-						check.runAction(
-							cc.spawn(
-								cc.scaleTo(0.33,1,1),
-								cc.fadeTo(0.33,100)
-							)
-						);
-					}
-					
-					if( hit && !self._incoming ) cc.audioEngine.playEffect(gRes.own_bomb_on_ship_mp3);
-					else if( hit )               cc.audioEngine.playEffect(gRes.other_bomb_on_ship_mp3);
-					else if( !self._incoming )   cc.audioEngine.playEffect(gRes.own_bomb_in_water_mp3);
-					else 						 cc.audioEngine.playEffect(gRes.other_bomb_in_water_mp3);
 					cb(hit);
 				})
 			)
 		);
-	}
+	},
 });
 
 

@@ -26,7 +26,7 @@
 			other_bomb_on_ship_mp3 : path+"res/sounds/gegenangriff_schiffsbombe7,0.mp3",
 			other_bomb_flying_mp3: path+"res/sounds/gegenangriff_kanonenschuss7,0.mp3",
 			textright_mp3 : path+"res/sounds/wort_richtig_intro01,01.mp3",
-			textwrong_mp3 : path+"res/sounds/wort_falsch_intro01,01.mp3"
+			textwrong_mp3 : path+"res/sounds/wort_falsch_intro01,01.mp3",
 		},
 		"Das Eselein" : {
 			Fairytale_json: 	path+"vars/Das Eselein/Das Eselein.json",
