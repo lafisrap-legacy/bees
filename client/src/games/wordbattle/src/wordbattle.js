@@ -94,6 +94,12 @@ var WordBattleLayer = cc.Layer.extend({
 			);
 			
 			//////////////////////////////
+			// Set up paper document
+			var paper = self._paper = new DocumentsLayer(self._text, 50, 75);
+			self.addChild(paper,5);
+
+
+			//////////////////////////////
 			// Create and show seas
 			var s1 = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
 			s1.setPosition(cc.p(284,cc.height/2));
