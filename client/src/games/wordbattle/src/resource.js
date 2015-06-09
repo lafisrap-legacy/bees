@@ -27,6 +27,10 @@
 			other_bomb_flying_mp3: path+"res/sounds/gegenangriff_kanonenschuss7,0.mp3",
 			textright_mp3 : path+"res/sounds/wort_richtig_intro01,01.mp3",
 			textwrong_mp3 : path+"res/sounds/wort_falsch_intro01,01.mp3",
+
+			smoke_plist: path+"res/particles/smoke.plist",
+			smokefire_plist: path+"res/particles/smokefire.plist",
+			fire_plist: path+"res/particles/fire.plist",
 		},
 		"Das Eselein" : {
 			Fairytale_json: 	path+"vars/Das Eselein/Das Eselein.json",

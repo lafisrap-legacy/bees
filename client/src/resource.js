@@ -17,11 +17,13 @@ var res = {
 	PTMono100Bees_fnt : "res/fonts/PTMono100Bees.fnt",
 	PTMono700Bees_png : "res/fonts/PTMono280Bees.png",
 	PTMono700Bees_fnt : "res/fonts/PTMono280Bees.fnt",
+	indieflower50_png : "res/fonts/indieflower50.png",
+	indieflower50_fnt : "res/fonts/indieflower50.fnt",
 	indieflower_ttf: {type:"font", name:"IndieFlower", srcs:["res/fonts/IndieFlower.ttf"]},
 
 	// documents view
-//	documents_png : "res/documents/documents.png",
-//    documents_plist : "res/documents/documents.plist",
+	documents_png : "res/documents/documents.png",
+    documents_plist : "res/documents/documents.plist",
 
 	// list view
 	listview_png : "res/listview/listview.png",

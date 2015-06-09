@@ -1052,6 +1052,7 @@ var Battleship = cc.Node.extend({
 			if( !part._letterSprite ) {
 				part.setOpacity(255);
 				this.markDamage(part);
+				this.letItBurn(part);
 				return true;
 			}
 		}
@@ -1080,6 +1081,7 @@ var Battleship = cc.Node.extend({
 			part.setSpriteFrame(cc.spriteFrameCache.getSpriteFrame(part._shipDamaged));
 			part.setRotation(Math.floor(Math.random()*4)*90);
 		}
+
 		if( d === _B_MAX_DAMAGE && this._hidden ) {
 			var letter = new cc.LabelBMFont( part._letter , "res/fonts/PTMono100Bees.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
 			letter.setPosition(part.getPosition());
@@ -1092,6 +1094,35 @@ var Battleship = cc.Node.extend({
 			_b_retain(letter, "Small letter on ship part: "+part._letter);
 			part._letterSprite = letter;
 		}
+	},
+
+	letItBurn: function(part) {
+		var d = part._damage,
+			em = part._emitter;
+
+		if( em ) {
+			em.stopSystem();
+			setTimeout(function(em) {
+				part.removeChild(em);
+				_b_release(em);
+			},2000,em);
+		}
+
+		if( d < 1 || d > 3 ) return;
+	
+		var	emRes = gRes[(d===1? "smoke" : d===2? "smokefire": "fire") + "_plist"],
+			rotation = 90-part.getRotation()-(90-this.getRotation()),
+			offset = rotation === 0? {x:1,y:2} : 
+					 rotation === 90? {x:2,y:1} :
+					 rotation === 180? {x:1,y:2/3} :
+					 rotation === 270? {x:2/3,y:1} : null;
+		//cc.assert( offset, "Rotation must be one of 0, 90, 180, 270. It is "+rotation);
+		offset = {x:1,y:1};
+		em = part._emitter = new cc.ParticleSystem( emRes );
+		em.setPosition(cc.p(_B_SQUARE_SIZE/offset.x, _B_SQUARE_SIZE/offset.y));
+		em.setRotation(rotation);
+		part.addChild(em);
+		_b_retain(em);
 	},
 
 	setFullDamage: function() {
@@ -1110,6 +1141,7 @@ var Battleship = cc.Node.extend({
 
 			part._damage = _B_MAX_DAMAGE;
 			this.markDamage(part);
+			this.letItBurn(part);
 		}
 	},
 
@@ -1123,6 +1155,7 @@ var Battleship = cc.Node.extend({
 				part._damage++;
 				setTimeout(function(part) {
 					self.markDamage(part);
+					self.letItBurn(part);
 				}, _B_DAMAGE_PROGRESS_DELAY*Math.random()*1000*10, part);
 			}
 		}

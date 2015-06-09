@@ -19,6 +19,7 @@
         "src/fairylayer.js",
         "src/text.js",
 		"src/textinputlayer.js",
+		"src/documentslayer.js",
         
         "src/games/wordbattle/src/resource.js",
         "src/games/wordbattle/src/wordbattle.js"
