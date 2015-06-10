@@ -589,7 +589,7 @@ var WordBattleLayer = cc.Layer.extend({
 									ownShip.moveBigShip(false, function() {
 										ownShip.showWord(false);
 
-										if( otherShip ) {
+										if( otherShip && otherShip.getParent() ) {
 											otherShip.destroyShip(true);
 											otherShip.getParent().removeChild(otherShip);
 											_b_release(otherShip);
@@ -1247,6 +1247,23 @@ var Battleship = cc.Node.extend({
 			(function bigShipMove(bigShip) {
 				var lastShip = false;
 				battleLayer._bigShipMoving = true;
+
+				cc.audioEngine.setMusicVolume(0.5);
+				if( bigShip.win ) {
+					cc.log("Playing winning music!");
+					//cc.audioEngine.stopAllMusic();
+					cc.audioEngine.setMusicVolume(0.5);
+					cc.audioEngine.playMusic(gRes.organizing_intro_mp3,false);
+					cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,true);
+					cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,true);
+					cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,true);
+				} else {
+					cc.log("Playing loosing music!");
+					cc.audioEngine.stopAllMusic();
+					//cc.audioEngine.playMusic(gRes.shiplost_intro_mp3,false);
+					//cc.audioEngine.addMusic(gRes.shiplost_loop_mp3,true);
+				}
+				
 				bigShip.ship.move(bigShip.win, function(e) {
 					var q = battleLayer._bigShipQueue;
 					if( e === _B_NEXT_BIG_SHIP ) {
@@ -1266,6 +1283,10 @@ var Battleship = cc.Node.extend({
 
 						if( lastShip ) {
 							cc.eventManager.dispatchCustomEvent("last_ship_left");
+							cc.audioEngine.fadeOut(2);
+							setTimeout(function() {
+								cc.audioEngine.stopAllMusic();
+							}, 2000);
 						}
 					}
 				});

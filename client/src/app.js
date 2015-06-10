@@ -352,7 +352,9 @@ var _b_audio = function() {
 		}
 
 		if( musicToPlay.length > 0 ) {	
+			cc.log("Next piece wating ...");
 			if( !cc.audioEngine.isMusicPlaying() ) {
+				cc.log("Playing next piece of "+musicToPlay.length);
 				var music = musicToPlay.splice(0,1)[0];
 
 				cc.audioEngine.playMusic(music.url, music.loop);
