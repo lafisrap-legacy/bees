@@ -7,7 +7,16 @@
 //
 //
 
-var _B_DOCUMENT_BOX = cc.rect(50, 600, 800, 0);
+var _B_DOCUMENT_SHAPES = {
+	Paper: {
+		sprite: {
+			top: "paper_top.png",
+			middle: ["paper_middle_1.png","paper_middle_2.png","paper_middle_3.png"],
+			bottom: "paper_bottom.png"
+		},
+		dim: cc.rect(50, 600, 800, 0)
+	}
+}
 
 // Regular Expressions
 //
@@ -24,81 +33,92 @@ _b_WordsWithPunctuation = /\s*„?\b([\wäöüÄÖÜß]{2,})[^\wäöüÄÖÜß\�
 // Properties
 // ----------
 //
-var DocumentsLayer = cc.Layer.extend({
+var DocumentLayer = cc.Layer.extend({
 
-	_paragraphs: [],
+	_words: [],
+	_paragraphStarts: [],
 	_textStatus: [],
 	_box: null,
 
 	// ctor initializes sprite cache
 	//
-    ctor: function(text, fontSize, lineHeight) {
-        this._super();  
+    ctor: function(text, shape) {
+		var self = this,
+			words = this._words;
+
+        this._super();
         
 	    cc.spriteFrameCache.addSpriteFrames(res.documents_plist);	  
 
 		var box = this._box = cc.Layer.create(),
-			dim = _B_DOCUMENT_BOX;
+			dim = _B_DOCUMENT_SHAPES[shape.type].dim;
 
 		this.addChild(box,20);
 		_b_retain(box, "Text box");
 
 		var labelX, labelY = dim.y,
+			paragraphStart = 0,
 			cnt = 0;
 
-		for( var i=0 ; i<text.length ; i++ ) {
+		var i=0;
+		(function addWords() {
 			var p = text[i].replace(/[\{\}]/g,""),
 				plainWords = p.match(_b_plainWords),
 				fullWords = p.match(_b_WordsWithPunctuation),
-				words = [],
 				labelX = dim.x;
 
-			labelY -= lineHeight;
+			labelY -= shape.lineHeight;
 
 			cc.assert(plainWords.length === fullWords.length, "Number of words doesn't match between _pureWords and _fullWords.");
 
 			for( var j=0 ; j<plainWords.length ; j++ ) {
-
 				// create word sprite 
-				var label = new cc.LabelBMFont( fullWords[j] , "res/fonts/indieflower50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_LEFT );
-				//var label = this._label = cc.LabelTTF.create(fullWords[j], _b_getFontName(res.indieflower_ttf), fontSize, undefined,cc.TEXT_ALIGNMENT_LEFT, cc.VERTICAL_TEXT_ALIGNMENT_TOP);
+				//var label = new cc.LabelBMFont( fullWords[j] , "res/fonts/indieflower50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_LEFT );
+				var label = cc.LabelTTF.create(fullWords[j], _b_getFontName(res.indieflower_ttf), shape.fontSize, undefined,cc.TEXT_ALIGNMENT_LEFT, cc.VERTICAL_TEXT_ALIGNMENT_TOP),
+					word = {label: label, full:fullWords[j], plain:plainWords[j], pos:cc.p(labelX, labelY), status: {added: false, color: cc.color(0,0,0), opacity: 255} };
 				
-				var word = {label: label, full:fullWords[j], plain:plainWords[j], pos:cc.p(labelX, labelY), status: {added: false, color: cc.color(0,0,0), opacity: 255} };
 				words.push(word);
 
 				label.setColor(word.status.color);
 				label.setOpacity(word.status.opacity);
 				label.setPosition(cc.p(labelX+label.width/2, labelY));
-				if( cnt < 100 ) {
-					box.addChild(label,20);
-					word.status.added = true;
-					_b_retain(label,"Word "+plainWords[j]);
-				}
-
-				// handle words that are add and words that are not
-				// add background
-				// add scrolling:
 
 				labelX += label.width; 
 				if(labelX > dim.x + dim.width ) {
 					labelX = dim.x;
-					labelY -= lineHeight;
+					labelY -= shape.lineHeight;
 				}
 
 				cnt++;
 			}
 
-			if( words.length ) this._paragraphs.push(words);
+			cc.log("Finished paragraph "+i);
 
-			// add up length
-		}
+			self._paragraphStarts[i] = paragraphStart;
+			paragraphStart += plainWords.length;
+
+			if( ++i < text.length ) setTimeout(addWords,1);
+			else cc.eventManager.dispatchCustomEvent("paragraphs_prepared");		
+		})();
 
 		cc.log("Baking "+cnt+" words");
 		box.bake();
-
-		// create paper images
-
 	},
 
+	show: function(paragraph) {
+		var self = this;
 
+		cc.assert(paragraph < self._paragraphStarts.length, "Requested paragraph "+paragraph+" does not exist.");
+		
+		_b_one(["paragraphs_prepared"], function() {
+			var wStart = self._paragraphStarts[paragraph],
+				firstWord = self._words[wStart];
+				// handle words that are add and words that are not
+				// add background
+				// add scrolling:
+			// box.addChild(label,20);
+			// word.status.added = true;
+			//_b_retain(label,"Word "+plainWords[j]);
+		});
+	}
 });	

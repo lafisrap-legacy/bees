@@ -95,9 +95,12 @@ var WordBattleLayer = cc.Layer.extend({
 			
 			//////////////////////////////
 			// Set up paper document
-			var paper = self._paper = new DocumentsLayer(self._text, 50, 75);
-			self.addChild(paper,5);
-
+			var paper = self._paper = new DocumentLayer(self._text, {
+				type: "Paper", 
+				fontSize: 50,
+				lineHeight: 75
+			});
+			self.addChild(paper, 5);
 
 			//////////////////////////////
 			// Create and show seas
@@ -270,6 +273,10 @@ var WordBattleLayer = cc.Layer.extend({
 	startRound: function(allStrait) {
 		var self = this;
 	
+		//////////////////////////////
+		// Show fairy tale 
+		this._paper.show(0);
+
 		//////////////////////////////
 		// Build ships
 		var r = self._rounds[self._round],
