@@ -391,7 +391,7 @@ var WordBattleLayer = cc.Layer.extend({
 				setTimeout(function() {
 					cc.audioEngine.stopAllMusic();
 				}, 2000);
-
+				
 				self.playRound();
 			});
 		});
