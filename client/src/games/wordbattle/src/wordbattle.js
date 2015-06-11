@@ -98,7 +98,7 @@ var WordBattleLayer = cc.Layer.extend({
 			var paper = self._paper = new DocumentLayer(self._text, {
 				type: "Paper", 
 				fontSize: 50,
-				lineHeight: 75
+				lineHeight: 64
 			});
 			self.addChild(paper, 5);
 
