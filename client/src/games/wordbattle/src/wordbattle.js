@@ -102,6 +102,7 @@ var WordBattleLayer = cc.Layer.extend({
 			});
 			self.addChild(paper, 5);
 
+			_b_one(["seas_have_moved_in"], function() {
 			//////////////////////////////
 			// Create and show seas
 			var s1 = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
@@ -139,6 +140,7 @@ var WordBattleLayer = cc.Layer.extend({
 			_b_retain(s2,"WordBattleLayer: sea2");		
 
 			self.startGame();
+			});
 		}, this.gameUpdate, this);
 
 		//////////////////////////////

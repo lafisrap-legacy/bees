@@ -41,11 +41,11 @@ var DocumentLayer = cc.Layer.extend({
 	_lastDisplayedWord: null,
 
 	_box: null,
-	_dim: null,
+	_shape: null,
 
 	// ctor initializes sprite cache
 	//
-    ctor: function(text, shape) {
+    ctor: function(text, sizes) {
 		var self = this,
 			words = this._words;
 
@@ -54,7 +54,8 @@ var DocumentLayer = cc.Layer.extend({
 	    cc.spriteFrameCache.addSpriteFrames(res.documents_plist);	  
 
 		var box = this._box = cc.Layer.create(),
-			dim = this._dim = _B_DOCUMENT_SHAPES[shape.type].dim;
+			shape = this._shape = _B_DOCUMENT_SHAPES[sizes.type],
+			dim = shape.dim;
 
 		this.addChild(box,20);
 		_b_retain(box, "Text box");
@@ -75,12 +76,12 @@ var DocumentLayer = cc.Layer.extend({
 			for( var j=0 ; j<plainWords.length ; j++ ) {
 				// create word sprite 
 				//var label = new cc.LabelBMFont( fullWords[j] , "res/fonts/indieflower50.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_LEFT );
-				var label = cc.LabelTTF.create(fullWords[j], _b_getFontName(res.indieflower_ttf), shape.fontSize, undefined,cc.TEXT_ALIGNMENT_LEFT, cc.VERTICAL_TEXT_ALIGNMENT_TOP);
+				var label = cc.LabelTTF.create(fullWords[j], _b_getFontName(res.indieflower_ttf), sizes.fontSize, undefined,cc.TEXT_ALIGNMENT_LEFT, cc.VERTICAL_TEXT_ALIGNMENT_TOP);
 
 				labelX += label.width; 
 				if(labelX > dim.width ) {
 					labelX = label.width;
-					labelY -= shape.lineHeight;
+					labelY -= sizes.lineHeight;
 				}
 
 				var word = {label: label, full:fullWords[j], plain:plainWords[j], pos:cc.p(labelX, labelY), status: {added: false, color: cc.color(0,0,0), opacity: 255} };
@@ -98,10 +99,30 @@ var DocumentLayer = cc.Layer.extend({
 			self._paragraphStarts[i] = paragraphStart;
 			paragraphStart += plainWords.length;
 
-			labelY -= shape.lineHeight; // new line after paragraph
+			labelY -= sizes.lineHeight; // new line after paragraph
 
 			if( ++i < text.length ) setTimeout(addWords,1);
-			else cc.eventManager.dispatchCustomEvent("paragraphs_prepared");		
+			else {
+				cc.eventManager.dispatchCustomEvent("paragraphs_prepared");		
+			
+				// draw document top
+				var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(shape.sprite.top),cc.rect(0,0,1136,155));
+				sprite.setPosition(cc.p(cc.width/2,cc.height-155/2));
+				box.addChild(sprite,0);
+
+				// draw middle elements
+				var elems = Math.ceil((-labelY - 155 - 79)/360);
+				for( var j=0 ; j<elems ; j++ ) {
+					var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(shape.sprite.middle[Math.floor(Math.random()*shape.sprite.middle.length)]),cc.rect(0,0,1136,360));
+					sprite.setPosition(cc.p(cc.width/2,cc.height-155-j*360-180));
+					box.addChild(sprite,0);
+				}
+
+				// draw document bottom
+				var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(shape.sprite.bottom),cc.rect(0,0,1136,79));
+				sprite.setPosition(cc.p(cc.width/2,cc.height-155-j*360-79/2));
+				box.addChild(sprite,0);
+			}
 		})();
 
 		cc.log("Baking "+cnt+" words");
@@ -115,17 +136,17 @@ var DocumentLayer = cc.Layer.extend({
 		
 		_b_one(["paragraphs_prepared"], function() {
 			var box = self._box,
-				dim = self._dim,
+				dim = self._shape.dim,
 				fdw = self._firstDisplayedWord = self._paragraphStarts[paragraph],
 				ldw = fdw,
 				word = self._words[fdw],
-				boxPos = -word.pos.y;
+				boxPos = 150;
 
 			box.setPosition(0, boxPos);
 
 			var i = fdw;
 			while( boxPos - word.pos.y < dim.height ) {
-				box.addChild(word.label,20);
+				box.addChild(word.label, 10);
 				_b_retain(word.label,"Word "+word.plain);
 				
 				ldw = i;
