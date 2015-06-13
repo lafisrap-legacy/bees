@@ -95,51 +95,15 @@ var WordBattleLayer = cc.Layer.extend({
 			
 			//////////////////////////////
 			// Set up paper document
-			var paper = self._paper = new DocumentLayer(self._text, {
+			var paper = self._paper = new DocumentLayer(self.getParent().variation, self._text, {
 				type: "Paper", 
 				fontSize: 50,
 				lineHeight: 64
 			});
 			self.addChild(paper, 5);
 
-			_b_one(["seas_have_moved_in"], function() {
-			//////////////////////////////
-			// Create and show seas
-			var s1 = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
-			s1.setPosition(cc.p(284,cc.height/2));
-			s1.setScale(0.0);
-			s1.setOpacity(0);
-			s1.runAction(
-				cc.EaseSineOut.create(
-					cc.spawn(
-						cc.scaleTo(0.90, 1),
-						cc.fadeIn(0.90)
-					)
-				)
-			);
-			var s2 = self._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
-			s2.setPosition(cc.p(852,cc.height/2));
-			s2.setScale(0.0);
-			s2.setOpacity(0);
-			s2.runAction(
-				cc.sequence(
-					cc.EaseSineOut.create(
-						cc.spawn(
-							cc.scaleTo(1.00,1),
-							cc.fadeIn(1.00)
-						)
-					),
-					cc.callFunc(function() {
-						cc.eventManager.dispatchCustomEvent("seas_have_moved_in");		
-					})
-				)
-			);
-			self.addChild(s1,0);
-			self.addChild(s2,0);	
-			_b_retain(s1,"WordBattleLayer: sea1");		
-			_b_retain(s2,"WordBattleLayer: sea2");		
-
-			self.startGame();
+			_b_one(["paragraphs_prepared"], function() {
+				self.startGame();
 			});
 		}, this.gameUpdate, this);
 
@@ -165,7 +129,7 @@ var WordBattleLayer = cc.Layer.extend({
         // Reading the fairytale and related data
 		var json = cc.loader.getRes(vRes.Fairytale_json);
 		if( !json ) {
-			cc.log("ERROR: Can't open resource file for "+this.parent().game+"/"+this.parent().variation);
+			cc.log("ERROR: Can't open resource file for "+this.parent().game+"/"+this.getParent().variation);
 			cc.director.runScene($b);
 		}
 		this._text = json.text;
@@ -216,12 +180,6 @@ var WordBattleLayer = cc.Layer.extend({
         // Send the list to the opponent (first) or wait for his list and make a selection
         // to be done ...
 
-		cc.audioEngine.setMusicVolume(0.5);
-		cc.audioEngine.playMusic(gRes.organizing_intro_mp3,false);
-		cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,true);
-		cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,true);
-		cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,true);
-
     	// for now start with episode 1
     	this.startEpisode(0);
     },
@@ -229,56 +187,100 @@ var WordBattleLayer = cc.Layer.extend({
 	// startEpisode starts a play with one paragraph, creating a play list
 	startEpisode: function(paragraph) {
 		var self = this;
-	
-		var p = this._text[paragraph];
+
+		//////////////////////////////
+		// Show fairy tale 
+		this._paper.show(paragraph, function() {;
+
+			//////////////////////////////
+			// Create and show seas
+			var s1 = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
+			s1.setPosition(cc.p(284,cc.height/2));
+			s1.setScale(0.0);
+			s1.setOpacity(0);
+			s1.runAction(
+				cc.EaseSineOut.create(
+					cc.spawn(
+						cc.scaleTo(0.90, 1),
+						cc.fadeIn(0.90)
+					)
+				)
+			);
+			var s2 = self._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
+			s2.setPosition(cc.p(852,cc.height/2));
+			s2.setScale(0.0);
+			s2.setOpacity(0);
+			s2.runAction(
+				cc.sequence(
+					cc.EaseSineOut.create(
+						cc.spawn(
+							cc.scaleTo(1.00,1),
+							cc.fadeIn(1.00)
+						)
+					),
+					cc.callFunc(function() {
+						cc.eventManager.dispatchCustomEvent("seas_have_moved_in");		
+					})
+				)
+			);
+			self.addChild(s1,0);
+			self.addChild(s2,0);	
+			_b_retain(s1,"WordBattleLayer: sea1");		
+			_b_retain(s2,"WordBattleLayer: sea2");		
+
+			//////////////////////////////
+			// Play winning music! 
+			cc.audioEngine.setMusicVolume(0.5);
+			cc.audioEngine.playMusic(gRes.organizing_intro_mp3,false);
+			cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,true);
+			cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,true);
+			cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,true);
 		
-        //////////////////////////////
-        // Get the single words out of the current paragraph, with and without punctuation
-		var sw = this._selectedWords = [],
-			word;
+        	//////////////////////////////
+        	// Get the single words out of the current paragraph, with and without punctuation
+			var p = this._text[paragraph],
+				sw = this._selectedWords = [],
+				word;
 
-	   	while( (word=_b_selectedWords.exec(p)) != null ) {
-			sw.push(word[1]);
-		}
-		cc.assert(sw.length, "I didn't find any words in the current paragraph.")
+	   		while( (word=_b_selectedWords.exec(p)) != null ) {
+				sw.push(word[1]);
+			}
+			cc.assert(sw.length, "I didn't find any words in the current paragraph.")
 
-        //////////////////////////////
-        // Divide the words on different rounds and send it, or wait for the words from the other player
-		this._round = 0;
-        if( this._first ) {
-			var lotteryWheel = [],
-				rounds = [],
-				n = sw.length;
+        	//////////////////////////////
+        	// Divide the words on different rounds and send it, or wait for the words from the other player
+			this._round = 0;
+        	if( this._first ) {
+				var lotteryWheel = [],
+					rounds = [],
+					n = sw.length;
 			
-			for( var i=0 ; i<n ; i++ ) lotteryWheel.push(i);
-			for( var i=0 ; i < Math.floor((n-1)/_B_WORDS_PER_ROUND+1) ; i++ ) rounds.push([]);
-			for( var i=0 ; i<n ; i++ ) rounds[i%rounds.length].push(lotteryWheel.splice(parseInt(Math.random()*lotteryWheel.length),1)[0]);
-			cc.assert(lotteryWheel.length == 0, "Lottery wheel is not empty.");
+				for( var i=0 ; i<n ; i++ ) lotteryWheel.push(i);
+				for( var i=0 ; i < Math.floor((n-1)/_B_WORDS_PER_ROUND+1) ; i++ ) rounds.push([]);
+				for( var i=0 ; i<n ; i++ ) rounds[i%rounds.length].push(lotteryWheel.splice(parseInt(Math.random()*lotteryWheel.length),1)[0]);
+				cc.assert(lotteryWheel.length == 0, "Lottery wheel is not empty.");
 			
-			this._rounds = rounds;
-			_b_one(["seas_have_moved_in"], function() {
-				self.startRound();
-			});
-
-			$b.sendMessage({ message: "initRounds", rounds: this._rounds });
-		} else {
-			$b.receiveMessage("initRounds", function(data) {
-				cc.assert(data.message === "initRounds", "Received wrong message ('"+data.message+"' instead of 'initRounds') while starting episode.");
-				self._rounds = data.rounds;
+				this._rounds = rounds;
 				_b_one(["seas_have_moved_in"], function() {
 					self.startRound();
 				});
-			});
-		}
+
+				$b.sendMessage({ message: "initRounds", rounds: this._rounds });
+			} else {
+				$b.receiveMessage("initRounds", function(data) {
+					cc.assert(data.message === "initRounds", "Received wrong message ('"+data.message+"' instead of 'initRounds') while starting episode.");
+					self._rounds = data.rounds;
+					_b_one(["seas_have_moved_in"], function() {
+						self.startRound();
+					});
+				});
+			}
+		});
 	},
 	
 	startRound: function(allStrait) {
 		var self = this;
 	
-		//////////////////////////////
-		// Show fairy tale 
-		this._paper.show(0);
-
 		//////////////////////////////
 		// Build ships
 		var r = self._rounds[self._round],

@@ -14,7 +14,7 @@ var _B_DOCUMENT_SHAPES = {
 			middle: ["paper_middle_1.png","paper_middle_2.png","paper_middle_3.png"],
 			bottom: "paper_bottom.png"
 		},
-		dim: cc.rect(100, 500, 936, 460)
+		margin: {left: 50, right: 50, top:100, bottom: 100}
 	}
 }
 
@@ -45,7 +45,7 @@ var DocumentLayer = cc.Layer.extend({
 
 	// ctor initializes sprite cache
 	//
-    ctor: function(text, sizes) {
+    ctor: function(title, text, sizes) {
 		var self = this,
 			words = this._words;
 
@@ -55,21 +55,32 @@ var DocumentLayer = cc.Layer.extend({
 
 		var box = this._box = cc.Layer.create(),
 			shape = this._shape = _B_DOCUMENT_SHAPES[sizes.type],
-			dim = shape.dim;
+			boxWidth = cc.width - shape.margin.left - shape.margin.right;
 
 		this.addChild(box,20);
 		_b_retain(box, "Text box");
 
-		var labelX, labelY = 0,
+		var labelX, labelY = shape.margin.top,
 			paragraphStart = 0,
 			cnt = 0;
 
+		/////////////////////////////////////////////////////////////////////7
+		// Draw Title
+		var label = cc.LabelTTF.create(title, _b_getFontName(res.indieflower_ttf), sizes.fontSize * 2, cc.size(boxWidth, sizes.fontSize * 2) ,cc.TEXT_ALIGNMENT_CENTER, cc.VERTICAL_TEXT_ALIGNMENT_TOP);
+		label.setPosition(cc.p(boxWidth/2+shape.margin.left,cc.height - labelY));
+		label.setColor(cc.color(0,0,0,255));
+		box.addChild(label,10);
+
+		labelY += sizes.fontSize * 3;
+
+		/////////////////////////////////////////////////////////////////////7
+		// Draw words of fairytale
 		var i=0;
 		(function addWords() {
 			var p = text[i].replace(/[\{\}]/g,""),
 				plainWords = p.match(_b_plainWords),
 				fullWords = p.match(_b_WordsWithPunctuation),
-				labelX = 0;
+				labelX = shape.margin.left;
 
 			cc.assert(plainWords.length === fullWords.length, "Number of words doesn't match between _pureWords and _fullWords.");
 
@@ -79,17 +90,17 @@ var DocumentLayer = cc.Layer.extend({
 				var label = cc.LabelTTF.create(fullWords[j], _b_getFontName(res.indieflower_ttf), sizes.fontSize, undefined,cc.TEXT_ALIGNMENT_LEFT, cc.VERTICAL_TEXT_ALIGNMENT_TOP);
 
 				labelX += label.width; 
-				if(labelX > dim.width ) {
-					labelX = label.width;
-					labelY -= sizes.lineHeight;
+				if(labelX > cc.width - shape.margin.right ) {
+					labelX = shape.margin.left + label.width;
+					labelY += sizes.lineHeight;
 				}
 
-				var word = {label: label, full:fullWords[j], plain:plainWords[j], pos:cc.p(labelX, labelY), status: {added: false, color: cc.color(0,0,0), opacity: 255} };
+				var word = {label: label, full:fullWords[j], plain:plainWords[j], pos:cc.p(labelX, labelY), status: {visible: false, color: cc.color(0,0,0), opacity: 255} };
 				words.push(word);
 
 				label.setColor(word.status.color);
 				label.setOpacity(word.status.opacity);
-				label.setPosition(cc.p(dim.x + labelX - label.width/2, dim.y + labelY));
+				label.setPosition(cc.p(labelX - label.width/2, cc.height - labelY));
 
 				cnt++;
 			}
@@ -99,19 +110,17 @@ var DocumentLayer = cc.Layer.extend({
 			self._paragraphStarts[i] = paragraphStart;
 			paragraphStart += plainWords.length;
 
-			labelY -= sizes.lineHeight; // new line after paragraph
+			labelY += sizes.lineHeight; // new line after paragraph
 
 			if( ++i < text.length ) setTimeout(addWords,1);
-			else {
-				cc.eventManager.dispatchCustomEvent("paragraphs_prepared");		
-			
+			else {	
 				// draw document top
 				var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(shape.sprite.top),cc.rect(0,0,1136,155));
 				sprite.setPosition(cc.p(cc.width/2,cc.height-155/2));
 				box.addChild(sprite,0);
 
 				// draw middle elements
-				var elems = Math.ceil((-labelY - 155 - 79)/360);
+				var elems = Math.ceil((labelY - 155 - 79)/360);
 				for( var j=0 ; j<elems ; j++ ) {
 					var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(shape.sprite.middle[Math.floor(Math.random()*shape.sprite.middle.length)]),cc.rect(0,0,1136,360));
 					sprite.setPosition(cc.p(cc.width/2,cc.height-155-j*360-180));
@@ -122,6 +131,8 @@ var DocumentLayer = cc.Layer.extend({
 				var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(shape.sprite.bottom),cc.rect(0,0,1136,79));
 				sprite.setPosition(cc.p(cc.width/2,cc.height-155-j*360-79/2));
 				box.addChild(sprite,0);
+				
+				cc.eventManager.dispatchCustomEvent("paragraphs_prepared");		
 			}
 		})();
 
@@ -134,29 +145,73 @@ var DocumentLayer = cc.Layer.extend({
 
 		cc.assert(paragraph < self._paragraphStarts.length, "Requested paragraph "+paragraph+" does not exist.");
 		
-		_b_one(["paragraphs_prepared"], function() {
-			var box = self._box,
-				dim = self._shape.dim,
-				fdw = self._firstDisplayedWord = self._paragraphStarts[paragraph],
-				ldw = fdw,
-				word = self._words[fdw],
-				boxPos = 150;
+		var box = self._box,
+			shape = this._shape,
+			fdw = self._paragraphStarts[paragraph],
+			word = self._words[fdw];
 
-			box.setPosition(0, boxPos);
+		posY = paragraph===0? 0 : word.pos.y - shape.margin.top;  
+		this.showWordsAtPosition(posY);
 
-			var i = fdw;
-			while( boxPos - word.pos.y < dim.height ) {
-				box.addChild(word.label, 10);
-				_b_retain(word.label,"Word "+word.plain);
-				
-				ldw = i;
-				word = self._words[++i];
-			}
-
-			
 				// handle words that are add and words that are not
 				// add background
 				// add scrolling:
-		});
-	}
+	},
+
+	showWordsAtPosition: function(posY) {
+		var box = this._box,
+			fdw = this._firstDisplayedWord || 0,
+			ldw = this._lastDisplayedWord || 0,
+			word = this._words[fdw];
+		
+		box.setPosition(0, posY);
+		
+		// look if first words or last words have to be added
+		if( word.pos.y < posY || ldw === 0 ) {
+			while( word.pos.y < posY ) {
+				if( word.status.visible ) {
+					box.removeChild(word.label);
+					word.status.visible = false;
+					_b_release(word.label);
+				}
+				if( fdw === this._words.length-1 ) break; 
+				word = this._words[++fdw];
+			}
+
+			word = this._words[ldw];
+			while( word.pos.y < posY + cc.height ) {
+				if( !word.status.visible && word.pos.y >= posY ) {
+					box.addChild(word.label ,10);
+					word.status.visible = true;
+					_b_retain(word.label, "Word "+word.plain);
+				}
+				if( ldw === this._words.length-1 ) break;
+				word = this._words[++ldw];
+			}
+		} else {
+			while( word.pos.y > posY ) {
+				if( !word.status.visible && word.pos.y - posY < cc.height ) {
+					box.addChild(word.label ,10);
+					word.status.visible = true;
+					_b_retain(word.label, "Word "+word.plain);
+				}
+				if( fdw === 0 ) break; 
+				word = this._words[--fdw];
+			}
+
+			word = this._words[ldw];
+			while( word.pos.y > posY + cc.height ) {
+				if( word.status.visible ) {
+					box.removeChild(word.label);
+					word.status.visible = false;
+					_b_release(word.label);
+				}
+				if( ldw === 0 ) break;
+				word = this._words[--ldw];
+			}
+		}
+
+		this._firstDisplayedWord = fdw;
+		this._lastDisplayedWord = ldw;
+	},
 });	
