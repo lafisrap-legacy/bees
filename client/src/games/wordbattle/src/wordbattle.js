@@ -206,10 +206,10 @@ var WordBattleLayer = cc.Layer.extend({
         // to be done ...
 
 		cc.audioEngine.setMusicVolume(0.5);
-		cc.audioEngine.playMusic(gRes.organizing_intro_mp3,false);
-		cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,true);
-		cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,true);
-		cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,true);
+		cc.audioEngine.addMusic(gRes.organizing_intro_mp3,false);
+		cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,false);
+		cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,false);
+		cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,false);
 
     	// for now start with episode 1
     	this.startEpisode(0);
@@ -1104,6 +1104,7 @@ var Battleship = cc.Node.extend({
 			em.stopSystem();
 			setTimeout(function(em) {
 				part.removeChild(em);
+				cc.log("Release emitter "+em.__retainId);
 				_b_release(em);
 			},2000,em);
 		}
@@ -1122,7 +1123,8 @@ var Battleship = cc.Node.extend({
 		em.setPosition(cc.p(_B_SQUARE_SIZE/offset.x, _B_SQUARE_SIZE/offset.y));
 		em.setRotation(rotation);
 		part.addChild(em);
-		_b_retain(em);
+		_b_retain(em, "Emitter");
+		cc.log("Retain emitter "+em.__retainId);
 	},
 
 	setFullDamage: function() {
@@ -1253,15 +1255,15 @@ var Battleship = cc.Node.extend({
 					cc.log("Playing winning music!");
 					//cc.audioEngine.stopAllMusic();
 					cc.audioEngine.setMusicVolume(0.5);
-					cc.audioEngine.playMusic(gRes.organizing_intro_mp3,false);
+					cc.audioEngine.addMusic(gRes.organizing_intro_mp3,false);
 					cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,true);
 					cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,true);
 					cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,true);
 				} else {
 					cc.log("Playing loosing music!");
 					cc.audioEngine.stopAllMusic();
-					//cc.audioEngine.playMusic(gRes.shiplost_intro_mp3,false);
-					//cc.audioEngine.addMusic(gRes.shiplost_loop_mp3,true);
+					cc.audioEngine.addMusic(gRes.shiplost_intro_mp3,false);
+					cc.audioEngine.addMusic(gRes.shiplost_loop_mp3,true);
 				}
 				
 				bigShip.ship.move(bigShip.win, function(e) {
@@ -1922,6 +1924,7 @@ var WordBattleScene = cc.Scene.extend({
     	this.variation = variation;
     	
 		gRes = gameRes[this.game]["All"];
+		sRes = gameRes[this.game]["SoundInfo"];
 		vRes = gameRes[this.game][variation];
 
     	$b.getState().currentGame 	  = this.game;
