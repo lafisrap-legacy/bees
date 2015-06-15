@@ -56,6 +56,7 @@ var WordBattleLayer = cc.Layer.extend({
 	_first: null,
 	_mode: null,
 	_bigShipMoving: false,
+	_playingWinningMusic: undefined,
 	_bigShipQueue: [],
 	
     ctor:function () {
@@ -1106,6 +1107,7 @@ var Battleship = cc.Node.extend({
 				part.removeChild(em);
 				cc.log("Release emitter "+em.__retainId);
 				_b_release(em);
+				em.destroyParticleSystem();
 			},2000,em);
 		}
 
@@ -1251,19 +1253,32 @@ var Battleship = cc.Node.extend({
 				battleLayer._bigShipMoving = true;
 
 				cc.audioEngine.setMusicVolume(0.5);
-				if( bigShip.win ) {
-					cc.log("Playing winning music!");
-					//cc.audioEngine.stopAllMusic();
-					cc.audioEngine.setMusicVolume(0.5);
-					cc.audioEngine.addMusic(gRes.organizing_intro_mp3,false);
-					cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,true);
-					cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,true);
-					cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,true);
-				} else {
-					cc.log("Playing loosing music!");
-					cc.audioEngine.stopAllMusic();
-					cc.audioEngine.addMusic(gRes.shiplost_intro_mp3,false);
-					cc.audioEngine.addMusic(gRes.shiplost_loop_mp3,true);
+				if( bigShip.win && !battleLayer._playingWinningMusic) {
+					cc.audioEngine.fadeOut(1, function() {
+						cc.audioEngine.stopAllMusic();
+						cc.audioEngine.setMusicVolume(0.5);
+						cc.audioEngine.addMusic(gRes.organizing_intro_mp3,false);
+						cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,false);
+						cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,false);
+						cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,false);
+						cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,false);
+						cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,false);
+						cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,false);
+						battleLayer._playingWinningMusic = true;
+					});
+				} else if( !bigShip.win && battleLayer._playingWinningMusic !== false ) {
+					cc.audioEngine.fadeOut(1, function() {
+						cc.audioEngine.stopAllMusic();
+						cc.audioEngine.setMusicVolume(0.5);
+						cc.audioEngine.addMusic(gRes.shiplost_intro_mp3,false);
+						cc.audioEngine.addMusic(gRes.shiplost_loop_mp3,false);
+						cc.audioEngine.addMusic(gRes.shiplost_loop_mp3,false);
+						cc.audioEngine.addMusic(gRes.shiplost_loop_mp3,false);
+						cc.audioEngine.addMusic(gRes.shiplost_loop_mp3,false);
+						cc.audioEngine.addMusic(gRes.shiplost_loop_mp3,false);
+						cc.audioEngine.addMusic(gRes.shiplost_loop_mp3,false);
+						battleLayer._playingWinningMusic = false;
+					});
 				}
 				
 				bigShip.ship.move(bigShip.win, function(e) {

@@ -341,7 +341,8 @@ var _b_audio = function() {
 	var musicToPlay = [],
 		musicTimeout = null,
 		fadeTime = 0,
-		fadePerSec = 0;
+		fadePerSec = 0,
+		finalCallback = null;
 	
 	cc.audioEngine.step = function(dt) {
 		if( fadeTime ) {
@@ -349,24 +350,28 @@ var _b_audio = function() {
 			cc.audioEngine.setMusicVolume(volume);
 
 			fadeTime -= dt;
-			if( fadeTime < 0 ) fadeTime = 0;
+			if( fadeTime < 0 ) {
+				fadeTime = 0;
+				if( typeof finalCallback === "function" ) finalCallback();
+			}
 		}
 	};
 
-	cc.audioEngine.fadeTo = function(time, targetVolume) {
+	cc.audioEngine.fadeTo = function(time, targetVolume, cb) {
 		var currentVolume = cc.audioEngine.getMusicVolume(),
 			diff = targetVolume - currentVolume;
 
 		fadeTime = time;
 		fadePerSec = diff / time;
+		finalCallback = cb;
 	};
 
-	cc.audioEngine.fadeOut = function(time) {
-		this.fadeTo(time,0);
+	cc.audioEngine.fadeOut = function(time, cb) {
+		this.fadeTo(time,0,cb);
 	};
 
-	cc.audioEngine.fadeIn = function(time) {
-		this.fadeTo(time,1);
+	cc.audioEngine.fadeIn = function(time, cb) {
+		this.fadeTo(time,1,cb);
 	};
 
 	cc.audioEngine.addMusic = function(url, loop) {
