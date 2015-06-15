@@ -68,8 +68,19 @@ func main() {
 					Usage: "json template file for resizing",
 				},
 			},
-		},
-		{
+		},{
+			Name:      "mp3length",
+			ShortName: "ml",
+			Usage:     "Create llist with mp3-file durations",
+			Action:    mp3Length,
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "path",
+					Value: "",
+					Usage: "specify directory (default is *.mp3 in current directory)",
+				},
+			},
+		},{
 			Name:      "template",
 			ShortName: "r",
 			Usage:     "just to have an example in the code",
