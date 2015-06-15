@@ -16,7 +16,11 @@ var _B_DOCUMENT_SHAPES = {
 		},
 		margin: {left: 50, right: 50, top:100, bottom: 100}
 	}
-}
+},
+	_B_TOUCH_THRESHOLD = 10,
+	_B_SCROLL_INERTANCE = 0.99
+	_B_SCROLL_THRESHOLD_1 = 1,
+	_B_SCROLL_THRESHOLD_2 = 3;
 
 // Regular Expressions
 //
@@ -131,7 +135,8 @@ var DocumentLayer = cc.Layer.extend({
 				var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(shape.sprite.bottom),cc.rect(0,0,1136,79));
 				sprite.setPosition(cc.p(cc.width/2,cc.height-155-j*360-79/2));
 				box.addChild(sprite,0);
-				
+
+				self._height = labelY;				
 				cc.eventManager.dispatchCustomEvent("paragraphs_prepared");		
 			}
 		})();
@@ -153,6 +158,11 @@ var DocumentLayer = cc.Layer.extend({
 		posY = paragraph===0? 0 : word.pos.y - shape.margin.top;  
 		this.showWordsAtPosition(posY);
 
+		this._posY = this._lastY = posY;
+		this._speed = 0;
+		
+		this.initListeners();
+
 				// handle words that are add and words that are not
 				// add background
 				// add scrolling:
@@ -164,10 +174,11 @@ var DocumentLayer = cc.Layer.extend({
 			ldw = this._lastDisplayedWord || 0,
 			word = this._words[fdw];
 		
+		if( posY === undefined ) posY = this._posY;
 		box.setPosition(0, posY);
-		
+
 		// look if first words or last words have to be added
-		if( word.pos.y < posY || ldw === 0 ) {
+		if( word.pos.y < posY || fdw === 0 ) {
 			while( word.pos.y < posY ) {
 				if( word.status.visible ) {
 					box.removeChild(word.label);
@@ -179,7 +190,7 @@ var DocumentLayer = cc.Layer.extend({
 			}
 
 			word = this._words[ldw];
-			while( word.pos.y < posY + cc.height ) {
+			while( word.pos.y < posY + cc.height + 100 ) {
 				if( !word.status.visible && word.pos.y >= posY ) {
 					box.addChild(word.label ,10);
 					word.status.visible = true;
@@ -190,7 +201,7 @@ var DocumentLayer = cc.Layer.extend({
 			}
 		} else {
 			while( word.pos.y > posY ) {
-				if( !word.status.visible && word.pos.y - posY < cc.height ) {
+				if( !word.status.visible && word.pos.y - posY - 100 < cc.height ) {
 					box.addChild(word.label ,10);
 					word.status.visible = true;
 					_b_retain(word.label, "Word "+word.plain);
@@ -214,4 +225,94 @@ var DocumentLayer = cc.Layer.extend({
 		this._firstDisplayedWord = fdw;
 		this._lastDisplayedWord = ldw;
 	},
+
+	initListeners: function() {
+		var self = this,
+			box = this._box;
+
+        cc.eventManager.addListener(cc.EventListener.create({
+           	event: cc.EventListener.TOUCH_ALL_AT_ONCE,
+           	onTouchesBegan: function(touches, event) {
+               	console.log("onTouchesBegan!");
+                var touch = touches[0],
+               		loc = touch.getLocation();
+
+                self.touchStartPoint = {
+                   	x: loc.x,
+                   	y: loc.y
+               	};
+
+				self._startY = self._posY;
+
+              	self.touchLastPoint = {
+                	x: loc.x,
+                	y: loc.y
+                };
+            },
+
+           	onTouchesMoved: function(touches, event) {
+            	var touch = touches[0],
+					loc = touch.getLocation(),
+                    start = self.touchStartPoint;
+
+               	self.touchLastPoint = {
+                	x: loc.x,
+                    y: loc.y
+                };
+
+				self._posY = Math.min(Math.max(self._startY + loc.y - start.y, 0),self._height);
+				self.showWordsAtPosition();
+            },
+
+            onTouchesEnded: function(touches, event){
+            	console.log("onTouchesEnded!");
+
+                var touch = touches[0],
+                    loc = touch.getLocation();
+
+                self.touchStartPoint = null;
+            }
+        }), this);
+
+		self.scheduleUpdate();
+	},
+
+	// stopListeners stops the event handling
+	stopListeners: function() {
+        if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
+		this._touchListener = null;
+
+		self.unscheduleUpdate();
+    },    
+
+	update: function(dt) {
+		var posY = this._posY,
+			lastY = this._lastY,
+			speed = this._speed,
+			ps = this._paragraphStarts,
+			words = this._words;
+
+		if( lastY === posY && speed) {
+			posY = Math.min(Math.max(posY + speed, 0),this._height);
+			this.showWordsAtPosition();
+		}
+				
+		speed = (posY - lastY) * _B_SCROLL_INERTANCE;
+		if( speed < _B_SCROLL_THRESHOLD_1 ) speed = 0;
+		else if( speed < _B_SCROLL_THRESHOLD_2 ) {
+			for( var i=0 ; i<ps.length ; i++ ) {
+				var pY = words[ps[i]].pos.y;
+				if( Math.abs(pY - posY ) < _B_SCROLL_THRESHOLD_2 ) {
+					posY = pY;
+					speed = 0;
+					this.showWordsAtPosition();
+					break;
+				}
+			}
+		}
+
+		this._lastY = this._posY = posY;
+		this._speed = speed;
+		cc.log("Speed: "+this._speed);
+	}
 });	
