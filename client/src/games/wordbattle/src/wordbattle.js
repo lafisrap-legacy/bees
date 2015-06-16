@@ -46,6 +46,7 @@ var WordBattleLayer = cc.Layer.extend({
 	_otherSea: [],
 	_ownShips: [],
 	_otherShips: [],
+	_squares: [],
 	_bombs: [],
 	_text: null,
 	_sphinx: null,
@@ -231,6 +232,10 @@ var WordBattleLayer = cc.Layer.extend({
 			sw.push(word[1]);
 		}
 		cc.assert(sw.length, "I didn't find any words in the current paragraph.")
+		
+        //////////////////////////////
+        // Clear squares
+		for( var i=0 ; i<_B_MAX_SHIP_LENGTH ; i++ ) this._squares[i] = [];
 
         //////////////////////////////
         // Divide the words on different rounds and send it, or wait for the words from the other player
@@ -766,19 +771,27 @@ var WordBattleLayer = cc.Layer.extend({
 	checkSquare: function(pos) {
 		var sea = this._otherSea,
 	   		seaRect = sea.getBoundingBox(),
-			checkX = Math.floor((pos.x - seaRect.x)/_B_SQUARE_SIZE)*_B_SQUARE_SIZE+_B_SQUARE_SIZE/2,
-			checkY = Math.floor((pos.y - seaRect.y)/_B_SQUARE_SIZE)*_B_SQUARE_SIZE+_B_SQUARE_SIZE/2,
-			check = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("check.png"),cc.rect(0,0,_B_SQUARE_SIZE,_B_SQUARE_SIZE));
-		check.setPosition(cc.p(checkX, checkY));
-		check.setScale(0);
-		sea.addChild(check,10);
+			col = Math.floor((pos.x - seaRect.x)/_B_SQUARE_SIZE),
+			row = Math.floor((pos.y - seaRect.y)/_B_SQUARE_SIZE);
 
-		check.runAction(
-			cc.spawn(
-				cc.scaleTo(0.33,1,1),
-				cc.fadeTo(0.33,100)
-			)
-		);
+		if( !this._squares[row][col] ) {
+			this._squares[row][col] = true;
+
+			var checkX = col * _B_SQUARE_SIZE+_B_SQUARE_SIZE/2,
+				checkY = row * _B_SQUARE_SIZE+_B_SQUARE_SIZE/2,
+				check = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("check.png"),cc.rect(0,0,_B_SQUARE_SIZE,_B_SQUARE_SIZE));
+
+			check.setPosition(cc.p(checkX, checkY));
+			check.setScale(0);
+			sea.addChild(check,10);
+
+			check.runAction(
+				cc.spawn(
+					cc.scaleTo(0.33,1,1),
+					cc.fadeTo(0.33,100)
+				)
+			);
+		}
 	},
     
     gameUpdate: function(data) {
