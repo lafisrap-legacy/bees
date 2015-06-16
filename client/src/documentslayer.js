@@ -18,9 +18,9 @@ var _B_DOCUMENT_SHAPES = {
 	}
 },
 	_B_TOUCH_THRESHOLD = 10,
-	_B_SCROLL_INERTANCE = 0.99
+	_B_SCROLL_INERTANCE = 0.985
 	_B_SCROLL_THRESHOLD_1 = 1,
-	_B_SCROLL_THRESHOLD_2 = 3;
+	_B_SCROLL_THRESHOLD_2 = 10;
 
 // Regular Expressions
 //
@@ -153,16 +153,16 @@ var DocumentLayer = cc.Layer.extend({
 				box.addChild(sprite,0);
 
 				// draw middle elements
-				var elems = Math.ceil((labelY - 155 - 79)/360);
+				var elems = Math.ceil((labelY - 155 - 79)/352);
 				for( var j=0 ; j<elems ; j++ ) {
 					var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(shape.sprite.middle[Math.floor(Math.random()*shape.sprite.middle.length)]),cc.rect(0,0,1136,360));
-					sprite.setPosition(cc.p(cc.width/2,cc.height-155-j*360-180));
+					sprite.setPosition(cc.p(cc.width/2,cc.height-155-j*352-180));
 					box.addChild(sprite,0);
 				}
 
 				// draw document bottom
 				var sprite = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame(shape.sprite.bottom),cc.rect(0,0,1136,79));
-				sprite.setPosition(cc.p(cc.width/2,cc.height-155-j*360-79/2));
+				sprite.setPosition(cc.p(cc.width/2,cc.height-155-j*352-79/2));
 				box.addChild(sprite,0);
 
 				self._height = labelY;				
@@ -305,8 +305,7 @@ var DocumentLayer = cc.Layer.extend({
 	},
 
 	initListeners: function() {
-		var self = this,
-			box = this._box;
+		var self = this;
 
         cc.eventManager.addListener(cc.EventListener.create({
            	event: cc.EventListener.TOUCH_ALL_AT_ONCE,
@@ -367,6 +366,7 @@ var DocumentLayer = cc.Layer.extend({
 		var posY = this._posY,
 			lastY = this._lastY,
 			speed = this._speed,
+			margin = this._shape.margin.top,
 			ps = this._paragraphStarts,
 			words = this._words;
 
@@ -376,11 +376,11 @@ var DocumentLayer = cc.Layer.extend({
 		}
 				
 		speed = (posY - lastY) * _B_SCROLL_INERTANCE;
-		if( speed < _B_SCROLL_THRESHOLD_1 ) speed = 0;
-		else if( speed < _B_SCROLL_THRESHOLD_2 ) {
+		if( Math.abs(speed) < _B_SCROLL_THRESHOLD_1 ) speed = 0;
+		else if( Math.abs(speed) < _B_SCROLL_THRESHOLD_2 ) {
 			for( var i=0 ; i<ps.length ; i++ ) {
 				var pY = words[ps[i]].pos.y;
-				if( Math.abs(pY - posY ) < _B_SCROLL_THRESHOLD_2 ) {
+				if( Math.abs(pY - posY - margin ) < _B_SCROLL_THRESHOLD_2 ) {
 					posY = pY;
 					speed = 0;
 					this.showWordsAtPosition();
