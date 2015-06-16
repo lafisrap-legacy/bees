@@ -1,6 +1,6 @@
-// DocumentsLayer
+// DocumentLayer
 // 
-// The documents layer file contains documents for the collectors booklet 
+// The documents layer is the the base class for documents for the collectors booklet 
 
 
 // DocumentsLayer Constants
@@ -41,6 +41,7 @@ var DocumentLayer = cc.Layer.extend({
 
 	_words: [],
 	_paragraphStarts: [],
+	_selectedWords: [],
 	_firstDisplayedWord: null,
 	_lastDisplayedWord: null,
 
@@ -49,7 +50,8 @@ var DocumentLayer = cc.Layer.extend({
 
 	// ctor initializes sprite cache
 	//
-    ctor: function(title, text, sizes) {
+    ctor: function(title, text, collectedWords, sizes) {
+
 		var self = this,
 			words = this._words;
 
@@ -84,7 +86,15 @@ var DocumentLayer = cc.Layer.extend({
 			var p = text[i].replace(/[\{\}]/g,""),
 				plainWords = p.match(_b_plainWords),
 				fullWords = p.match(_b_WordsWithPunctuation),
-				labelX = shape.margin.left;
+				selectedWords = [],
+				labelX = shape.margin.left,
+				cw = collectedWords[i] || [],
+				sw = [];
+	   	
+			var word;	
+			while( (word=_b_selectedWords.exec(text[i])) != null ) {
+				sw.push(word[1]);
+			}
 
 			cc.assert(plainWords.length === fullWords.length, "Number of words doesn't match between _pureWords and _fullWords.");
 
@@ -99,7 +109,21 @@ var DocumentLayer = cc.Layer.extend({
 					labelY += sizes.lineHeight;
 				}
 
-				var word = {label: label, full:fullWords[j], plain:plainWords[j], pos:cc.p(labelX, labelY), status: {visible: false, color: cc.color(0,0,0), opacity: 255} };
+				if( sw.length && sw[0] === plainWords[j] ) selectedWords.push({ord:j, word:sw.splice(0,1)[0]});
+
+				var word = {
+					label:	label, 
+					full:	fullWords[j], 
+					plain:	plainWords[j], 
+					pos:	cc.p(labelX, labelY), 
+					status: {
+						visible: 	false, 
+						color: 		cc.color(0,0,0), 
+						opacity: 	(j<3 || j>plainWords.length-4)?255:0,
+						collected: 	false
+					}
+				};
+
 				words.push(word);
 
 				label.setColor(word.status.color);
@@ -109,12 +133,17 @@ var DocumentLayer = cc.Layer.extend({
 				cnt++;
 			}
 
-			cc.log("Finished paragraph "+i);
+			cc.assert( sw.length === 0, "Not all selected words were found in the text.");
+			cc.log("Finished creating word labels for paragraph "+i);
 
+			self._selectedWords[i] = selectedWords;
+			
 			self._paragraphStarts[i] = paragraphStart;
 			paragraphStart += plainWords.length;
 
-			labelY += sizes.lineHeight; // new line after paragraph
+			labelY += sizes.lineHeight * 2; // new line after paragraph
+
+			for( var j=0 ; j<cw.length ; j++ ) self.insertWordIntoParagraph(i, cw[j]);
 
 			if( ++i < text.length ) setTimeout(addWords,1);
 			else {	
@@ -143,6 +172,43 @@ var DocumentLayer = cc.Layer.extend({
 
 		cc.log("Baking "+cnt+" words");
 		box.bake();
+	},
+
+	insertWordIntoParagraph: function(p, word) {
+		var words = this._words,
+			sw = this._selectedWords[p],
+			fw = this._paragraphStarts[p],
+			lw = (this._paragraphStarts[p+1] || words.length) - 1;
+
+		for( var i=0 ; i<sw.length ; i++ ) if( word.word === sw[i].word ) break;
+		cc.assert(i<sw.length, "Collected word was not found in selected words.");
+
+		var ord = sw[i].ord;
+
+		if( word.color ) words[ord].status.color = word.color;
+		if( word.opacity ) words[ord].status.opacity = word.opacity;
+		words[ord].label.runAction(
+			cc.spawn(
+				cc.fadeTo(2, word.opacity),
+				cc.tintTo(2, word.color)
+			)
+		);
+		words[ord].status.collected = true;
+
+		var lowerEnd = sw[i-1] && sw[i-1].ord+1 || fw,
+			upperEnd = sw[i+1] && sw[i+1].ord-1 || lw;
+
+		for( var i=lowerEnd ; i<upperEnd ; i++ ) {
+			if( word.opacity > words[i].status.opacity && i != ord ) {
+				words[i].status.opacity = word.opacity;
+				words[i].label.runAction(
+					cc.spawn(
+						cc.fadeTo(2, word.opacity),
+						cc.TintTo(2, word.color)
+					)
+				);
+			}
+		}
 	},
 
 	show: function(paragraph) {
@@ -183,6 +249,18 @@ var DocumentLayer = cc.Layer.extend({
 				if( word.status.visible ) {
 					box.removeChild(word.label);
 					word.status.visible = false;
+					if( word.status.collected ) word.label.runAction(
+						cc.repeatForever(
+							cc.sequence(
+					    		cc.EaseSineIn.create(
+									cc.tintTo(1,cc.color.BLACK)
+								),
+					    		cc.EaseSineOut.create(
+									cc.tintTo(1,word.status.color)
+								)
+							)
+						)
+					);
 					_b_release(word.label);
 				}
 				if( fdw === this._words.length-1 ) break; 

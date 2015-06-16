@@ -50,6 +50,7 @@ var WordBattleLayer = cc.Layer.extend({
 	_text: null,
 	_sphinx: null,
 	_fairy: null,
+	_collectedWords: null,
 	_selectedWords: null,
 	_rounds: null,
 	_round: null,
@@ -58,7 +59,7 @@ var WordBattleLayer = cc.Layer.extend({
 	_bigShipMoving: false,
 	_bigShipQueue: [],
 	
-    ctor:function () {
+    ctor:function (state) {
     	var self = this;
     
         this._super();
@@ -95,7 +96,7 @@ var WordBattleLayer = cc.Layer.extend({
 			
 			//////////////////////////////
 			// Set up paper document
-			var paper = self._paper = new DocumentLayer(self.getParent().variation, self._text, {
+			var paper = self._paper = new DocumentLayer(self.getParent().variation, self._text, self._collectedWords, {
 				type: "Paper", 
 				fontSize: 50,
 				lineHeight: 64
@@ -149,6 +150,15 @@ var WordBattleLayer = cc.Layer.extend({
         this.addChild(this._fairy,10);
 		_b_retain(this._fairy, "Fairy");
 
+		this._collectedWords = state.words;
+		/// tmp
+		this._collectedWords = [[
+			{ word: "wünschten", color: cc.color(0,0,255), opacity: 255 },
+			{ word: "König", color: cc.color(0,255,0), opacity: 255 },
+			{ word: "Königin", color: cc.color(255,0,0), opacity: 255 },
+			{ word: "Kind", color: cc.color(255,0,255), opacity: 255 },
+			{ word: "Eselein", color: cc.color(0,255,255), opacity: 255 }
+		]];
 	/*	
 		for( var i=0 ; i<3 ; i++ ) {	
 			var bomb = new Bomb(this._fairy._space, cc.p(100+80*i,500+(i%2)*100),self._otherSea);
@@ -1914,14 +1924,18 @@ var WordBattleScene = cc.Scene.extend({
 	ctor: function(variation) {
         this._super();
 
+		var state = $b.getState();
+
 		cc.assert(gameRes[this.game][variation],"No resources for "+variation+" in resource object gameRes");
     	this.variation = variation;
     	
 		gRes = gameRes[this.game]["All"];
 		vRes = gameRes[this.game][variation];
 
-    	$b.getState().currentGame 	  = this.game;
-    	$b.getState().currentVariation = this.variation;
+    	state.currentGame 	  = this.game;
+    	state.currentVariation = this.variation;
+		if( !state[this.variation] ) state[this.variation] = {};
+		if( !state[this.variation].words ) state[this.variation].words = [];
 
 		cc.audioEngine.setEffectsVolume(0.5);
 		cc.audioEngine.setMusicVolume(0.5);
@@ -1933,10 +1947,12 @@ var WordBattleScene = cc.Scene.extend({
 
 		$b.saveState(); 		
 	},
+
     onEnter: function () {
         this._super();
 
-        this.addChild(new WordBattleLayer());
+		var state = $b.getState()[this.variation];
+        this.addChild(new WordBattleLayer(state));
     },
     
     onExit: function() {
