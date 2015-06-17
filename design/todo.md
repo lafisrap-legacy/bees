@@ -1,15 +1,13 @@
 # To Do
 
 ## Next
-* let the cross hair shrink longer
-* let the middle bomb come in more randomly
-* set word on ship after big ship left
+
+* Big letters fly different on right side
 
 * set in new font from Dieter
 * find a solution for the hourglass
 * say some more results
 * work on text timing
-* set in fire, smoke and water effects
 * Input name, boy/girl
 
 ## Later

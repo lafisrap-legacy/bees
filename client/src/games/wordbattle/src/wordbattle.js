@@ -19,6 +19,7 @@ var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_MODE_WATCHING = 4,
 	_B_NEXT_BIG_SHIP = 1,
 	_B_BIG_SHIP_LEFT = 2,
+	_B_SEA_SYMBOL_SCALE = 0.1,
 
 // Regular Expressions
 //
@@ -51,6 +52,7 @@ var WordBattleLayer = cc.Layer.extend({
 	_text: null,
 	_sphinx: null,
 	_fairy: null,
+	_collectedWords: null,
 	_selectedWords: null,
 	_rounds: null,
 	_round: null,
@@ -60,7 +62,7 @@ var WordBattleLayer = cc.Layer.extend({
 	_playingWinningMusic: undefined,
 	_bigShipQueue: [],
 	
-    ctor:function () {
+    ctor:function (state) {
     	var self = this;
     
         this._super();
@@ -96,42 +98,17 @@ var WordBattleLayer = cc.Layer.extend({
 			);
 			
 			//////////////////////////////
-			// Create and show seas
-			var s1 = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
-			s1.setPosition(cc.p(284,cc.height/2));
-			s1.setScale(0.0);
-			s1.setOpacity(0);
-			s1.runAction(
-				cc.EaseSineOut.create(
-					cc.spawn(
-						cc.scaleTo(0.90, 1),
-						cc.fadeIn(0.90)
-					)
-				)
-			);
-			var s2 = self._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
-			s2.setPosition(cc.p(852,cc.height/2));
-			s2.setScale(0.0);
-			s2.setOpacity(0);
-			s2.runAction(
-				cc.sequence(
-					cc.EaseSineOut.create(
-						cc.spawn(
-							cc.scaleTo(1.00,1),
-							cc.fadeIn(1.00)
-						)
-					),
-					cc.callFunc(function() {
-						cc.eventManager.dispatchCustomEvent("seas_have_moved_in");		
-					})
-				)
-			);
-			self.addChild(s1,0);
-			self.addChild(s2,0);	
-			_b_retain(s1,"WordBattleLayer: sea1");		
-			_b_retain(s2,"WordBattleLayer: sea2");		
+			// Set up paper document
+			var paper = self._paper = new DocumentLayer(self.getParent().variation, self._text, self._collectedWords, {
+				type: "Paper", 
+				fontSize: 50,
+				lineHeight: 64
+			});
+			self.addChild(paper, 5);
 
-			self.startGame();
+			_b_one(["paragraphs_prepared"], function() {
+				self.startGame();
+			});
 		}, this.gameUpdate, this);
 
 		//////////////////////////////
@@ -156,7 +133,7 @@ var WordBattleLayer = cc.Layer.extend({
         // Reading the fairytale and related data
 		var json = cc.loader.getRes(vRes.Fairytale_json);
 		if( !json ) {
-			cc.log("ERROR: Can't open resource file for "+this.parent().game+"/"+this.parent().variation);
+			cc.log("ERROR: Can't open resource file for "+this.parent().game+"/"+this.getParent().variation);
 			cc.director.runScene($b);
 		}
 		this._text = json.text;
@@ -173,9 +150,18 @@ var WordBattleLayer = cc.Layer.extend({
 		this._mode = _B_MODE_TITLE;	
 		
 		this._fairy = new GameFairy();
-        this.addChild(this._fairy,10);
+        this.addChild(this._fairy,15);
 		_b_retain(this._fairy, "Fairy");
 
+		this._collectedWords = state.words;
+		/// tmp
+		this._collectedWords = [[
+			{ word: "wünschten", color: cc.color(9,72,184), opacity: 255 },
+			{ word: "König", color: cc.color(222,0,0), opacity: 255 },
+			{ word: "Königin", color: cc.color(250,190,17), opacity: 255 },
+			{ word: "Kind", color: cc.color(2,168,35), opacity: 255 },
+			{ word: "klagte", color: cc.color(173,109,142), opacity: 255 }
+		]];
 	/*	
 		for( var i=0 ; i<3 ; i++ ) {	
 			var bomb = new Bomb(this._fairy._space, cc.p(100+80*i,500+(i%2)*100),self._otherSea);
@@ -212,20 +198,74 @@ var WordBattleLayer = cc.Layer.extend({
 		cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,false);
 		cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,false);
 		cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,false);
-
-    	// for now start with episode 1
+    	
+		// for now start with episode 1
     	this.startEpisode(0);
     },
 
 	// startEpisode starts a play with one paragraph, creating a play list
 	startEpisode: function(paragraph) {
 		var self = this;
-	
-		var p = this._text[paragraph];
+
+		//////////////////////////////
+		// Create seas
+		var s1 = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
+		var s2 = self._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
+		_b_retain(s1,"WordBattleLayer: sea1");		
+		_b_retain(s2,"WordBattleLayer: sea2");		
+		
+		//////////////////////////////
+		// Show fairy tale 
+		this._paper.show(paragraph, new MyGameSymbol(s1, s2, function() {
+
+			var parent = s1.getParent(),
+				pos1 = parent.convertToWorldSpace(s1.getPosition()),
+				pos2 = parent.convertToWorldSpace(s2.getPosition());
+
+			parent.removeChild(s1);
+			parent.removeChild(s2);
+			self.addChild(s1, 10);
+			self.addChild(s2, 10);
+			s1.setPosition(self.convertToNodeSpace(pos1));
+			s2.setPosition(self.convertToNodeSpace(pos2));
+
+			s1.runAction(
+				cc.EaseSineOut.create(
+					cc.spawn(
+						cc.scaleTo(0.90, 1),
+						cc.rotateTo(0.90, 0),
+						cc.moveTo(0.90, cc.p(284,cc.height/2))
+					)
+				)
+			);
+			s2.runAction(
+				cc.sequence(
+					cc.EaseSineIn.create(
+						cc.spawn(
+							cc.scaleTo(1.00, 1),
+							cc.rotateTo(1.00, 0),
+							cc.moveTo(1.00, cc.p(852,cc.height/2))
+						)
+					),
+					cc.callFunc(function() {
+						cc.eventManager.dispatchCustomEvent("seas_have_moved_in");		
+					})
+				)
+			);
+
+			//////////////////////////////
+			// Play winning music! 
+			cc.audioEngine.setMusicVolume(0.5);
+			cc.audioEngine.playMusic(gRes.organizing_intro_mp3,false);
+			cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,true);
+			cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,true);
+			cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,true);
+		}));
 		
         //////////////////////////////
         // Get the single words out of the current paragraph, with and without punctuation
-		var sw = this._selectedWords = [],
+		var p = self._text[paragraph],
+			sw = self._selectedWords = [],
 			word;
 
 	   	while( (word=_b_selectedWords.exec(p)) != null ) {
@@ -1939,6 +1979,21 @@ var TypeWriter = cc.PhysicsSprite.extend({
 	}	
 });
 
+var MyGameSymbol = GameSymbol.extend({
+	ctor: function(sea1, sea2, cb) {
+		this._super(cb);
+	
+		var syms = this.getContentSize(),
+			seas = sea1.getContentSize();
+
+		sea1.setPosition(cc.p(syms.width/2-seas.width*_B_SEA_SYMBOL_SCALE/2-4, syms.height/2));
+		sea1.setScale(_B_SEA_SYMBOL_SCALE);
+		this.addChild(sea1);
+		sea2.setPosition(cc.p(syms.width/2+seas.width*_B_SEA_SYMBOL_SCALE/2+4, syms.height/2));
+		sea2.setScale(_B_SEA_SYMBOL_SCALE);
+		this.addChild(sea2);
+	}
+});
 
 
 var WordBattleScene = cc.Scene.extend({
@@ -1948,6 +2003,8 @@ var WordBattleScene = cc.Scene.extend({
 	ctor: function(variation) {
         this._super();
 
+		var state = $b.getState();
+
 		cc.assert(gameRes[this.game][variation],"No resources for "+variation+" in resource object gameRes");
     	this.variation = variation;
     	
@@ -1955,8 +2012,10 @@ var WordBattleScene = cc.Scene.extend({
 		sRes = gameRes[this.game]["SoundInfo"];
 		vRes = gameRes[this.game][variation];
 
-    	$b.getState().currentGame 	  = this.game;
-    	$b.getState().currentVariation = this.variation;
+    	state.currentGame 	  = this.game;
+    	state.currentVariation = this.variation;
+		if( !state[this.variation] ) state[this.variation] = {};
+		if( !state[this.variation].words ) state[this.variation].words = [];
 
 		cc.audioEngine.setEffectsVolume(0.5);
 		cc.audioEngine.setMusicVolume(0.5);
@@ -1968,10 +2027,12 @@ var WordBattleScene = cc.Scene.extend({
 
 		$b.saveState(); 		
 	},
+
     onEnter: function () {
         this._super();
 
-        this.addChild(new WordBattleLayer());
+		var state = $b.getState()[this.variation];
+        this.addChild(new WordBattleLayer(state));
     },
     
     onExit: function() {

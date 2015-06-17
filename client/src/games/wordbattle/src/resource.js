@@ -30,7 +30,7 @@
 			shiplost_intro_mp3 : path+"res/sounds/Schiff_verloren_intro5,0.mp3",
 			shiplost_loop_mp3 : path+"res/sounds/Schiff_verloren_loop5,0.mp3",
 
-			smoke_plist: path+"res/particles/smoke.plist",
+			smoke_plist:  path+"res/particles/smoke.plist",
 			smokefire_plist: path+"res/particles/smokefire.plist",
 			fire_plist: path+"res/particles/fire.plist",
 		},
