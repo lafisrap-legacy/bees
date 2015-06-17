@@ -20,12 +20,13 @@ var _B_DOCUMENT_SHAPES = {
 	_B_TOUCH_THRESHOLD = 10,
 	_B_SCROLL_INERTANCE = 0.985
 	_B_SCROLL_THRESHOLD_1 = 1,
-	_B_SCROLL_THRESHOLD_2 = 10;
+	_B_SCROLL_THRESHOLD_2 = 7,
+	_B_SYMBOL_POS = cc.p(980, 70);
 
 // Regular Expressions
 //
 _b_plainWords = /\b[\wäöüÄÖÜß]{2,}/g;
-_b_WordsWithPunctuation = /\s*„?\b([\wäöüÄÖÜß]{2,})[^\wäöüÄÖÜß\„]*/g;  // currently only German umlauts
+_b_WordsWithPunctuation = /([^\wäöüÄÖÜß]|\s)*„?([\wäöüÄÖÜß]{2,})[^\wäöüÄÖÜß\„]*/g;  // currently only German umlauts
 
 	
 // DocumentsLayer provides a one page paper with variable size and text and images on it.
@@ -63,12 +64,64 @@ var DocumentLayer = cc.Layer.extend({
 			shape = this._shape = _B_DOCUMENT_SHAPES[sizes.type],
 			boxWidth = cc.width - shape.margin.left - shape.margin.right;
 
-		this.addChild(box,20);
 		_b_retain(box, "Text box");
 
 		var labelX, labelY = shape.margin.top,
 			paragraphStart = 0,
 			cnt = 0;
+
+		/////////////////////////////////////////////////////////////////////7
+		// Define actions 
+		this._actionWordBlink = cc.repeatForever(
+			cc.sequence(
+				cc.EaseSineIn.create(
+					cc.scaleTo(1.6+Math.random()*0.4,1.1)
+				),
+				cc.EaseSineOut.create(
+					cc.scaleTo(1.8,1)
+				)
+			)
+		);
+		this._actionSymbolBlink = cc.repeatForever(
+			cc.sequence(
+				cc.EaseSineIn.create(
+					cc.scaleTo(0.4,0.95)
+				),
+				cc.EaseSineOut.create(
+					cc.scaleTo(0.4,1)
+				),
+				cc.EaseSineIn.create(
+					cc.scaleTo(0.4,0.95)
+				),
+				cc.EaseSineOut.create(
+					cc.scaleTo(0.4,1)
+				),
+				cc.EaseSineIn.create(
+					cc.scaleTo(0.4,0.95)
+				),
+				cc.EaseSineOut.create(
+					cc.scaleTo(0.4,1)
+				),
+				cc.EaseSineIn.create(
+					cc.scaleTo(0.4,0.95)
+				),
+				cc.EaseSineOut.create(
+					cc.scaleTo(0.4,1)
+				),
+				cc.EaseSineIn.create(
+					cc.spawn(
+						cc.scaleTo(0.8,0.6),
+						cc.rotateBy(0.8,180)
+					)
+				),
+				cc.EaseSineOut.create(
+					cc.spawn(
+						cc.scaleTo(0.8,1),
+						cc.rotateBy(0.8,180)
+					)
+				)
+			)
+		);
 
 		/////////////////////////////////////////////////////////////////////7
 		// Draw Title
@@ -170,6 +223,8 @@ var DocumentLayer = cc.Layer.extend({
 			}
 		})();
 
+		this.setCascadeOpacityEnabled(true);
+
 		cc.log("Baking "+cnt+" words");
 		box.bake();
 	},
@@ -181,24 +236,26 @@ var DocumentLayer = cc.Layer.extend({
 			lw = (this._paragraphStarts[p+1] || words.length) - 1;
 
 		for( var i=0 ; i<sw.length ; i++ ) if( word.word === sw[i].word ) break;
-		cc.assert(i<sw.length, "Collected word was not found in selected words.");
+		cc.assert(i<sw.length, "Collected word "+word.word+" was not found in selected words.");
 
 		var ord = sw[i].ord;
 
 		if( word.color ) words[ord].status.color = word.color;
 		if( word.opacity ) words[ord].status.opacity = word.opacity;
+		words[ord].label.setColor(word.color);
 		words[ord].label.runAction(
 			cc.spawn(
-				cc.fadeTo(2, word.opacity),
-				cc.tintTo(2, word.color)
+				//cc.tintTo(2, word.color),
+				cc.fadeTo(2, word.opacity)
 			)
 		);
 		words[ord].status.collected = true;
+		words[ord].label.runAction(this._actionWordBlink.clone());
 
 		var lowerEnd = sw[i-1] && sw[i-1].ord+1 || fw,
 			upperEnd = sw[i+1] && sw[i+1].ord-1 || lw;
 
-		for( var i=lowerEnd ; i<upperEnd ; i++ ) {
+		for( var i=lowerEnd ; i<=upperEnd ; i++ ) {
 			if( word.opacity > words[i].status.opacity && i != ord ) {
 				words[i].status.opacity = word.opacity;
 				words[i].label.runAction(
@@ -211,7 +268,7 @@ var DocumentLayer = cc.Layer.extend({
 		}
 	},
 
-	show: function(paragraph) {
+	show: function(paragraph, gameSymbol) {
 		var self = this;
 
 		cc.assert(paragraph < self._paragraphStarts.length, "Requested paragraph "+paragraph+" does not exist.");
@@ -224,14 +281,51 @@ var DocumentLayer = cc.Layer.extend({
 		posY = paragraph===0? 0 : word.pos.y - shape.margin.top;  
 		this.showWordsAtPosition(posY);
 
+		////////////////////////////////////////////////////////
+		// Show game start symbol with seas
+		this._gameSymbol = gameSymbol || new GameSymbol(cb);
+
+		gameSymbol.setPosition(cc.p(_B_SYMBOL_POS.x, cc.height - word.pos.y + _B_SYMBOL_POS.y));
+		gameSymbol.runAction(this._actionSymbolBlink.clone());
+		box.addChild(gameSymbol);
+
 		this._posY = this._lastY = posY;
 		this._speed = 0;
 		
 		this.initListeners();
+		this.addChild(box,20);
+		box.setScale(0.8);
+		box.setOpacity(0);
+		box.setCascadeOpacityEnabled(true);
+		box.runAction(
+			cc.EaseSineIn.create(
+				cc.spawn(
+					cc.scaleTo(0.9,1),
+					cc.fadeIn(0.9)
+				)
+			)
+		);
+	},
 
-				// handle words that are add and words that are not
-				// add background
-				// add scrolling:
+	hide: function(cb) {
+		var self = this,
+			box = self._box;
+
+		this.stopListeners();
+		box.runAction(
+			cc.sequence(
+				cc.EaseSineOut.create(
+					cc.spawn(
+						cc.scaleTo(0.9,0.7),
+						cc.fadeOut(0.9)
+					)
+				),
+				cc.callFunc(function() {
+					self.removeChild(box);
+					if(typeof cb === "function") cb();
+				})
+			)
+		);
 	},
 
 	showWordsAtPosition: function(posY) {
@@ -249,18 +343,7 @@ var DocumentLayer = cc.Layer.extend({
 				if( word.status.visible ) {
 					box.removeChild(word.label);
 					word.status.visible = false;
-					if( word.status.collected ) word.label.runAction(
-						cc.repeatForever(
-							cc.sequence(
-					    		cc.EaseSineIn.create(
-									cc.tintTo(1,cc.color.BLACK)
-								),
-					    		cc.EaseSineOut.create(
-									cc.tintTo(1,word.status.color)
-								)
-							)
-						)
-					);
+					if( word.status.collected ) word.label.runAction(this._actionWordBlink.clone());
 					_b_release(word.label);
 				}
 				if( fdw === this._words.length-1 ) break; 
@@ -356,6 +439,8 @@ var DocumentLayer = cc.Layer.extend({
 
 	// stopListeners stops the event handling
 	stopListeners: function() {
+		var self = this;
+
         if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
 		this._touchListener = null;
 
@@ -394,3 +479,59 @@ var DocumentLayer = cc.Layer.extend({
 		cc.log("Speed: "+this._speed);
 	}
 });	
+
+
+var GameSymbol = cc.Sprite.extend({
+	_finalCallback: null,
+
+	ctor: function(cb) {
+        cc.Sprite.prototype.ctor.call(this);
+
+		var frame = cc.spriteFrameCache.getSpriteFrame("startgame.png");
+        this.initWithSpriteFrame(frame);
+
+		this.initListeners();
+
+		this._finalCallback = cb;
+	},
+
+	initListeners: function() {
+		var self = this;
+
+        this._touchListener = cc.EventListener.create({
+           	event: cc.EventListener.TOUCH_ALL_AT_ONCE,
+           	onTouchesBegan: function(touches, event) {
+               	console.log("onTouchesBegan!");
+                var loc = touches[0].getLocation(),
+                    rect  = self.getBoundingBox();
+
+                if( rect && cc.rectContainsPoint(rect, loc) && typeof self._finalCallback === "function" ) {
+                    self.getParent().getParent().hide();
+                    self._finalCallback();
+                }   
+            },
+
+           	onTouchesMoved: function(touches, event) {
+            	var touch = touches[0],
+					loc = touch.getLocation();
+            },
+
+            onTouchesEnded: function(touches, event){
+            	console.log("onTouchesEnded!");
+
+                var touch = touches[0],
+                    loc = touch.getLocation();
+            }
+        });
+		
+		cc.eventManager.addListener(this._touchListener, this);
+	},
+
+	// stopListeners stops the event handling
+	stopListeners: function() {
+        if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
+		this._touchListener = null;
+    },    
+
+	//.convertToWorldSpace(part.getPosition())
+});

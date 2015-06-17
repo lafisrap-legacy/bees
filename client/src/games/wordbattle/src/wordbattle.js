@@ -19,6 +19,7 @@ var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_MODE_WATCHING = 4,
 	_B_NEXT_BIG_SHIP = 1,
 	_B_BIG_SHIP_LEFT = 2,
+	_B_SEA_SYMBOL_SCALE = 0.1,
 
 // Regular Expressions
 //
@@ -147,17 +148,17 @@ var WordBattleLayer = cc.Layer.extend({
 		this._mode = _B_MODE_TITLE;	
 		
 		this._fairy = new GameFairy();
-        this.addChild(this._fairy,10);
+        this.addChild(this._fairy,15);
 		_b_retain(this._fairy, "Fairy");
 
 		this._collectedWords = state.words;
 		/// tmp
 		this._collectedWords = [[
-			{ word: "wünschten", color: cc.color(0,0,255), opacity: 255 },
-			{ word: "König", color: cc.color(0,255,0), opacity: 255 },
-			{ word: "Königin", color: cc.color(255,0,0), opacity: 255 },
-			{ word: "Kind", color: cc.color(255,0,255), opacity: 255 },
-			{ word: "Eselein", color: cc.color(0,255,255), opacity: 255 }
+			{ word: "wünschten", color: cc.color(9,72,184), opacity: 255 },
+			{ word: "König", color: cc.color(222,0,0), opacity: 255 },
+			{ word: "Königin", color: cc.color(250,190,17), opacity: 255 },
+			{ word: "Kind", color: cc.color(2,168,35), opacity: 255 },
+			{ word: "klagte", color: cc.color(173,109,142), opacity: 255 }
 		]];
 	/*	
 		for( var i=0 ; i<3 ; i++ ) {	
@@ -199,33 +200,43 @@ var WordBattleLayer = cc.Layer.extend({
 		var self = this;
 
 		//////////////////////////////
+		// Create seas
+		var s1 = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
+		var s2 = self._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
+		_b_retain(s1,"WordBattleLayer: sea1");		
+		_b_retain(s2,"WordBattleLayer: sea2");		
+		
+		//////////////////////////////
 		// Show fairy tale 
-		this._paper.show(paragraph, function() {;
+		this._paper.show(paragraph, new MyGameSymbol(s1, s2, function() {
 
-			//////////////////////////////
-			// Create and show seas
-			var s1 = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
-			s1.setPosition(cc.p(284,cc.height/2));
-			s1.setScale(0.0);
-			s1.setOpacity(0);
+			var parent = s1.getParent(),
+				pos1 = parent.convertToWorldSpace(s1.getPosition()),
+				pos2 = parent.convertToWorldSpace(s2.getPosition());
+
+			parent.removeChild(s1);
+			parent.removeChild(s2);
+			self.addChild(s1, 10);
+			self.addChild(s2, 10);
+			s1.setPosition(self.convertToNodeSpace(pos1));
+			s2.setPosition(self.convertToNodeSpace(pos2));
+
 			s1.runAction(
 				cc.EaseSineOut.create(
 					cc.spawn(
 						cc.scaleTo(0.90, 1),
-						cc.fadeIn(0.90)
+						cc.rotateTo(0.90, 0),
+						cc.moveTo(0.90, cc.p(284,cc.height/2))
 					)
 				)
 			);
-			var s2 = self._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
-			s2.setPosition(cc.p(852,cc.height/2));
-			s2.setScale(0.0);
-			s2.setOpacity(0);
 			s2.runAction(
 				cc.sequence(
-					cc.EaseSineOut.create(
+					cc.EaseSineIn.create(
 						cc.spawn(
-							cc.scaleTo(1.00,1),
-							cc.fadeIn(1.00)
+							cc.scaleTo(1.00, 1),
+							cc.rotateTo(1.00, 0),
+							cc.moveTo(1.00, cc.p(852,cc.height/2))
 						)
 					),
 					cc.callFunc(function() {
@@ -233,10 +244,6 @@ var WordBattleLayer = cc.Layer.extend({
 					})
 				)
 			);
-			self.addChild(s1,0);
-			self.addChild(s2,0);	
-			_b_retain(s1,"WordBattleLayer: sea1");		
-			_b_retain(s2,"WordBattleLayer: sea2");		
 
 			//////////////////////////////
 			// Play winning music! 
@@ -245,47 +252,47 @@ var WordBattleLayer = cc.Layer.extend({
 			cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,true);
 			cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,true);
 			cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,true);
+		}));
 		
-        	//////////////////////////////
-        	// Get the single words out of the current paragraph, with and without punctuation
-			var p = this._text[paragraph],
-				sw = this._selectedWords = [],
-				word;
+        //////////////////////////////
+        // Get the single words out of the current paragraph, with and without punctuation
+		var p = self._text[paragraph],
+			sw = self._selectedWords = [],
+			word;
 
-	   		while( (word=_b_selectedWords.exec(p)) != null ) {
-				sw.push(word[1]);
-			}
-			cc.assert(sw.length, "I didn't find any words in the current paragraph.")
+	   	while( (word=_b_selectedWords.exec(p)) != null ) {
+			sw.push(word[1]);
+		}
+		cc.assert(sw.length, "I didn't find any words in the current paragraph.")
 
-        	//////////////////////////////
-        	// Divide the words on different rounds and send it, or wait for the words from the other player
-			this._round = 0;
-        	if( this._first ) {
-				var lotteryWheel = [],
-					rounds = [],
-					n = sw.length;
+        //////////////////////////////
+        // Divide the words on different rounds and send it, or wait for the words from the other player
+		this._round = 0;
+        if( this._first ) {
+			var lotteryWheel = [],
+				rounds = [],
+				n = sw.length;
 			
-				for( var i=0 ; i<n ; i++ ) lotteryWheel.push(i);
-				for( var i=0 ; i < Math.floor((n-1)/_B_WORDS_PER_ROUND+1) ; i++ ) rounds.push([]);
-				for( var i=0 ; i<n ; i++ ) rounds[i%rounds.length].push(lotteryWheel.splice(parseInt(Math.random()*lotteryWheel.length),1)[0]);
-				cc.assert(lotteryWheel.length == 0, "Lottery wheel is not empty.");
+			for( var i=0 ; i<n ; i++ ) lotteryWheel.push(i);
+			for( var i=0 ; i < Math.floor((n-1)/_B_WORDS_PER_ROUND+1) ; i++ ) rounds.push([]);
+			for( var i=0 ; i<n ; i++ ) rounds[i%rounds.length].push(lotteryWheel.splice(parseInt(Math.random()*lotteryWheel.length),1)[0]);
+			cc.assert(lotteryWheel.length == 0, "Lottery wheel is not empty.");
 			
-				this._rounds = rounds;
+			this._rounds = rounds;
+			_b_one(["seas_have_moved_in"], function() {
+				self.startRound();
+			});
+
+			$b.sendMessage({ message: "initRounds", rounds: this._rounds });
+		} else {
+			$b.receiveMessage("initRounds", function(data) {
+				cc.assert(data.message === "initRounds", "Received wrong message ('"+data.message+"' instead of 'initRounds') while starting episode.");
+				self._rounds = data.rounds;
 				_b_one(["seas_have_moved_in"], function() {
 					self.startRound();
 				});
-
-				$b.sendMessage({ message: "initRounds", rounds: this._rounds });
-			} else {
-				$b.receiveMessage("initRounds", function(data) {
-					cc.assert(data.message === "initRounds", "Received wrong message ('"+data.message+"' instead of 'initRounds') while starting episode.");
-					self._rounds = data.rounds;
-					_b_one(["seas_have_moved_in"], function() {
-						self.startRound();
-					});
-				});
-			}
-		});
+			});
+		}
 	},
 	
 	startRound: function(allStrait) {
@@ -1915,6 +1922,21 @@ var TypeWriter = cc.PhysicsSprite.extend({
 	}	
 });
 
+var MyGameSymbol = GameSymbol.extend({
+	ctor: function(sea1, sea2, cb) {
+		this._super(cb);
+	
+		var syms = this.getContentSize(),
+			seas = sea1.getContentSize();
+
+		sea1.setPosition(cc.p(syms.width/2-seas.width*_B_SEA_SYMBOL_SCALE/2-4, syms.height/2));
+		sea1.setScale(_B_SEA_SYMBOL_SCALE);
+		this.addChild(sea1);
+		sea2.setPosition(cc.p(syms.width/2+seas.width*_B_SEA_SYMBOL_SCALE/2+4, syms.height/2));
+		sea2.setScale(_B_SEA_SYMBOL_SCALE);
+		this.addChild(sea2);
+	}
+});
 
 
 var WordBattleScene = cc.Scene.extend({

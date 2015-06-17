@@ -339,7 +339,6 @@ var _b_resume = function() {
 var _b_audio = function() {
 
 	var musicToPlay = [],
-		musicTimeout = null,
 		fadeTime = 0,
 		fadePerSec = 0;
 	
@@ -351,9 +350,17 @@ var _b_audio = function() {
 			fadeTime -= dt;
 			if( fadeTime < 0 ) fadeTime = 0;
 		}
+
+		if( musicToPlay.length > 0 ) {	
+			if( !cc.audioEngine.isMusicPlaying() ) {
+				var music = musicToPlay.splice(0,1)[0];
+
+				cc.audioEngine.playMusic(music.url, music.loop);
+			}
+		}
 	};
 
-	cc.audioEngine.fadeTo = function(time, targetVolume, cb) {
+	cc.audioEngine.fadeTo = function(time, targetVolume) {
 		var currentVolume = cc.audioEngine.getMusicVolume(),
 			diff = targetVolume - currentVolume;
 
@@ -361,52 +368,24 @@ var _b_audio = function() {
 		fadePerSec = diff / time;
 	};
 
-	cc.audioEngine.fadeOut = function(time, cb) {
-		this.fadeTo(time,0,cb);
+	cc.audioEngine.fadeOut = function(time) {
+		this.fadeTo(time,0);
 	};
 
-	cc.audioEngine.fadeIn = function(time, cb) {
-		this.fadeTo(time,1,cb);
+	cc.audioEngine.fadeIn = function(time) {
+		this.fadeTo(time,1);
 	};
 
 	cc.audioEngine.addMusic = function(url, loop) {
-		
-		cc.assert(url, "I need a url for playing music.");
-			
-		var name = url.substr(url.lastIndexOf("/")+1),
-			time = sRes[name] && Math.round(sRes[name]*1000);
-
-		cc.assert(time, "Couldn't retrieve duration of mp3 file "+name);
-
-		var next = function() {
-			if( musicToPlay.length > 0 ) {
-				var music = musicToPlay.splice(0,1)[0];
-				cc.audioEngine.playMusic(music.url, music.loop);
-				musicTimeout = setTimeout(next, music.time);
-			} else {
-				musicTimeout = null;
-			}
-		};
-
-		if( !musicTimeout ) {
-			cc.audioEngine.playMusic(url, loop);
-			musicTimeout = setTimeout(next, time);
-		} else {
-			musicToPlay.push({
-				url: url,
-				loop: loop,
-				time: time
-			});
-		}
+		musicToPlay.push({
+			url: url,
+			loop: loop
+		});
 	};
 
 	cc.audioEngine.stopAllMusic = function() {
 		cc.audioEngine.stopMusic();
 		musicToPlay = [];
-		if( musicTimeout ) {
-			clearTimeout(musicTimeout);
-			musicTimeout = null;
-		}
 	};
 };
 _b_audio();
