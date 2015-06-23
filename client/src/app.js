@@ -208,6 +208,7 @@ var _b_retain = function(obj,name) {
 
 var _b_release = function(obj) {
 
+	if( !obj || !_b_retained[obj.__retainId] ) debugger;
 	cc.assert(obj && _b_retained[obj.__retainId], "_b_release: Object '"+obj.__retainId+"' not valid or not in retained array...");
 	obj.release();		
 	//cc.log("Releasing "+obj.__retainId+": '"+_b_retained[obj.__retainId]+"'");

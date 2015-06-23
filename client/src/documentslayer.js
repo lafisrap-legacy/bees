@@ -21,7 +21,8 @@ var _B_DOCUMENT_SHAPES = {
 	_B_SCROLL_INERTANCE = 0.985
 	_B_SCROLL_THRESHOLD_1 = 1,
 	_B_SCROLL_THRESHOLD_2 = 7,
-	_B_SYMBOL_POS = cc.p(980, 70);
+	_B_SYMBOL_POS = cc.p(980, 70),
+	_B_GAMESYMBOL_ROTATION = 11;
 
 // Regular Expressions
 //
@@ -48,6 +49,7 @@ var DocumentLayer = cc.Layer.extend({
 
 	_box: null,
 	_shape: null,
+	_gameSymbol: null,
 
 	// ctor initializes sprite cache
 	//
@@ -196,7 +198,7 @@ var DocumentLayer = cc.Layer.extend({
 
 			labelY += sizes.lineHeight * 2; // new line after paragraph
 
-			for( var j=0 ; j<cw.length ; j++ ) self.insertWordIntoParagraph(i, cw[j]);
+			for( var j=0 ; j<cw.length ; j++ ) self.insertWordIntoParagraph(cw[j], i);
 
 			if( ++i < text.length ) setTimeout(addWords,1);
 			else {	
@@ -229,34 +231,50 @@ var DocumentLayer = cc.Layer.extend({
 		box.bake();
 	},
 
-	insertWordIntoParagraph: function(p, word) {
+	getBox: function() { return this._box; },
+
+	getWord: function(word, p) {
+		return this._words[this.getOrds(word, p).ord];
+	},
+
+	getOrds: function(word, p) {
 		var words = this._words,
+			p = p || this._paragraph || 0,
 			sw = this._selectedWords[p],
 			fw = this._paragraphStarts[p],
-			lw = (this._paragraphStarts[p+1] || words.length) - 1;
+			lw = (this._paragraphStarts[p+1] || words.length) - 1,
+			word = word.word? word.word : word;
 
-		for( var i=0 ; i<sw.length ; i++ ) if( word.word === sw[i].word ) break;
-		cc.assert(i<sw.length, "Collected word "+word.word+" was not found in selected words.");
+		for( var i=0 ; i<sw.length ; i++ ) if( word === sw[i].word ) break;
+		cc.assert(i<sw.length, "Collected word "+word+" was not found in selected words.");
 
-		var ord = sw[i].ord;
+		return {
+			ord:  sw[i].ord, 
+			prev: sw[i-1] && sw[i-1].ord+1 || fw,
+			next: sw[i+1] && sw[i+1].ord-1 || lw
+		}
+	},
 
-		if( word.color ) words[ord].status.color = word.color;
-		if( word.opacity ) words[ord].status.opacity = word.opacity;
-		words[ord].label.setColor(word.color);
-		words[ord].label.runAction(
+	insertWordIntoParagraph: function(word, p) {
+		var words = this._words,
+			p = p || this._paragraph || 0,
+			sw = this._selectedWords[p],
+			fw = this._paragraphStarts[p],
+			lw = (this._paragraphStarts[p+1] || words.length) - 1,
+			ords = this.getOrds(word, p);
+
+		if( word.color ) words[ords.ord].status.color = word.color;
+		if( word.opacity ) words[ords.ord].status.opacity = word.opacity;
+		words[ords.ord].label.setColor(word.color);
+		words[ords.ord].label.runAction(
 			cc.spawn(
 				//cc.tintTo(2, word.color),
 				cc.fadeTo(2, word.opacity)
 			)
 		);
-		words[ord].status.collected = true;
-		words[ord].label.runAction(this._actionWordBlink.clone());
 
-		var lowerEnd = sw[i-1] && sw[i-1].ord+1 || fw,
-			upperEnd = sw[i+1] && sw[i+1].ord-1 || lw;
-
-		for( var i=lowerEnd ; i<=upperEnd ; i++ ) {
-			if( word.opacity > words[i].status.opacity && i != ord ) {
+		for( var i=ords.prev ; i<=ords.next ; i++ ) {
+			if( word.opacity > words[i].status.opacity && i != ords.ord ) {
 				words[i].status.opacity = word.opacity;
 				words[i].label.runAction(
 					cc.spawn(
@@ -268,15 +286,15 @@ var DocumentLayer = cc.Layer.extend({
 		}
 	},
 
-	show: function(paragraph, gameSymbol) {
+	prepare: function(paragraph, gameSymbol) {
 		var self = this;
 
 		cc.assert(paragraph < self._paragraphStarts.length, "Requested paragraph "+paragraph+" does not exist.");
 		
-		var box = self._box,
+		var box = this._box,
 			shape = this._shape,
-			fdw = self._paragraphStarts[paragraph],
-			word = self._words[fdw];
+			fdw = this._paragraphStarts[paragraph],
+			word = this._words[fdw];
 
 		posY = paragraph===0? 0 : word.pos.y - shape.margin.top;  
 		this.showWordsAtPosition(posY);
@@ -286,38 +304,55 @@ var DocumentLayer = cc.Layer.extend({
 		this._gameSymbol = gameSymbol || new GameSymbol(cb);
 
 		gameSymbol.setPosition(cc.p(_B_SYMBOL_POS.x, cc.height - word.pos.y + _B_SYMBOL_POS.y));
-		gameSymbol.runAction(this._actionSymbolBlink.clone());
 		box.addChild(gameSymbol);
-
-		this._posY = this._lastY = posY;
-		this._speed = 0;
-		
-		this.initListeners();
-		this.addChild(box,20);
 		box.setScale(0.8);
 		box.setOpacity(0);
 		box.setCascadeOpacityEnabled(true);
+
+		this._posY = posY;
+		this._paragraph = paragraph;
+		
+		this.initListeners();
+		
+		this.show();
+	},
+
+	show: function() {
+		var self = this,
+			box = this._box,
+			gameSymbol = this._gameSymbol,
+			posY = this._lastY = this._posY;
+
+		this._speed = 0;
+	
+		this.addChild(box);
 		box.runAction(
 			cc.EaseSineIn.create(
 				cc.spawn(
-					cc.scaleTo(0.9,1),
-					cc.fadeIn(0.9)
+					cc.scaleTo(0.90, 1),
+					cc.moveTo(0.90, cc.p(0, posY)),
+					cc.fadeIn(0.90)
 				)
 			)
 		);
+
+		gameSymbol.setRotation(_B_GAMESYMBOL_ROTATION);
+		gameSymbol.runAction(this._actionSymbolBlink.clone());
+
+		this.initListeners();
 	},
 
 	hide: function(cb) {
 		var self = this,
-			box = self._box;
+			box = this._box;
 
 		this.stopListeners();
 		box.runAction(
 			cc.sequence(
 				cc.EaseSineOut.create(
 					cc.spawn(
-						cc.scaleTo(0.9,0.7),
-						cc.fadeOut(0.9)
+						cc.scaleTo(0.90,0.7),
+						cc.fadeOut(0.90)
 					)
 				),
 				cc.callFunc(function() {
@@ -456,7 +491,7 @@ var DocumentLayer = cc.Layer.extend({
 			words = this._words;
 
 		if( lastY === posY && speed) {
-			posY = Math.min(Math.max(posY + speed, 0),this._height);
+			posY = this._posY = Math.min(Math.max(posY + speed, 0),this._height);
 			this.showWordsAtPosition();
 		}
 				
@@ -464,9 +499,9 @@ var DocumentLayer = cc.Layer.extend({
 		if( Math.abs(speed) < _B_SCROLL_THRESHOLD_1 ) speed = 0;
 		else if( Math.abs(speed) < _B_SCROLL_THRESHOLD_2 ) {
 			for( var i=0 ; i<ps.length ; i++ ) {
-				var pY = words[ps[i]].pos.y;
-				if( Math.abs(pY - posY - margin ) < _B_SCROLL_THRESHOLD_2 ) {
-					posY = pY;
+				var wordY = words[ps[i]].pos.y;
+				if( Math.abs(wordY - posY - margin ) < _B_SCROLL_THRESHOLD_2 ) {
+					posY = this._posY = wordY;
 					speed = 0;
 					this.showWordsAtPosition();
 					break;
@@ -474,7 +509,7 @@ var DocumentLayer = cc.Layer.extend({
 			}
 		}
 
-		this._lastY = this._posY = posY;
+		this._lastY = posY;
 		this._speed = speed;
 		cc.log("Speed: "+this._speed);
 	}
