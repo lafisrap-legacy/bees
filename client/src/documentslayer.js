@@ -171,18 +171,16 @@ var DocumentLayer = cc.Layer.extend({
 					full:	fullWords[j], 
 					plain:	plainWords[j], 
 					pos:	cc.p(labelX, labelY), 
-					status: {
-						visible: 	false, 
-						color: 		cc.color(0,0,0), 
-						opacity: 	(j<3 || j>plainWords.length-4)?255:0,
-						collected: 	false
-					}
+					visible: 	false, 
+					color: 		cc.color(0,0,0), 
+					opacity: 	(j<3 || j>plainWords.length-4)?255:0,
+					collected: 	false
 				};
 
 				words.push(word);
 
-				label.setColor(word.status.color);
-				label.setOpacity(word.status.opacity);
+				label.setColor(word.color);
+				label.setOpacity(word.opacity);
 				label.setPosition(cc.p(labelX - label.width/2, cc.height - labelY));
 
 				cnt++;
@@ -231,7 +229,8 @@ var DocumentLayer = cc.Layer.extend({
 		box.bake();
 	},
 
-	getBox: function() { return this._box; },
+	getBox:         function() { return this._box; },
+    getGameSymbol:  function() { return this._gameSymbol; },
 
 	getWord: function(word, p) {
 		return this._words[this.getOrds(word, p).ord];
@@ -243,7 +242,7 @@ var DocumentLayer = cc.Layer.extend({
 			sw = this._selectedWords[p],
 			fw = this._paragraphStarts[p],
 			lw = (this._paragraphStarts[p+1] || words.length) - 1,
-			word = word.word? word.word : word;
+			word = word.plain? word.plain : word;
 
 		for( var i=0 ; i<sw.length ; i++ ) if( word === sw[i].word ) break;
 		cc.assert(i<sw.length, "Collected word "+word+" was not found in selected words.");
@@ -263,8 +262,8 @@ var DocumentLayer = cc.Layer.extend({
 			lw = (this._paragraphStarts[p+1] || words.length) - 1,
 			ords = this.getOrds(word, p);
 
-		if( word.color ) words[ords.ord].status.color = word.color;
-		if( word.opacity ) words[ords.ord].status.opacity = word.opacity;
+		if( word.color ) words[ords.ord].color = word.color;
+		if( word.opacity ) words[ords.ord].opacity = word.opacity;
 		words[ords.ord].label.setColor(word.color);
 		words[ords.ord].label.runAction(
 			cc.spawn(
@@ -274,13 +273,16 @@ var DocumentLayer = cc.Layer.extend({
 		);
 
 		for( var i=ords.prev ; i<=ords.next ; i++ ) {
-			if( word.opacity > words[i].status.opacity && i != ords.ord ) {
-				words[i].status.opacity = word.opacity;
+			if( word.opacity > words[i].opacity && i != ords.ord ) {
+				words[i].opacity = word.opacity;
 				words[i].label.runAction(
-					cc.spawn(
-						cc.fadeTo(2, word.opacity),
-						cc.TintTo(2, word.color)
-					)
+                    cc.sequence(
+                        cc.delayTime(Math.random()+1),
+                        cc.spawn(
+                            cc.fadeTo(2, word.opacity),
+                            cc.tintTo(2, word.color)
+                        )
+                    )
 				);
 			}
 		}
@@ -317,20 +319,22 @@ var DocumentLayer = cc.Layer.extend({
 		this.show();
 	},
 
-	show: function() {
+	show: function(y) {
 		var self = this,
 			box = this._box,
+            margin = this._shape.margin,
 			gameSymbol = this._gameSymbol,
-			posY = this._lastY = this._posY;
+			posY = Math.max( y || this._posY, margin.top) - margin.top;
 
 		this._speed = 0;
-	
+        this._lastY = this._posY = posY;	
+		this.showWordsAtPosition(posY);
+
 		this.addChild(box);
 		box.runAction(
 			cc.EaseSineIn.create(
 				cc.spawn(
 					cc.scaleTo(0.90, 1),
-					cc.moveTo(0.90, cc.p(0, posY)),
 					cc.fadeIn(0.90)
 				)
 			)
@@ -375,10 +379,10 @@ var DocumentLayer = cc.Layer.extend({
 		// look if first words or last words have to be added
 		if( word.pos.y < posY || fdw === 0 ) {
 			while( word.pos.y < posY ) {
-				if( word.status.visible ) {
+				if( word.visible ) {
 					box.removeChild(word.label);
-					word.status.visible = false;
-					if( word.status.collected ) word.label.runAction(this._actionWordBlink.clone());
+					word.visible = false;
+					if( word.collected ) word.label.runAction(this._actionWordBlink.clone());
 					_b_release(word.label);
 				}
 				if( fdw === this._words.length-1 ) break; 
@@ -387,9 +391,9 @@ var DocumentLayer = cc.Layer.extend({
 
 			word = this._words[ldw];
 			while( word.pos.y < posY + cc.height + 100 ) {
-				if( !word.status.visible && word.pos.y >= posY ) {
+				if( !word.visible && word.pos.y >= posY ) {
 					box.addChild(word.label ,10);
-					word.status.visible = true;
+					word.visible = true;
 					_b_retain(word.label, "Word "+word.plain);
 				}
 				if( ldw === this._words.length-1 ) break;
@@ -397,9 +401,9 @@ var DocumentLayer = cc.Layer.extend({
 			}
 		} else {
 			while( word.pos.y > posY ) {
-				if( !word.status.visible && word.pos.y - posY - 100 < cc.height ) {
+				if( !word.visible && word.pos.y - posY - 100 < cc.height ) {
 					box.addChild(word.label ,10);
-					word.status.visible = true;
+					word.visible = true;
 					_b_retain(word.label, "Word "+word.plain);
 				}
 				if( fdw === 0 ) break; 
@@ -408,9 +412,9 @@ var DocumentLayer = cc.Layer.extend({
 
 			word = this._words[ldw];
 			while( word.pos.y > posY + cc.height ) {
-				if( word.status.visible ) {
+				if( word.visible ) {
 					box.removeChild(word.label);
-					word.status.visible = false;
+					word.visible = false;
 					_b_release(word.label);
 				}
 				if( ldw === 0 ) break;
@@ -527,7 +531,7 @@ var GameSymbol = cc.Sprite.extend({
 
 		this.initListeners();
 
-		this._finalCallback = cb;
+        this.restore(cb);
 	},
 
 	initListeners: function() {
@@ -545,18 +549,6 @@ var GameSymbol = cc.Sprite.extend({
                     self._finalCallback();
                 }   
             },
-
-           	onTouchesMoved: function(touches, event) {
-            	var touch = touches[0],
-					loc = touch.getLocation();
-            },
-
-            onTouchesEnded: function(touches, event){
-            	console.log("onTouchesEnded!");
-
-                var touch = touches[0],
-                    loc = touch.getLocation();
-            }
         });
 		
 		cc.eventManager.addListener(this._touchListener, this);
@@ -566,7 +558,9 @@ var GameSymbol = cc.Sprite.extend({
 	stopListeners: function() {
         if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
 		this._touchListener = null;
-    },    
+    },   
 
-	//.convertToWorldSpace(part.getPosition())
+    restore: function(cb) {
+		this._finalCallback = cb;
+    } 
 });

@@ -3,10 +3,10 @@
 // _B_SERVER_ADDRESS: websocket address of bee server
 // _B_RECONNECT_TIME: Seconds after a reconnected is tried, if there is no connection 
 //
-//var _B_SERVER_ADDRESS = "ws://192.168.43.126:4000/socket",
-//var _B_SERVER_ADDRESS = "ws://192.168.178.177:4000/socket",
+//var _B_SERVER_ADDRESS = "ws://192.168.43.183:4000/socket",
+var _B_SERVER_ADDRESS = "ws://192.168.178.177:4000/socket",
 //var _B_SERVER_ADDRESS = "ws://192.168.178.41:4000/socket",
-var _B_SERVER_ADDRESS = "ws://localhost:4000/socket",
+//var _B_SERVER_ADDRESS = "ws://localhost:4000/socket",
 //var _B_SERVER_ADDRESS = "ws://217.197.85.219:4000/socket",
 	_B_RECONNECT_TIME = 10;
 
@@ -183,7 +183,8 @@ var WebLayer = cc.Class.extend({
 	},
 
 	stopMessage: function(message) {
-		var ms = self._messageStorage,
+		var self = this,
+            ms = self._messageStorage,
 			mcb = self._messageCbs;
 
 		for( var i=0 ; i<ms.length ; i++ ) {
@@ -196,7 +197,7 @@ var WebLayer = cc.Class.extend({
 	},
  
     saveState: function(state) {
-    	self = this;
+    	var self = this;
     	self.whenReady(function() {
 	    	self.ws.send('{"command":"saveState", "sid":"'+self.sid+'", "gameState":"'+JSON.stringifyWithEscapes(state)+'"}');		
     	});

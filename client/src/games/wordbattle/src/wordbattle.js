@@ -20,6 +20,8 @@ var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_NEXT_BIG_SHIP = 1,
 	_B_BIG_SHIP_LEFT = 2,
 	_B_SEA_SYMBOL_SCALE = 0.1,
+    _B_SEA_MOVING_DELAY = 0.9,
+    _B_LETTERS_FLYING_DELAY = 4.0,
 
 // Regular Expressions
 //
@@ -155,13 +157,13 @@ var WordBattleLayer = cc.Layer.extend({
 
 		this._collectedWords = state.words;
 		/// tmp
-		this._collectedWords = [[
-			{ word: "wünschten", color: cc.color(9,72,184), opacity: 255 },
-			{ word: "König", color: cc.color(222,0,0), opacity: 255 },
-			{ word: "Königin", color: cc.color(250,190,17), opacity: 255 },
-			{ word: "Kind", color: cc.color(2,168,35), opacity: 255 },
-			{ word: "klagte", color: cc.color(173,109,142), opacity: 255 }
-		]];
+		//this._collectedWords = [[
+		//	{ word: "wünschten", color: cc.color(9,72,184), opacity: 255 },
+		//	{ word: "König", color: cc.color(222,0,0), opacity: 255 },
+		//	{ word: "Königin", color: cc.color(250,190,17), opacity: 255 },
+		//	{ word: "Kind", color: cc.color(2,168,35), opacity: 255 },
+		//	{ word: "klagte", color: cc.color(173,109,142), opacity: 255 }
+		//]];
 	/*	
 		for( var i=0 ; i<3 ; i++ ) {	
 			var bomb = new Bomb(this._fairy._space, cc.p(100+80*i,500+(i%2)*100),self._otherSea);
@@ -209,57 +211,15 @@ var WordBattleLayer = cc.Layer.extend({
 
 		//////////////////////////////
 		// Create seas
-		var s1 = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
-		var s2 = self._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
-		_b_retain(s1,"WordBattleLayer: sea1");		
-		_b_retain(s2,"WordBattleLayer: sea2");		
+		var own = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
+		var other = self._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
+		_b_retain(own,"WordBattleLayer: sea1");		
+		_b_retain(other,"WordBattleLayer: sea2");		
 		
 		//////////////////////////////
 		// Show fairy tale 
-		this._paper.prepare(paragraph, new MyGameSymbol(s1, s2, function() {
-
-			var parent = s1.getParent(),
-				pos1 = parent.convertToWorldSpace(s1.getPosition()),
-				pos2 = parent.convertToWorldSpace(s2.getPosition());
-
-			parent.removeChild(s1);
-			parent.removeChild(s2);
-			self.addChild(s1, 10);
-			self.addChild(s2, 10);
-			s1.setPosition(self.convertToNodeSpace(pos1));
-			s2.setPosition(self.convertToNodeSpace(pos2));
-
-			s1.runAction(
-				cc.EaseSineOut.create(
-					cc.spawn(
-						cc.scaleTo(0.90, 1),
-						cc.rotateTo(0.90, 0),
-						cc.moveTo(0.90, cc.p(284,cc.height/2))
-					)
-				)
-			);
-			s2.runAction(
-				cc.sequence(
-					cc.EaseSineIn.create(
-						cc.spawn(
-							cc.scaleTo(1.00, 1),
-							cc.rotateTo(1.00, 0),
-							cc.moveTo(1.00, cc.p(852,cc.height/2))
-						)
-					),
-					cc.callFunc(function() {
-						cc.eventManager.dispatchCustomEvent("seas_have_moved_in");		
-					})
-				)
-			);
-
-			//////////////////////////////
-			// Play winning music! 
-			cc.audioEngine.setMusicVolume(0.5);
-			cc.audioEngine.playMusic(gRes.organizing_intro_mp3,false);
-			cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,true);
-			cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,true);
-			cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,true);
+		this._paper.prepare(paragraph, new MyGameSymbol(own, other, function() {
+            self.moveSeasIn(own, other);
 		}));
 		
         //////////////////////////////
@@ -308,9 +268,9 @@ var WordBattleLayer = cc.Layer.extend({
 	},
 	
 	startRound: function(allStrait) {
-		var self = this;
-	
-		//////////////////////////////
+		var self = this;	
+		
+        //////////////////////////////
 		// Build ships
 		var r = this._rounds[this._round],
 			own = this._ownSea;  
@@ -401,8 +361,8 @@ var WordBattleLayer = cc.Layer.extend({
 
 			//////////////////////////////////////////////
 			// Get fairytale and let letters fly
-			paper.show();
-			self.letLettersFly(own);
+			var minY = self.letLettersFly(own);
+			paper.show(minY);
 			fairy.hide();
 
 			//////////////////////////////////////////////
@@ -410,34 +370,95 @@ var WordBattleLayer = cc.Layer.extend({
 			own.runAction(	
 				cc.EaseSineIn.create(
 					cc.spawn(
-						cc.scaleTo(0.90, 0),
-						cc.moveTo(0.90, cc.p(cc.width, cc.height))
+						cc.scaleTo(_B_SEA_MOVING_DELAY, 0),
+						cc.moveTo(_B_SEA_MOVING_DELAY, cc.p(cc.width, cc.height))
 					)
 				)
 			);
 
 			other.runAction(	
-				cc.EaseSineOut.create(
-					cc.spawn(
-						cc.scaleTo(0.90, 0),
-						cc.moveTo(0.90, cc.p(cc.width, cc.height))
-					)
-				)
+                cc.sequence(
+                    cc.EaseSineOut.create(
+                        cc.spawn(
+                            cc.scaleTo(_B_SEA_MOVING_DELAY+0.1, 0),
+                            cc.moveTo(_B_SEA_MOVING_DELAY+0.1, cc.p(cc.width, cc.height))
+                        )
+                    ),
+                    cc.callFunc(function() {
+                        ///////////////////////////////////////////////
+                        // Empty the seas 
+                        var parent = own.getParent(),
+                            seas = [own, other];
+                        for( var sea in seas ) {
+                            for( var i=0 ; i<seas[sea].children.length ; i++ ) { 
+                                var ship = seas[sea].children[i];
+                                if( ship._isShip ) _b_release(ship);
+                            }
+
+                            seas[sea].removeAllChildren();
+                        }
+
+                        parent.removeChild(own);
+                        parent.removeChild(other);
+                        
+                        paper.getGameSymbol().restore(function() {
+
+                            self.moveSeasIn(own, other);
+			                _b_one(["seas_have_moved_in"], function() {
+                                if( ++self._round < self._rounds.length ) self.startRound();
+                                else ; // search for next paragraph and start new episode ...
+                            });
+                        });
+                    })
+                )
 			);
-
-			///////////////////////////////////////////////
-			// Empty the seas 
-			var seas = [own, other];
-			for( var sea in seas ) {
-				for( var i=0 ; i<seas[sea].children.length ; i++ ) { 
-					var ship = seas[sea].children[i];
-					if( ship._isShip ) _b_release(ship);
-				}
-
-				seas[sea].removeAllChildren();
-			}		
 		});
 	},
+
+    moveSeasIn: function(own, other) {
+        var parent = own.getParent(),
+            pos1 = parent.convertToWorldSpace(own.getPosition()),
+            pos2 = parent.convertToWorldSpace(other.getPosition());
+
+        parent.removeChild(own);
+        parent.removeChild(other);
+        this.addChild(own, 10);
+        this.addChild(other, 10);
+        own.setPosition(this.convertToNodeSpace(pos1));
+        other.setPosition(this.convertToNodeSpace(pos2));
+
+        own.runAction(
+            cc.EaseSineOut.create(
+                cc.spawn(
+                    cc.scaleTo(_B_SEA_MOVING_DELAY, 1),
+                    cc.rotateTo(_B_SEA_MOVING_DELAY, 0),
+                    cc.moveTo(_B_SEA_MOVING_DELAY, cc.p(284,cc.height/2))
+                )
+            )
+        );
+        other.runAction(
+            cc.sequence(
+                cc.EaseSineIn.create(
+                    cc.spawn(
+                        cc.scaleTo(_B_SEA_MOVING_DELAY + 0.1, 1),
+                        cc.rotateTo(_B_SEA_MOVING_DELAY + 0.1, 0),
+                        cc.moveTo(_B_SEA_MOVING_DELAY + 0.1, cc.p(852,cc.height/2))
+                    )
+                ),
+                cc.callFunc(function() {
+                    cc.eventManager.dispatchCustomEvent("seas_have_moved_in");		
+                })
+            )
+        );
+
+        //////////////////////////////
+        // Play winning music! 
+        cc.audioEngine.setMusicVolume(0.5);
+        cc.audioEngine.playMusic(gRes.organizing_intro_mp3,false);
+        cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,true);
+        cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,true);
+        cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,true);
+    },
 
 	sendInitialBoard: function(result) {
 		var self = this,
@@ -684,6 +705,7 @@ var WordBattleLayer = cc.Layer.extend({
 										otherShip = self._otherSea.getChildByName(word);
 
 									cc.assert(ownShip, "I wanted to show a word on a lost ship, but didn't find it.");
+                                    if( !ownShip._shipWon ) ownShip._shipWon = false;
 									ownShip.moveBigShip(false, function() {
 										if( !ownShip.showWord(false) && --self._shipsLeft === 0 ) self.endRound(); 
 
@@ -725,7 +747,8 @@ var WordBattleLayer = cc.Layer.extend({
 	letLettersFly: function(own) {
 		var self = this,
 			ships = own.children,
-			paper = this._paper;
+			paper = this._paper,
+			minY = 10000000; // just more than the longest fairytale in the world
 
 		for( var i=0 ; i<ships.length ; i++ ) {
 			var ship = ships[i],
@@ -736,6 +759,22 @@ var WordBattleLayer = cc.Layer.extend({
 			if( ship._isShip ) {
 				var wordPos = word.label.getPosition(),
 					letterSpace = word.label.width / word.plain.length;
+
+                if( ship._shipWon === true ) {
+                    word.opacity = 255;
+                    word.color = cc.color(222,0,0);
+                } else {
+                    word.opacity = Math.min(word.opacity + 10, 255);
+                    word.color = cc.color(224,208,160);
+                }
+
+                this._collectedWords.push({ 
+                    plain: word.plain, 
+                    color: word.color, 
+                    opacity: word.opacity 
+                });
+				
+                minY = Math.min(minY, wordPos.y);
 
 				for( var j=0 ; j<parts.length ; j++ ) {
 					var part = parts[j];
@@ -750,7 +789,7 @@ var WordBattleLayer = cc.Layer.extend({
 						letter.runAction(
 							cc.sequence(
 								cc.EaseSineOut.create(
-									cc.scaleTo(0.9,1)
+									cc.scaleTo(_B_SEA_MOVING_DELAY,1)
 								),
 								cc.callFunc(function(obj, data) {
 									var letter = data.letter,
@@ -758,7 +797,8 @@ var WordBattleLayer = cc.Layer.extend({
 										pos2 = data.pos,
 										bezier = [
 											pos1,	
-											cc.p(pos2.x < cc.width/2? cc.width:0, pos1.y + (pos2.y>pos1.y? -50:50)),
+											cc.p(pos2.x < cc.width/2? cc.width*0.75 + Math.random()*100 : cc.width*0.25 - Math.random()*100, 
+                                                 pos1.y + (pos2.y>pos1.y? -50 - Math.random()*50 : 50 + Math.random()*50)),
 											pos2
 										];
 
@@ -767,21 +807,28 @@ var WordBattleLayer = cc.Layer.extend({
 									box.addChild(letter,20);
 
 									letter.runAction(
-										cc.EaseSineOut.create(
-											cc.spawn(
-												cc.bezierTo(10, bezier),
-												cc.scaleTo(10, 0.1),
-												cc.rotateBy(10,1080)
-											)
-										)
+                                        cc.EaseSineOut.create(
+                                            cc.spawn(
+                                                cc.bezierTo(_B_LETTERS_FLYING_DELAY, bezier),
+                                                cc.scaleTo(_B_LETTERS_FLYING_DELAY, 0.1),
+                                                cc.rotateBy(_B_LETTERS_FLYING_DELAY,1080)
+                                            )
+                                        )
 									);
 								}, self, {letter: letter, pos:cc.p(wordPos.x - word.label.width/2 + letterSpace*j, wordPos.y)})
 							)
 						);
 					}
 				}
-			}
+
+                setTimeout(function() {
+                    paper.insertWordIntoParagraph(word);
+                }, (_B_SEA_MOVING_DELAY + _B_LETTERS_FLYING_DELAY)*1000);
+            }
 		}
+
+		$b.saveState(); 		
+		return minY;
 	},
 
     letShipsBeMoved: function() {
@@ -1397,6 +1444,7 @@ var Battleship = cc.Node.extend({
 					var own = battleLayer._ownSea,
 						ship = own.getChildByName(self._word);
 					cc.assert(ship, "I wanted to show a word on a won ship, but didn't find it.");
+                    ship._shipWon = true;
 					if( !ship.showWord(true) && --battleLayer._shipsLeft === 0 ) battleLayer.endRound(); 
 				});
 
@@ -2110,10 +2158,22 @@ var TypeWriter = cc.PhysicsSprite.extend({
 });
 
 var MyGameSymbol = GameSymbol.extend({
-	ctor: function(sea1, sea2, cb) {
+    _sea1: null,
+    _sea2: null,
+
+    ctor: function(sea1, sea2, cb) {	 
+        this._sea1 = sea1;
+        this._sea2 = sea2;
+
 		this._super(cb);
-	
-		var syms = this.getContentSize(),
+	},
+
+    restore: function(cb) {
+        this._super(cb);
+
+		var sea1 = this._sea1,
+            sea2 = this._sea2,
+            syms = this.getContentSize(),
 			seas = sea1.getContentSize();
 
 		sea1.setPosition(cc.p(syms.width/2-seas.width*_B_SEA_SYMBOL_SCALE/2-4, syms.height/2));
@@ -2122,7 +2182,7 @@ var MyGameSymbol = GameSymbol.extend({
 		sea2.setPosition(cc.p(syms.width/2+seas.width*_B_SEA_SYMBOL_SCALE/2+4, syms.height/2));
 		sea2.setScale(_B_SEA_SYMBOL_SCALE);
 		this.addChild(sea2);
-	}
+    }
 });
 
 
