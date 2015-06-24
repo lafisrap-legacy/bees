@@ -1313,18 +1313,17 @@ var Battleship = cc.Node.extend({
 	},
 
 	letItBurn: function(part) {
-		return
 		var d = part._damage,
 			em = part._emitter;
 
 		if( em ) {
 			em.stopSystem();
-			setTimeout(function() {
+			setTimeout(function(em) {
 				part.removeChild(em);
 				cc.log("Releasing emitter "+em._retainId+" on letter "+part._letter+".");
 				_b_release(em);
-				em.destroyParticleSystem();
-			},2000);
+				//em.destroyParticleSystem();
+			},2000,em);
 		}
 
 		if( d < 1 || d > 3 ) return;
@@ -1340,6 +1339,7 @@ var Battleship = cc.Node.extend({
 		em = part._emitter = new cc.ParticleSystem( emRes );
 		em.setPosition(cc.p(_B_SQUARE_SIZE/offset.x, _B_SQUARE_SIZE/offset.y));
 		em.setRotation(rotation);
+        em.setScale(1.5);
 		part.addChild(em);
 		_b_retain(em, "Emitter");
 	},
