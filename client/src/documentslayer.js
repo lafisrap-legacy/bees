@@ -265,22 +265,25 @@ var DocumentLayer = cc.Layer.extend({
 		if( word.color ) words[ords.ord].color = word.color;
 		if( word.opacity ) words[ords.ord].opacity = word.opacity;
 		words[ords.ord].label.setColor(word.color);
+		words[ords.ord].label.setScale(0.0);
 		words[ords.ord].label.runAction(
 			cc.spawn(
-				//cc.tintTo(2, word.color),
-				cc.fadeTo(2, word.opacity)
+				cc.fadeTo(2, word.opacity),
+                cc.scaleTo(2, 1)
 			)
 		);
 
 		for( var i=ords.prev ; i<=ords.next ; i++ ) {
 			if( word.opacity > words[i].opacity && i != ords.ord ) {
 				words[i].opacity = word.opacity;
+		        if( word.opacity < 255 ) words[i].label.setColor(word.color);
+		        words[i].label.setScale(0.0);
 				words[i].label.runAction(
                     cc.sequence(
                         cc.delayTime(Math.random()+1),
                         cc.spawn(
                             cc.fadeTo(2, word.opacity),
-                            cc.tintTo(2, word.color)
+                            cc.scaleTo(2, 1)
                         )
                     )
 				);
@@ -562,5 +565,6 @@ var GameSymbol = cc.Sprite.extend({
 
     restore: function(cb) {
 		this._finalCallback = cb;
+        this.initListeners();
     } 
 });

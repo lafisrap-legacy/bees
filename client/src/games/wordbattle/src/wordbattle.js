@@ -354,25 +354,38 @@ var WordBattleLayer = cc.Layer.extend({
 		$b.stopMessage("ship_destroyed");
 			
 		fairy.show(1);
-		fairy.say(0, 2, _b_t.fairies.end_of_round_1);
-		fairy.say(2, 3, _b_t.fairies.end_of_round_2);
+		fairy.say(1, 2, _b_t.fairies.end_of_round_1);
+		fairy.say(3, 3, _b_t.fairies.end_of_round_2);
 
-		_b_one("in_5_seconds", function() {
+		_b_one("in_6_seconds", function() {
 
 			//////////////////////////////////////////////
 			// Get fairytale and let letters fly
-			var minY = self.letLettersFly(own);
-			paper.show(minY);
+			var sym = paper.getGameSymbol(),
+                seaSize = own.getContentSize(),
+                pos = sym.getPosition(),
+                box = paper.getBox();
+
+            self.letLettersFly(own);
+			paper.show(cc.height - pos.y);
 			fairy.hide();
 
 			//////////////////////////////////////////////
-			// Let seas fly away
+			// Let seas fly to game symbol
+            pos.y += box.getPosition().y;
 			own.runAction(	
 				cc.EaseSineIn.create(
-					cc.spawn(
-						cc.scaleTo(_B_SEA_MOVING_DELAY, 0),
-						cc.moveTo(_B_SEA_MOVING_DELAY, cc.p(cc.width, cc.height))
-					)
+                    cc.sequence(
+                        cc.spawn(
+                            cc.callFunc(function() { sym.runAction(cc.rotateTo(2,0)) }),
+                            cc.scaleTo(_B_SEA_MOVING_DELAY*2, _B_SEA_SYMBOL_SCALE),
+                            cc.moveTo(_B_SEA_MOVING_DELAY*2, cc.p(pos.x - seaSize.width*_B_SEA_SYMBOL_SCALE/2-4, pos.y )),
+                            cc.rotateBy(_B_SEA_MOVING_DELAY*2, 360)
+                        ),
+                        cc.callFunc(function() {
+                            sym.runAction(cc.rotateTo(0.5, _B_GAMESYMBOL_ROTATION))
+                        })
+                    )
 				)
 			);
 
@@ -380,8 +393,9 @@ var WordBattleLayer = cc.Layer.extend({
                 cc.sequence(
                     cc.EaseSineOut.create(
                         cc.spawn(
-                            cc.scaleTo(_B_SEA_MOVING_DELAY+0.1, 0),
-                            cc.moveTo(_B_SEA_MOVING_DELAY+0.1, cc.p(cc.width, cc.height))
+                            cc.scaleTo(_B_SEA_MOVING_DELAY*2+0.1, _B_SEA_SYMBOL_SCALE),
+						    cc.moveTo(_B_SEA_MOVING_DELAY*2+0.1, cc.p(pos.x + seaSize.width*_B_SEA_SYMBOL_SCALE/2+4, pos.y )),
+                            cc.rotateBy(_B_SEA_MOVING_DELAY*2+0.1, 360)
                         )
                     ),
                     cc.callFunc(function() {
@@ -747,8 +761,7 @@ var WordBattleLayer = cc.Layer.extend({
 	letLettersFly: function(own) {
 		var self = this,
 			ships = own.children,
-			paper = this._paper,
-			minY = 10000000; // just more than the longest fairytale in the world
+			paper = this._paper;
 
 		for( var i=0 ; i<ships.length ; i++ ) {
 			var ship = ships[i],
@@ -764,7 +777,7 @@ var WordBattleLayer = cc.Layer.extend({
                     word.opacity = 255;
                     word.color = cc.color(222,0,0);
                 } else {
-                    word.opacity = Math.min(word.opacity + 10, 255);
+                    word.opacity = Math.min(word.opacity + 51, 255);
                     word.color = cc.color(224,208,160);
                 }
 
@@ -774,8 +787,6 @@ var WordBattleLayer = cc.Layer.extend({
                     opacity: word.opacity 
                 });
 				
-                minY = Math.min(minY, wordPos.y);
-
 				for( var j=0 ; j<parts.length ; j++ ) {
 					var part = parts[j];
 						letter = part._letterSprite;
@@ -807,12 +818,18 @@ var WordBattleLayer = cc.Layer.extend({
 									box.addChild(letter,20);
 
 									letter.runAction(
-                                        cc.EaseSineOut.create(
-                                            cc.spawn(
-                                                cc.bezierTo(_B_LETTERS_FLYING_DELAY, bezier),
-                                                cc.scaleTo(_B_LETTERS_FLYING_DELAY, 0.1),
-                                                cc.rotateBy(_B_LETTERS_FLYING_DELAY,1080)
-                                            )
+                                        cc.sequence(
+                                            cc.EaseSineOut.create(
+                                                cc.spawn(
+                                                    cc.bezierTo(_B_LETTERS_FLYING_DELAY, bezier),
+                                                    cc.scaleTo(_B_LETTERS_FLYING_DELAY, 0.0),
+                                                    cc.rotateBy(_B_LETTERS_FLYING_DELAY,1080)
+                                                )
+                                            ),
+                                            cc.callFunc(function() {
+                                                box.removeChild(letter);
+                                                _b_release(letter);
+                                            })
                                         )
 									);
 								}, self, {letter: letter, pos:cc.p(wordPos.x - word.label.width/2 + letterSpace*j, wordPos.y)})
@@ -828,7 +845,6 @@ var WordBattleLayer = cc.Layer.extend({
 		}
 
 		$b.saveState(); 		
-		return minY;
 	},
 
     letShipsBeMoved: function() {
@@ -1267,7 +1283,7 @@ var Battleship = cc.Node.extend({
 				part.setOpacity(255);
 				this.markDamage(part);
 				this.letItBurn(part);
-				//this.explode(part);
+				this.explode(part);
 				return true;
 			}
 		}
@@ -1355,7 +1371,7 @@ var Battleship = cc.Node.extend({
 		setTimeout(function() {
 			part.removeChild(em);
 			_b_release(em);
-			em.destroyParticleSystem();
+			//em.destroyParticleSystem();
 		}, 1000);
 	},
 
@@ -2173,13 +2189,13 @@ var MyGameSymbol = GameSymbol.extend({
 
 		var sea1 = this._sea1,
             sea2 = this._sea2,
-            syms = this.getContentSize(),
-			seas = sea1.getContentSize();
+            symSize = this.getContentSize(),
+			seaSize = sea1.getContentSize();
 
-		sea1.setPosition(cc.p(syms.width/2-seas.width*_B_SEA_SYMBOL_SCALE/2-4, syms.height/2));
+		sea1.setPosition(cc.p(symSize.width/2-seaSize.width*_B_SEA_SYMBOL_SCALE/2-4, symSize.height/2));
 		sea1.setScale(_B_SEA_SYMBOL_SCALE);
 		this.addChild(sea1);
-		sea2.setPosition(cc.p(syms.width/2+seas.width*_B_SEA_SYMBOL_SCALE/2+4, syms.height/2));
+		sea2.setPosition(cc.p(symSize.width/2+seaSize.width*_B_SEA_SYMBOL_SCALE/2+4, symSize.height/2));
 		sea2.setScale(_B_SEA_SYMBOL_SCALE);
 		this.addChild(sea2);
     }
