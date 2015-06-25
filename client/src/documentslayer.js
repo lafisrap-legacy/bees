@@ -518,7 +518,6 @@ var DocumentLayer = cc.Layer.extend({
 
 		this._lastY = posY;
 		this._speed = speed;
-		cc.log("Speed: "+this._speed);
 	}
 });	
 
@@ -545,7 +544,8 @@ var GameSymbol = cc.Sprite.extend({
            	onTouchesBegan: function(touches, event) {
                	console.log("onTouchesBegan!");
                 var loc = touches[0].getLocation(),
-                    rect  = self.getBoundingBox();
+                    pos = self.getParent().convertToWorldSpace(self.getPosition());
+                    rect  = cc.rect(pos.x-self.width/2, pos.y-self.height/2, self.width, self.height);
 
                 if( rect && cc.rectContainsPoint(rect, loc) && typeof self._finalCallback === "function" ) {
                     self.getParent().getParent().hide();

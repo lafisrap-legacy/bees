@@ -2,7 +2,7 @@
 //
 var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_SQUARE_SIZE = 56,
-	_B_WORDS_PER_ROUND = 1,	
+	_B_WORDS_PER_ROUND = 2,	
 	_B_HOURGLASS_POS = cc.p(668,80),
 	_B_CANON_POS = cc.p(130,280),
 	_B_CANONBALL_POS = cc.p(240,340),
@@ -838,9 +838,9 @@ var WordBattleLayer = cc.Layer.extend({
 					}
 				}
 
-                setTimeout(function() {
+                setTimeout(function(word) {
                     paper.insertWordIntoParagraph(word);
-                }, (_B_SEA_MOVING_DELAY + _B_LETTERS_FLYING_DELAY)*1000);
+                }, (_B_SEA_MOVING_DELAY + _B_LETTERS_FLYING_DELAY - 0.5)*1000, word);
             }
 		}
 
