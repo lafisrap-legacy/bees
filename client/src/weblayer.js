@@ -4,9 +4,9 @@
 // _B_RECONNECT_TIME: Seconds after a reconnected is tried, if there is no connection 
 //
 //var _B_SERVER_ADDRESS = "ws://192.168.43.183:4000/socket",
-var _B_SERVER_ADDRESS = "ws://192.168.178.177:4000/socket",
+//var _B_SERVER_ADDRESS = "ws://192.168.178.177:4000/socket",
 //var _B_SERVER_ADDRESS = "ws://192.168.178.41:4000/socket",
-//var _B_SERVER_ADDRESS = "ws://localhost:4000/socket",
+var _B_SERVER_ADDRESS = "ws://localhost:4000/socket",
 //var _B_SERVER_ADDRESS = "ws://217.197.85.219:4000/socket",
 	_B_RECONNECT_TIME = 10;
 
@@ -44,7 +44,7 @@ var WebLayer = cc.Class.extend({
 	_messageCbs: [],
 	_messageStorage: [],
 	
-    ctor:function () {
+    ctor:function (state) {
     	var self = this;
 
 		try {
@@ -76,7 +76,7 @@ var WebLayer = cc.Class.extend({
     },
 
     login: function() {
-    	if( this.sid === null ) {
+    	if( !this.sid ) {
 
 			this.playerId = cc.sys.localStorage.getItem('playerId');
 			this.playerName = cc.sys.localStorage.getItem('playerName');
@@ -88,9 +88,11 @@ var WebLayer = cc.Class.extend({
 			}
 
 			if( this.playerId ) {
+                cc.log("Login with player id ...", this.playerId);
 				this.ws.send('{"command":"login", "playerId":"'+this.playerId+'", "playerName":"'+this.playerName+'"}');
 				// the server reply is collected in OnMessage / case: "login"
 			} else {
+                cc.log("Signup without player id ...");
 				// if it is a browser, ask for magic spell, signup with this
 					// if there is no bee server reachable, game cannot start
 				this.ws.send('{"command":"signup"}');
@@ -225,16 +227,25 @@ var WebLayer = cc.Class.extend({
 		switch( data.command ) {
 		case "login":
 			this.sid = ret.sid;
-			cc.log("Login: Setting sid to "+this.sid);
-			cc.assert(this.sid != null && typeof this.sid === "string","onmessage 'login': Received bad sid.");
+            if( !this.sid ) {
+                // we didn't get a sid, so we login (signup) again
+                cc.sys.localStorage.removeItem('playerId');
+                this.login();
+            } else {
+                var gs = ret.gameState,
+                    state = JSON.parse(gs!="" && gs || "{}");
+                $b.setState(state);
+                cc.log("Login: Setting sid to "+this.sid+" with gameState: "+state);
+                cc.assert(this.sid != null && typeof this.sid === "string","onmessage 'login': Received bad sid.");
 
-			// We are logged in, so we call the waiting commands
-			for( var i=0 ; i<this.sidCbs.length ; i++ ) {
-				cc.log("Login: Calling waiting message functions."+this.sid);
-				cc.assert(typeof this.sidCbs[i] === "function", "onmessage 'login': Bad sid callback.");
-				this.sidCbs[i]();
-			}
-			this.sidCbs = [];
+                // We are logged in, so we call the waiting commands
+                for( var i=0 ; i<this.sidCbs.length ; i++ ) {
+                    cc.log("Login: Calling waiting message functions."+this.sid);
+                    cc.assert(typeof this.sidCbs[i] === "function", "onmessage 'login': Bad sid callback.");
+                    this.sidCbs[i]();
+                }
+                this.sidCbs = [];
+            }
 			break;
 		case "signup":
 			BeesPlayerId = data.data[0].playerId;

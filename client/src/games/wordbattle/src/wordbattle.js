@@ -21,7 +21,10 @@ var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
 	_B_BIG_SHIP_LEFT = 2,
 	_B_SEA_SYMBOL_SCALE = 0.1,
     _B_SEA_MOVING_DELAY = 0.9,
-    _B_LETTERS_FLYING_DELAY = 2.8,
+    _B_LETTERS_FLYING_DELAY = 4.5,
+    _B_LETTER_COLOR_NORMAL = cc.color(255,255,0),
+    _B_LETTER_COLOR_WIN = cc.color(0,255,0),
+    _B_LETTER_COLOR_LOST = cc.color(255,0,0),
 
 // Regular Expressions
 //
@@ -56,7 +59,8 @@ var WordBattleLayer = cc.Layer.extend({
 	_fairy: null,
 	_collectedWords: null,
 	_selectedWords: null,
-	_rounds: null,
+	_paragraph: null,
+    _rounds: null,
 	_round: null,
 	_first: null,
 	_mode: null,
@@ -156,14 +160,16 @@ var WordBattleLayer = cc.Layer.extend({
 		_b_retain(this._fairy, "Fairy");
 
 		this._collectedWords = state.words;
+        for( var i=0 ; i<this._text.length ; i++ ) if( !this._collectedWords[i] ) this._collectedWords[i]=[];
+
 		/// tmp
-		this._collectedWords = [[
-			{ plain: "wünschten", color: cc.color(9,72,184), opacity: 255 },
-			{ plain: "König", color: cc.color(222,0,0), opacity: 255 },
-			{ plain: "Königin", color: cc.color(250,190,17), opacity: 255 },
-			{ plain: "Kind", color: cc.color(2,168,35), opacity: 255 },
-			{ plain: "klagte", color: cc.color(173,109,142), opacity: 255 }
-		]];
+//		this._collectedWords = [[
+//			{ plain: "wünschten", color: cc.color(9,72,184), opacity: 255 },
+//			{ plain: "König", color: cc.color(222,0,0), opacity: 255 },
+//			{ plain: "Königin", color: cc.color(250,190,17), opacity: 255 },
+//			{ plain: "Kind", color: cc.color(2,168,35), opacity: 255 },
+//			{ plain: "klagte", color: cc.color(173,109,142), opacity: 255 }
+//		]];
 	/*	
 		for( var i=0 ; i<3 ; i++ ) {	
 			var bomb = new Bomb(this._fairy._space, cc.p(100+80*i,500+(i%2)*100),self._otherSea);
@@ -221,7 +227,7 @@ var WordBattleLayer = cc.Layer.extend({
         var pList = this.getPriorityParagraphs();
 		$b.sendMessage({ message: "getNextParagraph", pList: pList });
 		$b.receiveMessage("getNextParagraph", function(data) {
-            var paragraph = self.getNextParagraph(pList, data.pList);
+            var paragraph = self._paragraph = self.getNextParagraph(pList, data.pList);
 
             //////////////////////////////
             // Show fairy tale 
@@ -459,7 +465,7 @@ var WordBattleLayer = cc.Layer.extend({
                 list.push({paragraph: i, priority: 2});
                 continue;
             } else {
-                for( var j=0, minOpacity=256 ; j<words.length ; j++ ) minOpacity = Math.min(minOpacity, words[j].opacity);
+                for( var j=0, minOpacity=256 ; j<cWords.length ; j++ ) minOpacity = Math.min(minOpacity, cWords[j].opacity);
 
                 if( minOpacity < 255 ) list.push({paragraph: i, priority: 3});
                 else list.push({paragraph: i, priority: 4});
@@ -854,7 +860,7 @@ var WordBattleLayer = cc.Layer.extend({
                     word.color = cc.color(224,208,160);
                 }
 
-                this._collectedWords.push({ 
+                this._collectedWords[this._paragraph].push({ 
                     plain: word.plain, 
                     color: word.color, 
                     opacity: word.opacity 
@@ -878,7 +884,11 @@ var WordBattleLayer = cc.Layer.extend({
 								cc.callFunc(function(obj, data) {
 									var letter = data.letter,
 										pos1 = self.convertToWorldSpace(letter.getPosition()),
-										pos2 = data.pos,
+										pos2 = data.pos;
+
+									self.removeChild(letter);
+
+                                    var pos1 = box.convertToNodeSpace(pos1),
 										bezier = [
 											pos1,	
 											cc.p(pos2.x < cc.width/2? cc.width*0.75 + Math.random()*100 : cc.width*0.25 - Math.random()*100, 
@@ -886,8 +896,7 @@ var WordBattleLayer = cc.Layer.extend({
 											pos2
 										];
 
-									self.removeChild(letter);
-									letter.setPosition(box.convertToNodeSpace(pos1));
+									letter.setPosition(pos1);
 									box.addChild(letter,20);
 
 									letter.runAction(
@@ -896,6 +905,7 @@ var WordBattleLayer = cc.Layer.extend({
                                                 cc.spawn(
                                                     cc.bezierTo(_B_LETTERS_FLYING_DELAY, bezier),
                                                     cc.scaleTo(_B_LETTERS_FLYING_DELAY, 0.4),
+                                                    cc.fadeTo(_B_LETTERS_FLYING_DELAY, 40),
                                                     cc.rotateBy(_B_LETTERS_FLYING_DELAY,1080)
                                                 )
                                             ),
@@ -913,7 +923,7 @@ var WordBattleLayer = cc.Layer.extend({
 
                 setTimeout(function(word) {
                     paper.insertWordIntoParagraph(word);
-                }, (_B_SEA_MOVING_DELAY + _B_LETTERS_FLYING_DELAY - 0.5)*1000, word);
+                }, (_B_SEA_MOVING_DELAY + _B_LETTERS_FLYING_DELAY - 1.5)*1000, word);
             }
 		}
 
@@ -1392,6 +1402,7 @@ var Battleship = cc.Node.extend({
 			letter.setPosition(part.getPosition());
 			letter.setRotation(this._rotation);
 			letter.setScale(0.0);
+            letter.setColor(_B_LETTER_COLOR_NORMAL);
 			letter.runAction(
 				cc.scaleTo(0.66,1)	
 			);
@@ -1739,8 +1750,8 @@ var BigBattleShip = cc.Node.extend({
 			//var letter = new cc.LabelBMFont( word[i] , "res/fonts/PTMono280Bees.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
 			var letter = new cc.LabelBMFont( word[i] , "res/fonts/ErikaOrmig280.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
 			letter.setPosition(cc.p((i-wl/2)*175 + 87.5,60));
-			if( win ) letter.setColor(cc.color(105,255,105));
-			else letter.setColor(cc.color(255,105,105));
+			if( win ) letter.setColor(_B_LETTER_COLOR_WIN);
+			else letter.setColor(_B_LETTER_COLOR_LOST);
 			this.addChild(letter,10);
 		}
     },
@@ -2307,8 +2318,6 @@ var WordBattleScene = cc.Scene.extend({
         	command: "registerVariation",
         	variation: this.game+"/"+this.variation
         });   
-
-		$b.saveState(); 		
 	},
 
     onEnter: function () {

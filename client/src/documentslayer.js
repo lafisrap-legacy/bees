@@ -164,7 +164,7 @@ var DocumentLayer = cc.Layer.extend({
 					labelY += sizes.lineHeight;
 				}
 
-				if( sw.length && sw[0] === plainWords[j] ) selectedWords.push({ord:j, word:sw.splice(0,1)[0]});
+				if( sw.length && sw[0] === plainWords[j] ) selectedWords.push({ord:paragraphStart+j, word:sw.splice(0,1)[0]});
 
 				var word = {
 					label:	label, 

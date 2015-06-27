@@ -108,7 +108,7 @@ var BeesScene = cc.Scene.extend({
 	menuLayer: null,
 	selectPlayerLayer: null,
 	selectPlayerLayer: null,
-	gameState: {},
+	_gameState: {},
 	size: null,
 	
     onEnter:function () {
@@ -172,8 +172,9 @@ var BeesScene = cc.Scene.extend({
         (baseLayer || this).addChild(layer,5);
     },
     
-    getState: 			function() 			 	  { return this.gameState; },
-    saveState: 			function() 			 	  { return this.weblayer.saveState(this.gameState); },
+    getState: 			function() 			 	  { return this._gameState; },
+    setState: 			function(state) 		  { this._gameState = state; },
+    saveState: 			function() 			 	  { return this.weblayer.saveState(this._gameState); },
     sendCommand:		function(command)	 	  { return this.weblayer.sendCommand(command); },
     registerVariation: 	function(variation)  	  { return this.weblayer.registerVariation(variation); },
     acceptInvitations: 	function(cb) 		 	  { return this.weblayer.acceptInvitations(cb); },
