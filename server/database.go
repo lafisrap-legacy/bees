@@ -111,6 +111,7 @@ func Signup(db *sql.DB, p Cmd_data) []Cmd_data {
 	magicSpell, ok := p["magicSpell"]
 
 	if !ok {
+		fmt.Println("Signing up new player ...")
 		var id string
 		for playerId == "" {
 			// create player id (first get a random value, than get its SHA1 hash)
@@ -127,6 +128,8 @@ func Signup(db *sql.DB, p Cmd_data) []Cmd_data {
 				panic("signup: " + err.Error())
 			}
 		}
+
+		fmt.Println("New pIDs: ", playerId, playerIdSha1)
 
 		// insert new player id
 		_, err := db.Exec("insert into players (id, beehive, magicspell, logins, gamestate) values (?,?,?,?,?)", playerIdSha1, "yaylaswiese", "", 0, "")
@@ -173,7 +176,8 @@ func Login(db *sql.DB, p Cmd_data) []Cmd_data {
 		err = db.QueryRow("SELECT id, beehive, magicspell, logins, gamestate FROM players WHERE id = ?", playerIdSha1).Scan(&id, &beehive, &magicspell, &logins, &gamestate)
 		switch {
 		case err == sql.ErrNoRows:
-			err = errors.New("Player id not found.")
+			err = errors.New(ErrorMessages[1001])
+			fmt.Println("Login error: ", err.Error(), playerIdSha1)
 		case err == nil:
 			// increment login counter
 			_, err = db.Exec("UPDATE players SET logins = ? WHERE id = ?", logins+1, playerIdSha1)
