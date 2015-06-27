@@ -27,13 +27,13 @@ func (s socket) Close() error {
 }
 
 // notification represents a notification sent to a client
-// 
+//
 // command is the client command, e.g. "message" or "gameUpdate"
 // data is one or more JSON strings, with semantics only known to the clients
 //
 type notification struct {
 	command string
-	data []Cmd_data
+	data    []Cmd_data
 }
 
 var dbChan = make(chan string)
@@ -89,8 +89,8 @@ func translateMessages(s socket, commandChan chan Command) {
 			} else {
 				delete(message, "sid")
 				if sid == "" || sid != msgSid {
-					fmt.Println("No sid: ",sid,"!=",msgSid,message)
-					err = errors.New("No session or session id wrong.("+msgSid+")")
+					fmt.Println("No sid: ", sid, "!=", msgSid, message)
+					err = errors.New("No session or session id wrong.(" + msgSid + ")")
 				}
 			}
 			delete(message, "command")
@@ -99,7 +99,7 @@ func translateMessages(s socket, commandChan chan Command) {
 				err = errors.New("Session already active. Logout first.")
 			}
 
-			fmt.Println("Received command",command,"with",message,"err:",err)
+			fmt.Println("Received command", command, "with", message, "err:", err)
 			if err == nil {
 				commandChan <- Command{
 					command:   command,
@@ -108,7 +108,7 @@ func translateMessages(s socket, commandChan chan Command) {
 					parameter: message,
 				}
 
-				fmt.Println("Sent it! Now waiting for reply");
+				fmt.Println("Sent it! Now waiting for reply")
 				newSid := catchReturn(dataChan, encoder, command)
 				if newSid != "" {
 					sid = newSid
@@ -137,17 +137,21 @@ func catchReturn(dataChan chan []Cmd_data, encoder *json.Encoder, command string
 			"command": command,
 			"data":    data,
 		}
-		fmt.Println("Got message back!",cdata)
+		fmt.Println("Got message back!", cdata)
 		encoder.Encode(&cdata)
 
 		if command == "login" {
+			fmt.Println("It's the login command.")
 			if sid, ok := data[0]["sid"]; ok {
 
+				fmt.Println("sid received ...")
 				notificationChan := make(chan notification)
 				go catchNotifications(notificationChan, encoder)
 				setNotificationChan(notificationChan, sid)
 
 				return sid
+			} else {
+				fmt.Println("no sid received ...")
 			}
 		}
 	}
