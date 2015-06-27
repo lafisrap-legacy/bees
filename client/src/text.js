@@ -13,6 +13,8 @@ _b_text = {
 			"ready": "Bereit für die nächste Runde?",
 			"word_won": "RICHTIG!",
 			"word_lost": "Falsch.",
+			"end_of_round_1": "AUS! AUS! AUS!",
+			"end_of_round_2": "Die Runde ist vorbei.",
         },
 		"textinput": {
 			"insert_text": "..."

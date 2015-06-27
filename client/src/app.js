@@ -208,6 +208,7 @@ var _b_retain = function(obj,name) {
 
 var _b_release = function(obj) {
 
+	if( !obj || !_b_retained[obj.__retainId] ) debugger;
 	cc.assert(obj && _b_retained[obj.__retainId], "_b_release: Object '"+obj.__retainId+"' not valid or not in retained array...");
 	obj.release();		
 	//cc.log("Releasing "+obj.__retainId+": '"+_b_retained[obj.__retainId]+"'");
@@ -339,8 +340,10 @@ var _b_resume = function() {
 var _b_audio = function() {
 
 	var musicToPlay = [],
+		musicTimeout = null,
 		fadeTime = 0,
-		fadePerSec = 0;
+		fadePerSec = 0,
+		finalCallback = null;
 	
 	cc.audioEngine.step = function(dt) {
 		if( fadeTime ) {
@@ -348,44 +351,68 @@ var _b_audio = function() {
 			cc.audioEngine.setMusicVolume(volume);
 
 			fadeTime -= dt;
-			if( fadeTime < 0 ) fadeTime = 0;
-		}
-
-		if( musicToPlay.length > 0 ) {	
-			if( !cc.audioEngine.isMusicPlaying() ) {
-				var music = musicToPlay.splice(0,1)[0];
-
-				cc.audioEngine.playMusic(music.url, music.loop);
+			if( fadeTime < 0 ) {
+				fadeTime = 0;
+				if( typeof finalCallback === "function" ) finalCallback();
 			}
 		}
 	};
 
-	cc.audioEngine.fadeTo = function(time, targetVolume) {
+	cc.audioEngine.fadeTo = function(time, targetVolume, cb) {
 		var currentVolume = cc.audioEngine.getMusicVolume(),
 			diff = targetVolume - currentVolume;
 
 		fadeTime = time;
 		fadePerSec = diff / time;
+		finalCallback = cb;
 	};
 
-	cc.audioEngine.fadeOut = function(time) {
-		this.fadeTo(time,0);
+	cc.audioEngine.fadeOut = function(time, cb) {
+		this.fadeTo(time,0,cb);
 	};
 
-	cc.audioEngine.fadeIn = function(time) {
-		this.fadeTo(time,1);
+	cc.audioEngine.fadeIn = function(time, cb) {
+		this.fadeTo(time,1,cb);
 	};
 
 	cc.audioEngine.addMusic = function(url, loop) {
-		musicToPlay.push({
-			url: url,
-			loop: loop
-		});
+		
+		cc.assert(url, "I need a url for playing music.");
+			
+		var name = url.substr(url.lastIndexOf("/")+1),
+			time = sRes[name] && Math.round(sRes[name]*1000);
+
+		cc.assert(time, "Couldn't retrieve duration of mp3 file "+name);
+
+		var next = function() {
+			if( musicToPlay.length > 0 ) {
+				var music = musicToPlay.splice(0,1)[0];
+				cc.audioEngine.playMusic(music.url, music.loop);
+				musicTimeout = setTimeout(next, music.time);
+			} else {
+				musicTimeout = null;
+			}
+		};
+
+		if( !musicTimeout ) {
+			cc.audioEngine.playMusic(url, loop);
+			musicTimeout = setTimeout(next, time);
+		} else {
+			musicToPlay.push({
+				url: url,
+				loop: loop,
+				time: time
+			});
+		}
 	};
 
 	cc.audioEngine.stopAllMusic = function() {
 		cc.audioEngine.stopMusic();
 		musicToPlay = [];
+		if( musicTimeout ) {
+			clearTimeout(musicTimeout);
+			musicTimeout = null;
+		}
 	};
 };
 _b_audio();
