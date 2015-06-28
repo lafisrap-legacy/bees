@@ -26,7 +26,7 @@ var _B_DOCUMENT_SHAPES = {
 
 // Regular Expressions
 //
-_b_plainWords = /\b[\wäöüÄÖÜß]{2,}/g;
+_b_plainWords = /[äöüÄÖÜ]{0,1}\b[\wäöüÄÖÜß]{2,}/g;
 _b_WordsWithPunctuation = /([^\wäöüÄÖÜß]|\s)*„?([\wäöüÄÖÜß]{2,})[^\wäöüÄÖÜß\„]*/g;  // currently only German umlauts
 
 	
@@ -148,7 +148,7 @@ var DocumentLayer = cc.Layer.extend({
 	   	
 			var word;	
 			while( (word=_b_selectedWords.exec(text[i])) != null ) {
-				sw.push(word[1]);
+				if( word[1].length <= _B_MAX_SHIP_LENGTH ) sw.push(word[1]);
 			}
 
 			cc.assert(plainWords.length === fullWords.length, "Number of words doesn't match between _pureWords and _fullWords.");
@@ -164,7 +164,6 @@ var DocumentLayer = cc.Layer.extend({
 					labelY += sizes.lineHeight;
 				}
 
-				if( sw.length && sw[0] === plainWords[j] ) selectedWords.push({ord:paragraphStart+j, word:sw.splice(0,1)[0]});
 
 				var word = {
 					label:	label, 
@@ -173,11 +172,16 @@ var DocumentLayer = cc.Layer.extend({
 					pos:	cc.p(labelX, labelY), 
 					visible: 	false, 
 					color: 		cc.color(0,0,0), 
-					opacity: 	(j<3 || j>plainWords.length-4)?255:0,
+					opacity: 	255,
 					collected: 	false
 				};
 
-				words.push(word);
+				if( sw.length && sw[0] === plainWords[j] ) {
+                    selectedWords.push({ord:paragraphStart+j, word:sw.splice(0,1)[0]});
+                    word.opacity = 0;
+                }
+				
+                words.push(word);
 
 				label.setColor(word.color);
 				label.setOpacity(word.opacity);
@@ -273,6 +277,7 @@ var DocumentLayer = cc.Layer.extend({
 			)
 		);
 
+        /* This was used to mark all previous and following word till the next selected word, obolete for now
 		for( var i=ords.prev ; i<=ords.next ; i++ ) {
 			if( word.opacity > words[i].opacity && i != ords.ord ) {
 				words[i].opacity = word.opacity;
@@ -288,7 +293,7 @@ var DocumentLayer = cc.Layer.extend({
                     )
 				);
 			}
-		}
+		}*/
 	},
 
 	prepare: function(paragraph, gameSymbol) {
@@ -508,7 +513,7 @@ var DocumentLayer = cc.Layer.extend({
 			for( var i=0 ; i<ps.length ; i++ ) {
 				var wordY = words[ps[i]].pos.y;
 				if( Math.abs(wordY - posY - margin ) < _B_SCROLL_THRESHOLD_2 ) {
-					posY = this._posY = wordY;
+					posY = this._posY = wordY - margin;
 					speed = 0;
 					this.showWordsAtPosition();
 					break;

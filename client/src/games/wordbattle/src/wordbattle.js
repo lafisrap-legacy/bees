@@ -1,36 +1,31 @@
 // WordBattleLayer Constants
 //
-var _B_MAX_SHIP_LENGTH = 10,	// maximum ship length (or size of the sea)
-	_B_SQUARE_SIZE = 56,
-	_B_WORDS_PER_ROUND = 2,	
-	_B_HOURGLASS_POS = cc.p(668,80),
-	_B_CANON_POS = cc.p(130,280),
-	_B_CANONBALL_POS = cc.p(240,340),
-	_B_CROSSHAIR_Y_OFFSET = _B_SQUARE_SIZE + 7,
-	_B_DAMAGE_PROGRESS_DELAY = 0.1,
-	_B_BIGSHIP_MOVING_SPEED = 140,
-	_B_MAX_DAMAGE = 4,
-	_B_MAX_SHIP_DAMAGE = 0.85,
-	_B_LETTER_SIZE = 96,
-	_B_TAP_TIME = 200,
-	_B_MODE_TITLE = 1,
-	_B_MODE_MOVING = 2,
-	_B_MODE_BOMBING = 3,
-	_B_MODE_WATCHING = 4,
-	_B_NEXT_BIG_SHIP = 1,
-	_B_BIG_SHIP_LEFT = 2,
-	_B_SEA_SYMBOL_SCALE = 0.1,
-    _B_SEA_MOVING_DELAY = 0.9,
-    _B_LETTERS_FLYING_DELAY = 4.5,
-    _B_LETTER_COLOR_NORMAL = cc.color(255,255,0),
-    _B_LETTER_COLOR_WIN = cc.color(0,255,0),
-    _B_LETTER_COLOR_LOST = cc.color(255,0,0),
+var _B_MAX_SHIP_LENGTH = 10,	        // maximum ship length (or size of the sea)
+	_B_SQUARE_SIZE = 56,                // size of one square of the playground in pixels
+	_B_WORDS_PER_ROUND = 5,	            // max number of words per round
+	_B_HOURGLASS_POS = cc.p(668,80),    // Position of hoursglass
+	_B_CANON_POS = cc.p(130,280),       // Position of canon
+	_B_CANONBALL_POS = cc.p(240,340),   // Startpos of canonball
+	_B_CROSSHAIR_Y_OFFSET = _B_SQUARE_SIZE + 7, // Vertical offset of crosshair, that it can be seen above a thumb 
+	_B_DAMAGE_PROGRESS_DELAY = 0.1,     // waiting time to make damage processing more interesting
+	_B_BIGSHIP_MOVING_SPEED = 190,      // Moving speed of big ships
+	_B_MAX_DAMAGE = 4,                  // When is a ship done?
+	_B_MAX_SHIP_DAMAGE = 0.85,          // When a ship is damaged by 85% it is drowned
+	_B_TAP_TIME = 200                   // Above this time tap becomes a drag.
+	_B_NEXT_BIG_SHIP = 1,               // callback mode: the next big ship can com 
+	_B_BIG_SHIP_LEFT = 2,               // callback mode: the big ship left the screen
+	_B_SEA_SYMBOL_SCALE = 0.1,          // Size of a sea when it is a symbol
+    _B_SEA_MOVING_DELAY = 0.9,          // Animation time for seas
+    _B_LETTERS_FLYING_DELAY = 6.5,      // Seconds the letters fly
+    _B_LETTER_COLOR_NORMAL = cc.color(255,255,0),   // Letter color on ship: normal 
+    _B_LETTER_COLOR_WIN = cc.color(0,255,0),        // ... when word was won
+    _B_LETTER_COLOR_LOST = cc.color(255,0,0),       // ... when word was lost
 
 // Regular Expressions
 //
 _b_selectedWords = /\{([\wäöüÄÖÜß]{2,})\}/g;
 
-// WordBattleLayer is the main layer for the word battle game
+// WordBattleLayer is the main layer for the word battle game. It contains the two sea playgrounds as cocos2d childs and 
 //
 // Methods
 // -------
@@ -38,36 +33,29 @@ _b_selectedWords = /\{([\wäöüÄÖÜß]{2,})\}/g;
 // initListener starts touch events of the title layer
 // stopListener stops touch events 
 //
-// Properties
-// ----------
-// _ownSea is an array containing the own ships and their status
-// _otherSea is a array containing ships and status of the opponent
-// _text is the full text of the fairytale
-// _sphinx are the sphinx questions
-// _rounds is an arrayarray containing the word ids for every round
-// _round is the current round
-//
 var WordBattleLayer = cc.Layer.extend({
-	_ownSea: [],
-	_otherSea: [],
-	_ownShips: [],
-	_otherShips: [],
-	_squares: [],
-	_bombs: [],
-	_text: null,
-	_sphinx: null,
-	_fairy: null,
-	_collectedWords: null,
-	_selectedWords: null,
-	_paragraph: null,
-    _rounds: null,
-	_round: null,
-	_first: null,
-	_mode: null,
-	_bigShipMoving: false,
-	_playingWinningMusic: undefined,
-	_bigShipQueue: [],
+	_ownSea: [],            // left sea playground with own ships
+	_otherSea: [],          // right sea playground with opponents ships
+	_squares: [],           // array to mark squares that were hit
+	_bombs: [],             // currently active bombs
+	_text: null,            // the text of the fairytale organized in paragraphs
+	_sphinx: null,          // not used by now
+	_fairy: null,           // the layer where fairies appear, bombs are rolling and big ships floating
+	_collectedWords: null,  // the words that the player already collected, organized by paragraphs
+	_selectedWords: null,   // the words that can be collected, org. by paragraphs 
+	_paragraph: null,       // the current paragraph
+    _rounds: null,          // the number of rounds
+	_round: null,           // the corrent round
+	_first: null,           // is this player first? (changes after a round (paragraph))
+	_bigShipMoving: false,  // is a big ship on its way
+	_playingWinningMusic: undefined, // what kind of music is played right now
+	_bigShipQueue: [],      // queue up big ships
 	
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // startup function of the layer. It
+    // - loads the sprites from cache
+    // - connectes the other player
+    // - 
     ctor:function (state) {
     	var self = this;
     
@@ -91,8 +79,10 @@ var WordBattleLayer = cc.Layer.extend({
 
 			cc.log("Player "+player.name+" connected (sid:"+player.sid+")!");
 			
-			self._first = player.first === "yes";			
+			self._first = player.first === "yes"; // which player is starting?
 			
+            ////////////////////////////
+            // Fade out the start screen
 			startscreen.runAction(
 				cc.sequence(
 					cc.fadeOut(0.5),
@@ -113,7 +103,7 @@ var WordBattleLayer = cc.Layer.extend({
 			self.addChild(paper, 5);
 
 			_b_one(["paragraphs_prepared"], function() {
-				self.startGame();
+				self.startEpisode();
 			});
 		}, this.gameUpdate, this);
 
@@ -145,38 +135,17 @@ var WordBattleLayer = cc.Layer.extend({
 		this._text = json.text;
 		this._sphinx = json.sphinx;
 
-/*		var drawNode = cc.DrawNode.create();
-        drawNode.clear();
-        for( var i=1 ; i<_B_MAX_SHIP_LENGTH ; i++ ) {
-	        drawNode.drawSegment(cc.p(i*_B_SQUARE_SIZE,560),cc.p(i*_B_SQUARE_SIZE,0),0.5,new cc.Color(255,0,0,100));
-	        drawNode.drawSegment(cc.p(560,i*_B_SQUARE_SIZE),cc.p(0,i*_B_SQUARE_SIZE),0.5,new cc.Color(255,0,0,100));
-		}
-        s1.addChild(drawNode,20);*/
-        
-		this._mode = _B_MODE_TITLE;	
-		
+        ///////////////////////////////
+        // Creating fairy layer
 		this._fairy = new GameFairy();
         this.addChild(this._fairy,15);
 		_b_retain(this._fairy, "Fairy");
 
+        ///////////////////////////////
+        // Get collected words from storage and fill up empty paragraphs
 		this._collectedWords = state.words;
         for( var i=0 ; i<this._text.length ; i++ ) if( !this._collectedWords[i] ) this._collectedWords[i]=[];
 
-		/// tmp
-//		this._collectedWords = [[
-//			{ plain: "wünschten", color: cc.color(9,72,184), opacity: 255 },
-//			{ plain: "König", color: cc.color(222,0,0), opacity: 255 },
-//			{ plain: "Königin", color: cc.color(250,190,17), opacity: 255 },
-//			{ plain: "Kind", color: cc.color(2,168,35), opacity: 255 },
-//			{ plain: "klagte", color: cc.color(173,109,142), opacity: 255 }
-//		]];
-	/*	
-		for( var i=0 ; i<3 ; i++ ) {	
-			var bomb = new Bomb(this._fairy._space, cc.p(100+80*i,500+(i%2)*100),self._otherSea);
-			bomb.getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
-			this._fairy.addChild(bomb,20);
-		}
-*/
         return true;
     },
     
@@ -191,31 +160,20 @@ var WordBattleLayer = cc.Layer.extend({
     	this.stopListeners();
     },
     
-    // startGame starts the game, selecting the start paragraph, selecting a priority list from the collectors book, looking through suggestions of other player
-    startGame: function() {
-        //////////////////////////////
-        // Look into the collectors book, which paragraphs are next, and prioritize them
-        // to be done ...
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// startEpisode starts a play with one paragraph, first looking for this paragraph, creating a play list of selected words
+	startEpisode: function() {
+		var self = this;
 
-        //////////////////////////////
-        // Send the list to the opponent (first) or wait for his list and make a selection
-        // to be done ...
-
+        /////////////////////////////
+        // Playing winning music
 		cc.audioEngine.setMusicVolume(0.5);
 		cc.audioEngine.addMusic(gRes.organizing_intro_mp3,false);
 		cc.audioEngine.addMusic(gRes.organizing_loop1_mp3,false);
 		cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,false);
 		cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,false);
-    	
-		// for now start with episode 1
-    	this.startEpisode();
-    },
-
-	// startEpisode starts a play with one paragraph, creating a play list
-	startEpisode: function() {
-		var self = this;
-
-		//////////////////////////////
+		
+        //////////////////////////////
 		// Create seas
 		var own = self._ownSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
 		var other = self._otherSea = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("sea1.jpg"),cc.rect(0,0,560,560));
@@ -223,7 +181,7 @@ var WordBattleLayer = cc.Layer.extend({
 		_b_retain(other,"WordBattleLayer: sea2");		
 		
         //////////////////////////////
-        // Determine paragraph
+        // Determine paragraph (make a priority list, get the list of the opponent and find out the paragraph to play)
         var pList = this.getPriorityParagraphs();
 		$b.sendMessage({ message: "getNextParagraph", pList: pList });
 		$b.receiveMessage("getNextParagraph", function(data) {
@@ -236,7 +194,7 @@ var WordBattleLayer = cc.Layer.extend({
             }));
             
             //////////////////////////////
-            // Get the single words out of the current paragraph, with and without punctuation
+            // Get selected words of current paragraph 
             var p = self._text[paragraph],
                 sw = self._selectedWords = [],
                 word;
@@ -246,10 +204,6 @@ var WordBattleLayer = cc.Layer.extend({
             }
             cc.assert(sw.length, "I didn't find any words in the current paragraph.")
             
-            //////////////////////////////
-            // Clear squares
-            for( var i=0 ; i<_B_MAX_SHIP_LENGTH ; i++ ) self._squares[i] = [];
-
             //////////////////////////////
             // Divide the words on different rounds and send it, or wait for the words from the other player
             self._round = 0;
@@ -281,55 +235,64 @@ var WordBattleLayer = cc.Layer.extend({
         });
 	},
 	
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // startRound starts one round of bomb throwing and bomb receiving, either first throwing or first receiving
 	startRound: function(allStrait) {
-		var self = this;	
+		var self = this;
 		
-        //////////////////////////////
-		// Build ships
 		var r = this._rounds[this._round],
 			own = this._ownSea;  
 
-		this._shipsLeft = r.length;
+		this._shipsLeft = r.length; // number of ships still on the battle field
 	
+        //////////////////////////////
+		// Build ships
 		for( var i=0; i<r.length ; i++ ) {
 
+            ///////////////////////////////////////////////
+            // build ships
 			var word = this._selectedWords[r[i]];
 			if( word.length > _B_MAX_SHIP_LENGTH ) continue; // don't take words that don't fit ...
 			var ship = new Battleship(word, false, this);
 			
+            //////////////////////////////////////////////
+            // add ships to battle field and find a position for them
 			own.addChild(ship,10);
 			_b_retain(ship,"WordBattleLayer: ship"+i);		
 			var rotation = allStrait!==undefined? allStrait : Math.floor(Math.random()*2)*90;
 			var coords = ship.findPosition({col:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH),row:Math.floor(Math.random()*_B_MAX_SHIP_LENGTH)},rotation);
-			if( !coords ) {
+
+			if( !coords ) { // if no place is found start over and set all ships in one direction (avoiding intersections)
+                ///////////////////////////////////
+                // start over again
 				own.removeAllChildren();
 				return self.startRound(Math.floor(Math.random()*2)*90);
 			}
+
+            //////////////////////////////////////
+            // set all attributes of ship and animate them
 			ship.setRCPosition(coords);
 			ship.setRotation(rotation);
+            ship.setOpacity(0);
+            ship.setRotation(ship.getRotation()+180);
+            ship.setScale(0.6);
+            ship.runAction(
+                cc.sequence(
+                    cc.EaseSineOut.create(
+                        cc.spawn(
+                            cc.scaleTo(1.4,0.5),
+                            cc.rotateBy(1.4,180),
+                            cc.fadeIn(1.4)
+                        )
+                    )
+                )
+            );
 		}
 
-		for( var i=0; i<own.children.length ; i++ ) {
-			var ship = own.children[i];
-	
-			if( ship._isShip ) {
-			    ship.setOpacity(0);
-			    ship.setRotation(ship.getRotation()+180);
-			    ship.setScale(0.6);
-			    ship.runAction(
-				    cc.sequence(
-					    cc.EaseSineOut.create(
-						    cc.spawn(
-							    cc.scaleTo(1.4,0.5),
-							    cc.rotateBy(1.4,180),
-							    cc.fadeIn(1.4)
-						    )
-					    )
-				    )
-			    );
-			}
-		}		
-	
+        //////////////////////////////
+        // Clear squares
+        for( var i=0 ; i<_B_MAX_SHIP_LENGTH ; i++ ) self._squares[i] = [];
+
 		this.letShipsBeMoved();
 	
 		var fairy = this._fairy;
@@ -434,7 +397,7 @@ var WordBattleLayer = cc.Layer.extend({
                             self.moveSeasIn(own, other);
 			                _b_one(["seas_have_moved_in"], function() {
                                 if( ++self._round < self._rounds.length ) self.startRound();
-                                else ; // search for next paragraph and start new episode ...
+                                else self.startEpisode(); // search for next paragraph and start new episode ...
                             });
                         });
                     })
