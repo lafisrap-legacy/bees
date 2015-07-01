@@ -3,14 +3,15 @@
 var _B_MAX_SHIP_LENGTH = 10,	        // maximum ship length (or size of the sea)
 	_B_SQUARE_SIZE = 56,                // size of one square of the playground in pixels
 	_B_WORDS_PER_ROUND = 5,	            // max number of words per round
-	_B_HOURGLASS_POS = cc.p(668,80),    // Position of hoursglass
+    _B_MAX_BOMBS = 7,                   // Number of bombs per round
+	_B_MAX_SHIP_DAMAGE = 0.85,          // When a ship is damaged by 85% it is drowned
+    _B_HOURGLASS_POS = cc.p(668,80),    // Position of hoursglass
 	_B_CANON_POS = cc.p(130,280),       // Position of canon
 	_B_CANONBALL_POS = cc.p(240,340),   // Startpos of canonball
 	_B_CROSSHAIR_Y_OFFSET = _B_SQUARE_SIZE + 7, // Vertical offset of crosshair, that it can be seen above a thumb 
 	_B_DAMAGE_PROGRESS_DELAY = 0.1,     // waiting time to make damage processing more interesting
 	_B_BIGSHIP_MOVING_SPEED = 190,      // Moving speed of big ships
 	_B_MAX_DAMAGE = 4,                  // When is a ship done?
-	_B_MAX_SHIP_DAMAGE = 0.85,          // When a ship is damaged by 85% it is drowned
 	_B_TAP_TIME = 200                   // Above this time tap becomes a drag.
 	_B_NEXT_BIG_SHIP = 1,               // callback mode: the next big ship can com 
 	_B_BIG_SHIP_LEFT = 2,               // callback mode: the big ship left the screen
@@ -20,6 +21,7 @@ var _B_MAX_SHIP_LENGTH = 10,	        // maximum ship length (or size of the sea)
     _B_LETTER_COLOR_NORMAL = cc.color(255,255,0),   // Letter color on ship: normal 
     _B_LETTER_COLOR_WIN = cc.color(0,255,0),        // ... when word was won
     _B_LETTER_COLOR_LOST = cc.color(255,0,0),       // ... when word was lost
+    _B_ERIKA_FONT_OFFSET = 57         // Erika font (made with GlyphDesigner needs an offset)
 
 // Regular Expressions
 //
@@ -293,22 +295,31 @@ var WordBattleLayer = cc.Layer.extend({
         // Clear squares
         for( var i=0 ; i<_B_MAX_SHIP_LENGTH ; i++ ) self._squares[i] = [];
 
-		this.letShipsBeMoved();
-	
+        //////////////////////////////
+        // Start touch listener for moving and turning ships 
+		this.letShipsBeMoved();	
+
+        //////////////////////////////
+        // Let fairy introduce the ship moving 
 		var fairy = this._fairy;
 	
 		fairy.show(0);
-		fairy.say(_b_remember("fairies.move_ships")?10:2, 5, _b_t.fairies.move_ships);
-		_b_one(["in_20_seconds"], function(data) {
+		fairy.say(_b_remember("fairies.move_ships")?10:2, 5, _b_t.fairies.move_ships); // say it after 2 sec if its the first time and after 10 sec otherwise
+		_b_one(["in_20_seconds"], function(data) { // after 20 sec again
 			fairy.silent().show(2).say(0, 5, _b_t.fairies.move_ships );
 		});
+
+        //////////////////////////////
+        // Wait for a ship to be moved 
 		_b_one(["a_ship_was_moved"], function(data) {
 			_b_clear("in_20_seconds");
 			
-			var hg = self._hourglass = new Hourglass(self._fairy._space, _B_HOURGLASS_POS);
+            //////////////////////////////
+            // Show hourglass and introduce it 
+            var hg = self._hourglass = new Hourglass(self._fairy._space, _B_HOURGLASS_POS);
+
 			self.addChild(self._hourglass,10);
 			_b_retain(self._hourglass, "Hourglass");
-			
 			fairy.silent().show(1).say(0, 5, _b_t.fairies.press_it );
 			hg.show();
 			hg.countdown(30);
@@ -320,6 +331,8 @@ var WordBattleLayer = cc.Layer.extend({
 		});
 	},
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // endRound ends one round, letting the letters fly to their positions
 	endRound: function() {
 		var self = this,
 			own = this._ownSea,
@@ -406,6 +419,8 @@ var WordBattleLayer = cc.Layer.extend({
 		});
 	},
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // getPriorityParagraphs evaluates the collected words of a player and makes a list of paragraph priorities
     getPriorityParagraphs: function() {
         var text = this._text,
             cw = this._collectedWords,
@@ -445,6 +460,8 @@ var WordBattleLayer = cc.Layer.extend({
         });
     },
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // getNextParagraph determines the next paraphraph from two priority lists 
     getNextParagraph: function(ownPList, otherPList) {
         cc.assert(ownPList.length === otherPList.length, "Number of paragraphs not matching.");
         
@@ -471,6 +488,8 @@ var WordBattleLayer = cc.Layer.extend({
         return p;
     },
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // moveSeasIn enlarges the seas and starts music
     moveSeasIn: function(own, other) {
         var parent = own.getParent(),
             pos1 = parent.convertToWorldSpace(own.getPosition()),
@@ -515,16 +534,20 @@ var WordBattleLayer = cc.Layer.extend({
         cc.audioEngine.addMusic(gRes.organizing_loop2_mp3,true);
         cc.audioEngine.addMusic(gRes.organizing_loop3_mp3,true);
     },
-
-	sendInitialBoard: function(result) {
+	
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // sendInitialBoard sends the board to the player
+    sendInitialBoard: function(result) {
 		var self = this,
 			own = this._ownSea,
 			fairy = this._fairy,
 			hg = this._hourglass;
 			
+        //////////////////////////////7
+        // No more ship moving
 		this.stopShipsBeMoved();
-	
-		_b_one(["a_ship_was_moved","in_0.35_seconds"], function(data) {
+		
+        _b_one(["a_ship_was_moved","in_0.35_seconds"], function(data) {
 			var tiles = [];
 			for( var i=0 ; i<own.children.length ; i++ ) {
 				var tile = own.children[i];
@@ -564,6 +587,8 @@ var WordBattleLayer = cc.Layer.extend({
 		});
 	},
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // playRound plays one round of seven bombs
 	playRound: function() {
 		var self = this,
 			own = this._ownSea,
@@ -572,233 +597,264 @@ var WordBattleLayer = cc.Layer.extend({
 
 		cc.assert(hg, "playRound assumes to have an hourglass at the beginning.")
 
-		fairy.show(2);
-		fairy.say(0, 2, _b_t.fairies.lets_go);
+        var throwBombs = function(cb) {
+            fairy.show(2);
+            fairy.say(0, 2, _b_t.fairies.lets_go);
 
-		// start always with three bombs and one typewriter
-		for( var i=0 ; i<3 ; i++ ) {	
-			self._bombs[i] = new Bomb(fairy, cc.p(-60+90*i+(i%2)*Math.random()*50,300+(i%2)*100),self._otherSea, function(pos) {
-				if( typewriter ) {
-					typewriter.exit();
-					typewriter = null;
-				}
-			});
-			self._bombs[i].getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
-			fairy.addObject(self._bombs[i]);
-		}
+            // start always with three bombs and one typewriter
+            fairy.bombCounter = 0;
+            for( var i=0 ; i<3 ; i++ ) {	
+                self._bombs[i] = new Bomb(fairy, cc.p(-60+90*i+(i%2)*Math.random()*50,300+(i%2)*100),self._otherSea, function(pos) {
+                    if( typewriter ) {
+                        typewriter.exit();
+                        typewriter = null;
+                    }
+                });
+                self._bombs[i].getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
+                fairy.bombCounter++;
+                fairy.addObject(self._bombs[i]);
+            }
 
-		var afterTyping = function(ship, word) {
-		    if( word == "" ) {
-				return;
-			}
+            var afterTyping = function(ship, word) {
+                if( word == "" ) {
+                    return;
+                }
 
-			// get rid of type writer
-			typewriter.exit();
-			typewriter = null;
+                // get rid of type writer
+                typewriter.exit();
+                typewriter = null;
 
-			cc.log("Check if word is correct ...");
-			// check if word is correct
-			if(ship.getWord().toLowerCase() === word.toLowerCase()) {
-			    cc.log("Word is correct.");
-				ship.setFullDamage();
-				cc.audioEngine.playMusic(gRes.textright_mp3,false);
-				fairy.show(6);
-				fairy.say(0, 4, _b_t.fairies.word_won);
-				setTimeout(function() {
-					fairy.hide();
-				}, 4500)
-					
-			} else {
-			    cc.log("Word is not correct. Right would be: "+ship.getWord());
-				// word wrong: let all bombs explode
-				cc.audioEngine.playMusic(gRes.textwrong_mp3,false);
-				fairy.eachObject(function(i, obj) { 
-					obj.setTimer(0);
-				});
-				fairy.show(6);
-				fairy.say(0, 4, _b_t.fairies.word_lost);
-				_b_pause(); // wait with execution of next event until _b_resume() is called
-				setTimeout(function() {
-					_b_resume();
-					fairy.hide();
-				}, 4500)
-			}
-		},
-		typewriter;
+                cc.log("Check if word is correct ...");
+                // check if word is correct
+                if(ship.getWord().toLowerCase() === word.toLowerCase()) {
+                    cc.log("Word is correct.");
+                    ship.setFullDamage();
+                    cc.audioEngine.playMusic(gRes.textright_mp3,false);
+                    fairy.show(6);
+                    fairy.say(0, 4, _b_t.fairies.word_won);
+                    setTimeout(function() {
+                        fairy.hide();
+                    }, 4500)
+                        
+                } else {
+                    cc.log("Word is not correct. Right would be: "+ship.getWord());
+                    // word wrong: let all bombs explode
+                    cc.audioEngine.playMusic(gRes.textwrong_mp3,false);
+                    fairy.eachObject(function(i, obj) { 
+                        obj.setTimer(0);
+                    });
+                    fairy.show(6);
+                    fairy.say(0, 4, _b_t.fairies.word_lost);
+                    _b_pause(); // wait with execution of next event until _b_resume() is called
+                    setTimeout(function() {
+                        _b_resume();
+                        fairy.hide();
+                    }, 4500)
+                }
+            },
+            typewriter;
 
-		setTimeout(function() {
-		    typewriter = new TypeWriter(fairy, cc.p(-50,450), self._otherSea, afterTyping);
-		    fairy.addObject(typewriter);
-		}, 1000);
+            setTimeout(function() {
+                typewriter = new TypeWriter(fairy, cc.p(-50,450), self._otherSea, afterTyping);
+                fairy.addObject(typewriter);
+            }, 1000);
 
-		var canon = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("canon.png"),cc.rect(0,0,260,284)),
-			canonAction = cc.EaseSineOut.create(cc.moveTo(1.66, _B_CANON_POS));
+            var canon = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("canon.png"),cc.rect(0,0,260,284)),
+                canonAction = cc.EaseSineOut.create(cc.moveTo(1.66, _B_CANON_POS));
 
-		canon.setPosition(cc.p(_B_CANON_POS.x-130,_B_CANON_POS.y));
-		fairy.addChild(canon,30);
-		_b_retain(canon,"Canon");
-		canon.runAction(canonAction);
+            canon.setPosition(cc.p(_B_CANON_POS.x-130,_B_CANON_POS.y));
+            fairy.addChild(canon,30);
+            _b_retain(canon,"Canon");
+            canon.runAction(canonAction);
 
-		_b_one("in_2_seconds" , function() {
-			hg.hide(function() {
-				hg.exit();
-				self.removeChild(hg);
-				_b_release(hg);
-				self._hourglass = null;
-			});
-			fairy.hide();
+            _b_one("in_2_seconds" , function() {
+                hg.hide(function() {
+                    hg.exit();
+                    self.removeChild(hg);
+                    _b_release(hg);
+                    self._hourglass = null;
+                });
+                fairy.hide();
 
-			for( var i=0 ; i<3 ; i++ ) {	
-				self._bombs[i].setTimer(20);
-			}
+                for( var i=0 ; i<3 ; i++ ) {	
+                    self._bombs[i].setTimer(20);
+                }
 
-			_b_one(["last_object_gone","bomb_time_is_up"], function() {
-			
-				cc.log("Last object gone ...");
-				if( typewriter ) {
-					typewriter.exit();
-					typewriter = null;
-				}
+                _b_one(["last_object_gone","bomb_time_is_up"], function() {
+                
+                    cc.log("Last object gone ...");
+                    if( typewriter ) {
+                        typewriter.exit();
+                        typewriter = null;
+                    }
 
-				fairy.show(3);
-				fairy.say(0, 99, _b_t.fairies.ceasefire);
+                    fairy.show(3);
+                    fairy.say(0, 99, _b_t.fairies.ceasefire);
 
-				canon.runAction(
-					cc.sequence(
-						cc.moveBy(1.66, cc.p(-260,0)),
-						cc.callFunc(function() {
-							fairy.removeChild(canon);
-							_b_release(canon);
-						})
-					)
-				);
+                    canon.runAction(
+                        cc.sequence(
+                            cc.moveBy(1.66, cc.p(-260,0)),
+                            cc.callFunc(function() {
+                                fairy.removeChild(canon);
+                                _b_release(canon);
+                            })
+                        )
+                    );
 
-				cc.log("Sending ceasefire ...");
-				$b.sendMessage({ message: "ceasefire" });
-				$b.receiveMessage("ceasefire", function(data) {
-					cc.log("Receiving ceasefire ...");
+                    cc.log("Sending ceasefire ...");
+                    $b.sendMessage({ message: "ceasefire" });
 
-					$b.stopMessage("bomb");
-					cc.log("Don't wait for bombs any more.");
-					_b_one("in_4_seconds", function() {
-						fairy.silent();
-						fairy.show(4);
-						fairy.say(0, 3, _b_t.fairies.results);
-					
-						cc.log("Announcing results ...");
-						_b_one("in_1_seconds", function() {
-							var own = self._ownSea.getChildren(),
-								other = self._otherSea.getChildren();
+                    cb();
+                });
+            });
+        };
 
-							cc.log("Progressing damage ...");
-							var progressDamage = function(ships, isOwnSea) {
-								var i=0,
-									shipSunk = false,
-									interval = setInterval(function() {
-										while( i < ships.length && !ships[i]._isShip ) i++; 
-										if( i < ships.length ) {
-											if( ships[i].progressDamage() ) {
-												shipSunk = true; // ships can only sink in other sea, in own sea a ship_destroyed message is received
-											}
-										}
-										if( ++i >= ships.length ) {
-											clearInterval(interval);
-											
-											if( !shipSunk ) {
-												_b_one("in_3_seconds", function(){
-													if( !self._bigShipMoving ) cc.eventManager.dispatchCustomEvent("last_big_ship_left", self);
-												});
-											}
-											
-											_b_one("last_big_ship_left", function() {
-												 cc.eventManager.dispatchCustomEvent("damageProgressed", self);
-											});
-										}
-									}, _B_DAMAGE_PROGRESS_DELAY*1000);
-							};
+        var receiveBombs = function(cb) {
+            fairy.show(2);
+            fairy.say(0, 2, _b_t.fairies.incoming_bombs);
 
-							progressDamage(own,true);
-							progressDamage(other,false);
-							
-							_b_one("damageProgressed", function() {
+            (function receiveBomb() { 
+                $b.receiveMessage("bomb", function(data) {
+                    var pos = data.pos,
+                        seaRect = self._ownSea.getBoundingBox(),
+                        flyingBomb = new FlyingBomb(self._ownSea, true);
 
-								cc.log("Damage is progressed!");
-								$b.sendMessage({ message: "damageProgressed" });
-								$b.receiveMessage("damageProgressed", function() {
+                    fairy.addChild(flyingBomb);
+                    _b_retain(flyingBomb,"WordBattleLayer: Flying Bomb");		
 
-									fairy.say(0, 3, _b_t.fairies.ready);
+                    flyingBomb.land(cc.p(seaRect.x+pos.x, seaRect.y+pos.y), function(hit) {
+                        fairy.removeChild(flyingBomb);
+                        _b_release(flyingBomb);
+                    });
 
-									_b_one("in_1_seconds", function() {
-										
-										var hg = self._hourglass = new Hourglass(self._fairy._space, _B_HOURGLASS_POS);
-										self.addChild(self._hourglass,10);
-										_b_retain(self._hourglass, "Hourglass");
-										hg.show();
-										fairy.show(5);
-										fairy.say(2,3, _b_t.fairies.press_it);
-										cc.log("Waiting for hourglass to be clicked ...");
+                    receiveBomb();
+                });
+            })();
 
-										_b_one("hourglass_is_clicked", function() {
-											cc.log("Hourglass is clicked! Sending message to start round ...");
-											$b.sendMessage({ message: "playRound" });
+            $b.receiveMessage("ceasefire", function(data) {
+                cc.log("Receiving ceasefire ...");
 
-											hg.getBody().applyImpulse(cp.v(0,60000),cp.v(0,0));
-											fairy.hide();
-											$b.receiveMessage("playRound", function() {
-												cc.log("Got message to play round!!");
-												$b.stopMessage("ship_destroyed");
-												self.playRound();
-											});
-										});
-									});
-								});
-							});
+                $b.stopMessage("bomb");
+                cc.log("Don't wait for bombs any more.");
 
-							(function receiveShipDestroyed() {
-								$b.receiveMessage("ship_destroyed", function(data) {
-									var word = data.word,
-										ownShip = self._ownSea.getChildByName(word),
-										otherShip = self._otherSea.getChildByName(word);
+                cb();
+            });
+        };
 
-									cc.assert(ownShip, "I wanted to show a word on a lost ship, but didn't find it.");
-                                    if( !ownShip._shipWon ) ownShip._shipWon = false;
-									ownShip.moveBigShip(false, function() {
-										if( !ownShip.showWord(false) && --self._shipsLeft === 0 ) self.endRound(); 
+        var processResults = function() {
+            self._first = !self._first;
 
-										if( otherShip && otherShip.getParent() ) {
-											otherShip.destroyShip(true);
-											otherShip.getParent().removeChild(otherShip);
-											_b_release(otherShip);
-										}
-									});
+            fairy.silent();
+            fairy.show(4);
+            fairy.say(0, 3, _b_t.fairies.results);
+        
+            cc.log("Announcing results ...");
+            _b_one("in_1.1_seconds", function() {
+                var own = self._ownSea.getChildren(),
+                    other = self._otherSea.getChildren();
 
-									receiveShipDestroyed();
-								});
-							})();
-						});
-					});
-				});
-			});
+                cc.log("Progressing damage ...");
+                var progressDamage = function(ships, isOwnSea) {
+                    var i=0,
+                        shipSunk = false,
+                        interval = setInterval(function() {
+                            while( i < ships.length && !ships[i]._isShip ) i++; 
+                            if( i < ships.length ) {
+                                if( ships[i].progressDamage() ) {
+                                    shipSunk = true; // ships can only sink in other sea, in own sea a ship_destroyed message is received
+                                }
+                            }
+                            if( ++i >= ships.length ) {
+                                clearInterval(interval);
+                                
+                                if( !shipSunk ) {
+                                    _b_one("in_3_seconds", function(){
+                                        if( !self._bigShipMoving ) cc.eventManager.dispatchCustomEvent("last_big_ship_left", self);
+                                    });
+                                }
+                                
+                                _b_one("last_big_ship_left", function() {
+                                     cc.eventManager.dispatchCustomEvent("damageProgressed", self);
+                                });
+                            }
+                        }, _B_DAMAGE_PROGRESS_DELAY*1000);
+                };
 
-			(function receiveBomb() {
-				$b.receiveMessage("bomb", function(data) {
-					var pos = data.pos,
-						seaRect = self._ownSea.getBoundingBox(),
-						flyingBomb = new FlyingBomb(self._ownSea, true);
+                progressDamage(own,true);
+                progressDamage(other,false);
+                
+                _b_one("damageProgressed", function() {
 
-					fairy.addChild(flyingBomb);
-					_b_retain(flyingBomb,"WordBattleLayer: Flying Bomb");		
+                    cc.log("Damage is progressed!");
+                    $b.sendMessage({ message: "damageProgressed" });
+                    $b.receiveMessage("damageProgressed", function() {
 
-					flyingBomb.land(cc.p(seaRect.x+pos.x, seaRect.y+pos.y), function(hit) {
-						fairy.removeChild(flyingBomb);
-						_b_release(flyingBomb);
-					});
+                        fairy.say(0, 3, _b_t.fairies.ready);
 
-					receiveBomb();
-				});
-			})();
-		});
-	},
+                        _b_one("in_1_seconds", function() {
+                            
+                            var hg = self._hourglass = new Hourglass(self._fairy._space, _B_HOURGLASS_POS);
+                            self.addChild(self._hourglass,10);
+                            _b_retain(self._hourglass, "Hourglass");
+                            hg.show();
+                            fairy.show(5);
+                            fairy.say(2,3, _b_t.fairies.press_it);
+                            cc.log("Waiting for hourglass to be clicked ...");
+
+                            _b_one("hourglass_is_clicked", function() {
+                                cc.log("Hourglass is clicked! Sending message to start round ...");
+                                $b.sendMessage({ message: "playRound" });
+
+                                hg.getBody().applyImpulse(cp.v(0,60000),cp.v(0,0));
+                                fairy.hide();
+                                $b.receiveMessage("playRound", function() {
+                                    cc.log("Got message to play round!!");
+                                    $b.stopMessage("ship_destroyed");
+                                    self.playRound();
+                                });
+                            });
+                        });
+                    });
+                });
+
+                (function receiveShipDestroyed() {
+                    $b.receiveMessage("ship_destroyed", function(data) {
+                        var word = data.word,
+                            ownShip = self._ownSea.getChildByName(word),
+                            otherShip = self._otherSea.getChildByName(word);
+
+                        cc.assert(ownShip, "I wanted to show a word on a lost ship, but didn't find it.");
+                        if( !ownShip._shipWon ) ownShip._shipWon = false;
+                        ownShip.moveBigShip(false, function() {
+                            if( !ownShip.showWord(false) && --self._shipsLeft === 0 ) self.endRound(); 
+
+                            if( otherShip && otherShip.getParent() ) {
+                                otherShip.destroyShip();
+                                //otherShip.getParent().removeChild(otherShip);
+                                //_b_release(otherShip);
+                            }
+                        });
+
+                        receiveShipDestroyed();
+                    });
+                })();
+            });
+        };
+
+        if( self._first ) {
+            throwBombs(function() {
+                receiveBombs(function() {
+                    processResults();
+                });
+            });
+        } else {
+            receiveBombs(function() {
+                throwBombs(function() {
+                    processResults();
+                });
+            });
+        }
+    },
 
 	letLettersFly: function(own) {
 		var self = this,
@@ -1056,6 +1112,24 @@ var WordBattleLayer = cc.Layer.extend({
 		}
 	},
     
+	splash: function(pos) {
+		var self = this,
+            emRes = gRes["splash_plist"],
+			em = new cc.ParticleSystem( emRes );
+
+		em.setPosition(pos);
+		em.setScale(1.5);
+		this.addChild(em,30);
+		_b_retain(em, "Explosion emitter");
+        cc.log("Retaining emitter "+em.__retainId+" with name Splash emitter.");
+		setTimeout(function() {
+			self.removeChild(em);
+			_b_release(em);
+            cc.log("Releasing Splash emitter "+em.__retainId);
+			//em.destroyParticleSystem();
+		}, 1000);
+	},
+
     gameUpdate: function(data) {
     	
     	debugger;
@@ -1081,7 +1155,8 @@ var Battleship = cc.Node.extend({
 	_coords: null,
 	_isShip: true,
 	_battleLayer: null,
-	
+    _shipDestroyed: false,
+
 	ctor: function(word, hidden, layer) {
 	
 	    cc.assert( word && word.length >=2 && word.length <= _B_MAX_SHIP_LENGTH , word+" is too short or too long. I need a word with a length between 2 and "+_B_MAX_SHIP_LENGTH );
@@ -1147,15 +1222,24 @@ var Battleship = cc.Node.extend({
 		this.setScale(0.50);
     },
 
-	destroyShip: function(check) {
-		for( var i=0 ; i<this.children.length ; i++ ) {
+	destroyShip: function() {
+		var wl = this._word.length;
+
+		for( var i=0 ; i<wl ; i++ ) {
 			var part = this.children[i];
 
-			if( check ) this._battleLayer.checkSquare(this.convertToWorldSpace(part.getPosition()));
-
-			_b_release(this.children[i]);
+			part.setColor(cc.color(160,160,160,255));
+            part.setRotation(0);
+            part.setOpacity(128);
+            if( part._letterSprite ) {
+                this.getParent().removeChild(part._letterSprite);
+                _b_release(part._letterSprite);
+                part._letterSprite = null;
+            }
+			if( part._emitter ) this.stopEmitter(part);	
 		}
-		this.removeAllChildren();
+
+        this._shipDestroyed = true;
 	},
     
     getWord: function() {
@@ -1325,13 +1409,13 @@ var Battleship = cc.Node.extend({
 				part = this.children[i],
 				d = Math.min(++part._damage,_B_MAX_DAMAGE);
 
-			if( !part._letterSprite ) {
+			if( !this._shipDestroyed ) {
 				part.setOpacity(255);
 				this.markDamage(part);
 				this.letItBurn(part);
-				this.explode(part);
-				return true;
-			}
+            }
+			this.explode(part);
+            return true;
 		}
 		return false;
 	},
@@ -1353,6 +1437,8 @@ var Battleship = cc.Node.extend({
 	markDamage: function(part) {
 		var d = part._damage;
 
+        if( this._shipDestroyed ) return;
+
 		part.runAction(cc.tintBy(0.11,-40,-40,-40));
 		if( d === 1 ) {
 			part.setSpriteFrame(cc.spriteFrameCache.getSpriteFrame(part._shipDamaged));
@@ -1360,17 +1446,18 @@ var Battleship = cc.Node.extend({
 		}
 
 		if( d === _B_MAX_DAMAGE && this._hidden ) {
-			var letter = new cc.LabelBMFont( part._letter , "res/fonts/ErikaOrmig114.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
-			//var letter = new cc.LabelBMFont( part._letter , "res/fonts/PTMono100Bees.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
-			letter.setPosition(part.getPosition());
-			letter.setRotation(this._rotation);
+			var letter = new cc.LabelBMFont( part._letter , "res/fonts/ErikaOrmig114.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER ),
+                pos = part.getPosition(),
+                r = this._rotation;
+
+			letter.setPosition(pos.x+(r===0?_B_ERIKA_FONT_OFFSET:0), pos.y-(r===90?_B_ERIKA_FONT_OFFSET:0));
+			letter.setRotation(r);
 			letter.setScale(0.0);
             letter.setColor(_B_LETTER_COLOR_NORMAL);
 			letter.runAction(
 				cc.scaleTo(0.66,1)	
 			);
 			this.addChild(letter,10);
-			_b_retain(letter, "Letter '"+part._letter+"' of word '"+this._word+"'");
 			_b_retain(letter, "Small letter on ship part: "+part._letter);
 			part._letterSprite = letter;
 		}
@@ -1380,17 +1467,9 @@ var Battleship = cc.Node.extend({
 		var d = part._damage,
 			em = part._emitter;
 
-		if( em ) {
-			em.stopSystem();
-			setTimeout(function(em) {
-				part.removeChild(em);
-				cc.log("Releasing emitter "+em._retainId+" on letter "+part._letter+".");
-				_b_release(em);
-				//em.destroyParticleSystem();
-			},2000,em);
-		}
+		if( em ) this.stopEmitter(part);	
 
-		if( d < 1 || d > 3 ) return;
+		if( d < 1 || d > 3 || this._shipDestroyed ) return;
 	
 		var	emRes = gRes[(d===1? "smoke" : d===2? "smokefire": "fire") + "_plist"],
 			rotation = 90-part.getRotation()-(90-this.getRotation()),
@@ -1406,7 +1485,21 @@ var Battleship = cc.Node.extend({
         em.setScale(1.5);
 		part.addChild(em);
 		_b_retain(em, "Emitter");
+        cc.log("Retaining emitter "+em.__retainId+" with name Emitter on letter "+part._letter+".");
 	},
+
+    stopEmitter: function(part) {
+        var em = part._emitter;
+
+        em.stopSystem();
+        //setTimeout(function(em) {
+            part.removeChild(em);
+            part._emitter = null;
+            cc.log("Releasing emitter "+em.__retainId+" on letter "+part._letter+".");
+            _b_release(em);
+            //em.destroyParticleSystem();
+        //},2000,em);
+    },
 
 	explode: function(part) {
 		var emRes = gRes["explosion_plist"],
@@ -1416,9 +1509,11 @@ var Battleship = cc.Node.extend({
 		em.setScale(1.5);
 		part.addChild(em);
 		_b_retain(em, "Explosion emitter");
+        cc.log("Retaining emitter "+em.__retainId+" with name Explosion emitter.");
 		setTimeout(function() {
 			part.removeChild(em);
 			_b_release(em);
+            cc.log("Releasing Exlosion emitter "+em.__retainId);
 			//em.destroyParticleSystem();
 		}, 1000);
 	},
@@ -1456,7 +1551,7 @@ var Battleship = cc.Node.extend({
 			}
 		}
 
-		if( self.totalDamage() > _B_MAX_SHIP_DAMAGE && self._hidden ) {
+		if( self.totalDamage() > _B_MAX_SHIP_DAMAGE && self._hidden && !self._shipDestroyed ) {
 			var	battleLayer = self._battleLayer;
 
 			// get rid of ship in a nice way... (to do)
@@ -1483,7 +1578,7 @@ var Battleship = cc.Node.extend({
 								cc.bezierTo(3.5,bezier),
 								cc.rotateBy(3.5,-360+Math.random()*720),
 								cc.scaleTo(3.5,1),
-								cc.tintBy(3.5,-150,0,-150)
+								cc.tintTo(3.5,_B_LETTER_COLOR_WIN.r, _B_LETTER_COLOR_WIN.g, _B_LETTER_COLOR_WIN.b)
 							)
 						),
 						cc.callFunc(function(letter) {
@@ -1497,6 +1592,7 @@ var Battleship = cc.Node.extend({
 				if( sprite ) {
 					self.removeChild(sprite);
 					_b_release(sprite);
+                    part._letterSprite = null;
 				}
 				battleLayer.addChild(letter,20);
 				_b_retain(letter, "Big letter: "+part._letter);
@@ -1515,9 +1611,9 @@ var Battleship = cc.Node.extend({
 
 				// Get rid of old ship in this sea
 				if( self.getParent() && self.getParent().getChildByName(self._word) ) {
-					self.destroyShip(true);
-					self.getParent().removeChild(self);
-					_b_release(self);
+					self.destroyShip();
+					//self.getParent().removeChild(self);
+					//_b_release(self);
 				}
 			}, 2500);
 
@@ -1620,7 +1716,7 @@ var Battleship = cc.Node.extend({
 
 		for( var i=0 ; i<wl ; i++ ) {
 			var part = this.children[i],
-				tint = win? cc.tintBy(0.66,-150,0,-150) : cc.tintBy(0.66,0,-150,-150);
+				tint = win? cc.tintTo(0.66, _B_LETTER_COLOR_WIN.r, _B_LETTER_COLOR_WIN.g, _B_LETTER_COLOR_WIN.b) : cc.tintTo(0.66, _B_LETTER_COLOR_LOST.r, _B_LETTER_COLOR_LOST.g, _B_LETTER_COLOR_LOST.b);
 
 			if( !part._letterSprite ) {
 			    part.setRotation(0);
@@ -1631,11 +1727,12 @@ var Battleship = cc.Node.extend({
 					part.setColor(cc.color(160,160,160,255));
 				}
 
-				//var letter = new cc.LabelBMFont( part._letter , "res/fonts/PTMono100Bees.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
-				var letter = new cc.LabelBMFont( part._letter , "res/fonts/ErikaOrmig114.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
+				var letter = new cc.LabelBMFont( part._letter , "res/fonts/ErikaOrmig114.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER ),
+                    pos = part.getPosition(),
+                    r = this._rotation;
 
-				letter.setPosition(part.getPosition());
-				letter.setRotation(this._rotation);
+				letter.setPosition(pos.x+(r===0?_B_ERIKA_FONT_OFFSET:0), pos.y-(r===90?_B_ERIKA_FONT_OFFSET:0));
+				letter.setRotation(r);
 				letter.setScale(0.0);
 				letter.runAction(
 					cc.spawn(
@@ -1653,8 +1750,11 @@ var Battleship = cc.Node.extend({
 					part._letterSprite.runAction(tint);
 				}
 			}
+
+			if( part._emitter ) this.stopEmitter(part);	
 		}
 
+        this._shipDestroyed = true;
 		return mixed;
 	},
     
@@ -1708,11 +1808,11 @@ var BigBattleShip = cc.Node.extend({
 			part.setFlippedX(win? false:true);
 		}
 
-		// set postitios of letters
+		// set positions of letters
 		for( var i=0 ; i<wl ; i++ ) {
 			//var letter = new cc.LabelBMFont( word[i] , "res/fonts/PTMono280Bees.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
 			var letter = new cc.LabelBMFont( word[i] , "res/fonts/ErikaOrmig280.fnt" , cc.LabelAutomaticWidth, cc.TEXT_ALIGNMENT_CENTER );
-			letter.setPosition(cc.p((i-wl/2)*175 + 87.5,60));
+			letter.setPosition(cc.p((i-wl/2)*175 + _B_ERIKA_FONT_OFFSET*4, 60));
 			if( win ) letter.setColor(_B_LETTER_COLOR_WIN);
 			else letter.setColor(_B_LETTER_COLOR_LOST);
 			this.addChild(letter,10);
@@ -1854,10 +1954,10 @@ var Bomb = cc.PhysicsSprite.extend({
 	
 	land: function(cb) {
 		var self = this,
-			parent = this.getParent();	
+			fairy = this.getParent();	
 
 		// if not over a sea or not attached to one, leave ...
-		if( !this._imIn || !parent ) {
+		if( !this._imIn || !fairy ) {
 			if( typeof cb === "function" ) cb();
 			return;
 		}
@@ -1869,20 +1969,20 @@ var Bomb = cc.PhysicsSprite.extend({
 
 			var	flyingBomb = new FlyingBomb(this._sea, false);
 				
-			parent.addChild(flyingBomb,20);
+			fairy.addChild(flyingBomb,20);
 			_b_retain(flyingBomb,"WordBattleLayer: Flying Bomb");		
 
 			flyingBomb.fire(function() {
 				flyingBomb.land(cc.p(dpos.x, dpos.y+_B_CROSSHAIR_Y_OFFSET), function(hit) {
 					if( self.getParent() ) {
-						if(hit) {	
-							var bomb = new Bomb(parent, cc.p(-90,300),self._sea);
+						if(++fairy.bombCounter <= _B_MAX_BOMBS ) {	
+							var bomb = new Bomb(fairy, cc.p(-90,300),self._sea);
 							bomb.getBody().applyImpulse(cp.v(30,100),cp.v(300,0));
 							bomb.setTimer(self.getTimer());
-							parent.addObject(bomb);
-						}
+							fairy.addObject(bomb);
+                        }
 
-						parent.removeChild(flyingBomb);
+						fairy.removeChild(flyingBomb);
 						_b_release(flyingBomb);
 						self._crossHairStatic = false;
 						self.exit();
@@ -1996,6 +2096,7 @@ var FlyingBomb = cc.Sprite.extend({
 	land: function(pos, cb) {
 		var self = this,
 			sea = this._sea,
+            bl = sea.getParent(),
 			seaRect = sea.getBoundingBox(),
 			xStart = seaRect.x + this._incoming?seaRect.width:0,
 			distance = Math.abs(pos.x - xStart);
@@ -2014,7 +2115,7 @@ var FlyingBomb = cc.Sprite.extend({
 				cc.callFunc(function() {
 
 					// look if we hit a ship ...
-					var ships = self._sea.getChildren(),
+					var ships = sea.getChildren(),
 						hit = false;
 					for( var i=0 ; i<ships.length ; i++ ) {
 						if( ships[i].dropBomb ) if( hit = ships[i].dropBomb(pos) ) break;
@@ -2022,8 +2123,8 @@ var FlyingBomb = cc.Sprite.extend({
 					
 					if( hit && !self._incoming ) { cc.audioEngine.playEffect(gRes.own_bomb_on_ship_mp3); }
 					else if( hit )               { cc.audioEngine.playEffect(gRes.other_bomb_on_ship_mp3); }
-					else if( !self._incoming )   { cc.audioEngine.playEffect(gRes.own_bomb_in_water_mp3); self._sea.getParent().checkSquare(pos); }
-					else 						 { cc.audioEngine.playEffect(gRes.other_bomb_in_water_mp3); }
+					else if( !self._incoming )   { cc.audioEngine.playEffect(gRes.own_bomb_in_water_mp3); bl.splash(pos); bl.checkSquare(pos); }
+					else 						 { cc.audioEngine.playEffect(gRes.other_bomb_in_water_mp3); bl.splash(pos); }
 
 					cb(hit);
 				})

@@ -34,6 +34,7 @@
 			smokefire_plist: path+"res/particles/smokefire.plist",
 			fire_plist: path+"res/particles/fire.plist",
 			explosion_plist: path+"res/particles/explosion.plist",
+			splash_plist: path+"res/particles/splash.plist",
 		},
 		"SoundInfo": {
 			"angriff_kanonenschuss7,0.mp3": 4.101224,
