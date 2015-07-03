@@ -165,7 +165,8 @@ var WordBattleLayer = cc.Layer.extend({
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// startEpisode starts a play with one paragraph, first looking for this paragraph, creating a play list of selected words
 	startEpisode: function() {
-		var self = this;
+		var self = this,
+            paper = self._paper;
 
         /////////////////////////////
         // Playing winning music
@@ -191,7 +192,8 @@ var WordBattleLayer = cc.Layer.extend({
 
             //////////////////////////////
             // Show fairy tale 
-            self._paper.prepare(paragraph, new MyGameSymbol(own, other, function() {
+            paper.prepare(paragraph, new MyGameSymbol(own, other, function() {
+                paper.hide();
                 self.moveSeasIn(own, other);
             }));
             
@@ -901,7 +903,8 @@ var WordBattleLayer = cc.Layer.extend({
 									cc.scaleTo(_B_SEA_MOVING_DELAY,1)
 								),
 								cc.callFunc(function(obj, data) {
-									var letter = data.letter,
+									var part = data.part,
+                                        letter = data.letter,
 										pos1 = self.convertToWorldSpace(letter.getPosition()),
 										pos2 = data.pos;
 
@@ -931,10 +934,11 @@ var WordBattleLayer = cc.Layer.extend({
                                             cc.callFunc(function() {
                                                 box.removeChild(letter);
                                                 _b_release(letter);
+	                                            part._letterSprite = null;	
                                             })
                                         )
 									);
-								}, self, {letter: letter, pos:cc.p(wordPos.x - word.label.width/2 + letterSpace*j, wordPos.y)})
+								}, self, {part: part, letter: letter, pos:cc.p(wordPos.x - word.label.width/2 + letterSpace*j, wordPos.y)})
 							)
 						);
 					}

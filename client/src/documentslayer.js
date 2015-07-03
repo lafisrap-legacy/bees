@@ -307,6 +307,7 @@ var DocumentLayer = cc.Layer.extend({
 			word = this._words[fdw];
 
 		posY = paragraph===0? 0 : word.pos.y - shape.margin.top;  
+        cc.log("showWordsAtPositionon: prepare");
 		this.showWordsAtPosition(posY);
 
 		////////////////////////////////////////////////////////
@@ -322,8 +323,6 @@ var DocumentLayer = cc.Layer.extend({
 		this._posY = posY;
 		this._paragraph = paragraph;
 		
-		this.initListeners();
-		
 		this.show();
 	},
 
@@ -336,6 +335,7 @@ var DocumentLayer = cc.Layer.extend({
 
 		this._speed = 0;
         this._lastY = this._posY = posY;	
+        cc.log("showWordsAtPositionon: show");
 		this.showWordsAtPosition(posY);
 
 		this.addChild(box);
@@ -437,7 +437,7 @@ var DocumentLayer = cc.Layer.extend({
 	initListeners: function() {
 		var self = this;
 
-        cc.eventManager.addListener(cc.EventListener.create({
+		this._touchListener = cc.EventListener.create({
            	event: cc.EventListener.TOUCH_ALL_AT_ONCE,
            	onTouchesBegan: function(touches, event) {
                	console.log("onTouchesBegan!");
@@ -468,6 +468,7 @@ var DocumentLayer = cc.Layer.extend({
                 };
 
 				self._posY = Math.min(Math.max(self._startY + loc.y - start.y, 0),self._height);
+                cc.log("showWordsAtPositionon: TouchesMoved");
 				self.showWordsAtPosition();
             },
 
@@ -479,7 +480,9 @@ var DocumentLayer = cc.Layer.extend({
 
                 self.touchStartPoint = null;
             }
-        }), this);
+		});
+			
+		cc.eventManager.addListener(this._touchListener, this);
 
 		self.scheduleUpdate();
 	},
@@ -504,6 +507,7 @@ var DocumentLayer = cc.Layer.extend({
 
 		if( lastY === posY && speed) {
 			posY = this._posY = Math.min(Math.max(posY + speed, 0),this._height);
+            cc.log("showWordsAtPositionon: update 1");
 			this.showWordsAtPosition();
 		}
 				
@@ -515,6 +519,7 @@ var DocumentLayer = cc.Layer.extend({
 				if( Math.abs(wordY - posY - margin ) < _B_SCROLL_THRESHOLD_2 ) {
 					posY = this._posY = wordY - margin;
 					speed = 0;
+                    cc.log("showWordsAtPositionon: update 2");
 					this.showWordsAtPosition();
 					break;
 				}
@@ -553,7 +558,6 @@ var GameSymbol = cc.Sprite.extend({
                     rect  = cc.rect(pos.x-self.width/2, pos.y-self.height/2, self.width, self.height);
 
                 if( rect && cc.rectContainsPoint(rect, loc) && typeof self._finalCallback === "function" ) {
-                    self.getParent().getParent().hide();
                     self._finalCallback();
                 }   
             },
