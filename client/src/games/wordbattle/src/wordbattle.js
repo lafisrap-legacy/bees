@@ -2,7 +2,7 @@
 //
 var _B_MAX_SHIP_LENGTH = 10,	        // maximum ship length (or size of the sea)
 	_B_SQUARE_SIZE = 56,                // size of one square of the playground in pixels
-	_B_WORDS_PER_ROUND = 5,	            // max number of words per round
+	_B_WORDS_PER_ROUND = 3,	            // max number of words per round
     _B_MAX_BOMBS = 7,                   // Number of bombs per round
 	_B_MAX_SHIP_DAMAGE = 0.85,          // When a ship is damaged by 85% it is drowned
     _B_HOURGLASS_POS = cc.p(668,80),    // Position of hoursglass
@@ -769,15 +769,20 @@ var WordBattleLayer = cc.Layer.extend({
                             if( ++i >= ships.length ) {
                                 clearInterval(interval);
                                 
-                                if( !shipSunk ) {
-                                    _b_one("in_3_seconds", function(){
-                                        if( !self._bigShipMoving ) cc.eventManager.dispatchCustomEvent("last_big_ship_left", self);
+                                if( !isOwnSea ) {
+                                    if( !shipSunk ) {
+                                        _b_one("in_3_seconds", function(){
+                                            if( !self._bigShipMoving ) cc.eventManager.dispatchCustomEvent("last_big_ship_left", self);
+                                            cc.log("Sending: last_big_ship_left! from progressDamage");
+                                        });
+                                    }
+                                    
+                                    cc.log("Waiting for last_big_ship_left! from progressDamage");
+                                    _b_one("last_big_ship_left", function() {
+                                         cc.log("last_big_ship_left! message in progressDamage received.");
+                                         cc.eventManager.dispatchCustomEvent("damageProgressed", self);
                                     });
                                 }
-                                
-                                _b_one("last_big_ship_left", function() {
-                                     cc.eventManager.dispatchCustomEvent("damageProgressed", self);
-                                });
                             }
                         }, _B_DAMAGE_PROGRESS_DELAY*1000);
                 };
@@ -786,6 +791,11 @@ var WordBattleLayer = cc.Layer.extend({
                 progressDamage(other,false);
                 
                 _b_one("damageProgressed", function() {
+
+                    if( self._shipsLeft === 0 ) {
+                        self.endRound();
+                        return;
+                    }
 
                     cc.log("Damage is progressed!");
                     $b.sendMessage({ message: "damageProgressed" });
@@ -828,7 +838,7 @@ var WordBattleLayer = cc.Layer.extend({
                         cc.assert(ownShip, "I wanted to show a word on a lost ship, but didn't find it.");
                         if( !ownShip._shipWon ) ownShip._shipWon = false;
                         ownShip.moveBigShip(false, function() {
-                            if( !ownShip.showWord(false) && --self._shipsLeft === 0 ) self.endRound(); 
+                            if( !ownShip.showWord(false) ) self._shipsLeft--;
 
                             if( otherShip && otherShip.getParent() ) {
                                 otherShip.destroyShip();
@@ -934,6 +944,7 @@ var WordBattleLayer = cc.Layer.extend({
                                             cc.callFunc(function() {
                                                 box.removeChild(letter);
                                                 _b_release(letter);
+                                                cc.log("Getting rid of letter sprite '"+part._letter+"' ("+letter.__retainId+"): in letLettersFly.");
 	                                            part._letterSprite = null;	
                                             })
                                         )
@@ -1182,7 +1193,6 @@ var Battleship = cc.Node.extend({
 	
 	onExit: function() {
 		this._super();
-		this.destroyShip();
 	},		
 
     // buildShip creates a ship in a certain length
@@ -1238,6 +1248,7 @@ var Battleship = cc.Node.extend({
             if( part._letterSprite ) {
                 this.getParent().removeChild(part._letterSprite);
                 _b_release(part._letterSprite);
+                cc.log("Getting rid of letter sprite '"+part._letter+"' ("+part._letterSprite.__retainId+"): in destroyShip.");
                 part._letterSprite = null;
             }
 			if( part._emitter ) this.stopEmitter(part);	
@@ -1558,8 +1569,6 @@ var Battleship = cc.Node.extend({
 		if( self.totalDamage() > _B_MAX_SHIP_DAMAGE && self._hidden && !self._shipDestroyed ) {
 			var	battleLayer = self._battleLayer;
 
-			// get rid of ship in a nice way... (to do)
-
 			// show letter
 			for( var i=0 ; i<wl ; i++ ) {
 				var part = self.children[i],
@@ -1596,6 +1605,7 @@ var Battleship = cc.Node.extend({
 				if( sprite ) {
 					self.removeChild(sprite);
 					_b_release(sprite);
+                    cc.log("Getting rid of letter sprite '"+part._letter+"' ("+part._letterSprite.__retainId+"): in progressDamage.");
                     part._letterSprite = null;
 				}
 				battleLayer.addChild(letter,20);
@@ -1610,7 +1620,7 @@ var Battleship = cc.Node.extend({
 						ship = own.getChildByName(self._word);
 					cc.assert(ship, "I wanted to show a word on a won ship, but didn't find it.");
                     ship._shipWon = true;
-					if( !ship.showWord(true) && --battleLayer._shipsLeft === 0 ) battleLayer.endRound(); 
+					if( !ship.showWord(true) ) battleLayer._shipsLeft--;
 				});
 
 				// Get rid of old ship in this sea
@@ -1692,6 +1702,7 @@ var Battleship = cc.Node.extend({
 
 						if( lastShip ) {
 							cc.eventManager.dispatchCustomEvent("last_big_ship_left");
+                            cc.log("Sending: last_big_ship_left! from moveBigShip.");
 							cc.audioEngine.fadeOut(2);
 							setTimeout(function() {
 								cc.audioEngine.stopAllMusic();

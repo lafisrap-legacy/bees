@@ -4,7 +4,7 @@
 
 * Big letters fly different on right side
 
-* set in new font from Dieter
+* set in new font from Dieter  (http://www.dafont.com/pointfree.font?text=Michael%2C+wie+findest+Du+diese%3F&fpp=100&back=theme)
 * find a solution for the hourglass
 * say some more results
 * work on text timing

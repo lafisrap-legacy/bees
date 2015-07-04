@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>frames</key>
+        <dict>
+            <key>inputfield.png</key>
+            <dict>
+                <key>frame</key>
+                <string>{{2,2},{690,223}}</string>
+                <key>offset</key>
+                <string>{-2,1}</string>
+                <key>rotated</key>
+                <false/>
+                <key>sourceColorRect</key>
+                <string>{{0,1},{690,223}}</string>
+                <key>sourceSize</key>
+                <string>{694,227}</string>
+            </dict>
+        </dict>
+        <key>metadata</key>
+        <dict>
+            <key>format</key>
+            <integer>2</integer>
+            <key>realTextureFileName</key>
+            <string>textinput.png</string>
+            <key>size</key>
+            <string>{694,227}</string>
+            <key>smartupdate</key>
+            <string>$TexturePacker:SmartUpdate:bbcb8451920536512b734f7d7d111e63:769276508f6be0c53fbb135255925a5b:7668c785ff9cbc0f0cee5e27590512a9$</string>
+            <key>textureFileName</key>
+            <string>textinput.png</string>
+        </dict>
+    </dict>
+</plist>

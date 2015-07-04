@@ -1,0 +1,6 @@
+*.swp
+client/frameworks
+client/tools
+client/dieter
+client/roman
+client/runtime
