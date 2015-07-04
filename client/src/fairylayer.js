@@ -263,7 +263,6 @@ var FairyLayer = cc.Layer.extend({
 							y: loc.y - pos.y
 						};
 						dob._renderCmd.setDirtyFlag(cc.Node._dirtyFlags.transformDirty);
-						//cc.log("FairyLayer: Start dragging bomb "+i+". offset.x:"+offset.x+", offset.y:"+offset.y);
 						return true; // swallow touches (don't let other listeners get the event)
 					}					
 				}
@@ -316,7 +315,6 @@ var FairyLayer = cc.Layer.extend({
 	stopListeners: function() {
         if( this._touchListener ) cc.eventManager.removeListener(this._touchListener);
 		this._touchListener = null;
-        cc.log("FairyLayer: Stop listening!");
     },    
     
     // chipmonk addons
@@ -353,7 +351,6 @@ var FairyLayer = cc.Layer.extend({
 
 				if( body === arb.body_a || body === arb.body_b ) return false;  // no collision if the dragged object collides with other objects
 			}
-			//cc.log("Two objects touched!");
 			return true;
 		},null,null,null);	
 
@@ -363,7 +360,6 @@ var FairyLayer = cc.Layer.extend({
 
 				if( body === arb.body_a || body === arb.body_b ) return false;  // no collision if the dragged object collides with other objects
 			}
-			//cc.log("Object touched wall!");
 			return true;
 		},null,null,null);	
     },

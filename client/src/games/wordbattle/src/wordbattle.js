@@ -626,10 +626,8 @@ var WordBattleLayer = cc.Layer.extend({
                 typewriter.exit();
                 typewriter = null;
 
-                cc.log("Check if word is correct ...");
                 // check if word is correct
                 if(ship.getWord().toLowerCase() === word.toLowerCase()) {
-                    cc.log("Word is correct.");
                     ship.setFullDamage();
                     cc.audioEngine.playMusic(gRes.textright_mp3,false);
                     fairy.show(6);
@@ -639,7 +637,6 @@ var WordBattleLayer = cc.Layer.extend({
                     }, 4500)
                         
                 } else {
-                    cc.log("Word is not correct. Right would be: "+ship.getWord());
                     // word wrong: let all bombs explode
                     cc.audioEngine.playMusic(gRes.textwrong_mp3,false);
                     fairy.eachObject(function(i, obj) { 
@@ -684,7 +681,6 @@ var WordBattleLayer = cc.Layer.extend({
 
                 _b_one(["last_object_gone","bomb_time_is_up"], function() {
                 
-                    cc.log("Last object gone ...");
                     if( typewriter ) {
                         typewriter.exit();
                         typewriter = null;
@@ -737,7 +733,6 @@ var WordBattleLayer = cc.Layer.extend({
                 cc.log("Receiving ceasefire ...");
 
                 $b.stopMessage("bomb");
-                cc.log("Don't wait for bombs any more.");
 
                 cb();
             });
@@ -773,13 +768,10 @@ var WordBattleLayer = cc.Layer.extend({
                                     if( !shipSunk ) {
                                         _b_one("in_3_seconds", function(){
                                             if( !self._bigShipMoving ) cc.eventManager.dispatchCustomEvent("last_big_ship_left", self);
-                                            cc.log("Sending: last_big_ship_left! from progressDamage");
                                         });
                                     }
                                     
-                                    cc.log("Waiting for last_big_ship_left! from progressDamage");
                                     _b_one("last_big_ship_left", function() {
-                                         cc.log("last_big_ship_left! message in progressDamage received.");
                                          cc.eventManager.dispatchCustomEvent("damageProgressed", self);
                                     });
                                 }
@@ -885,10 +877,10 @@ var WordBattleLayer = cc.Layer.extend({
 
                 if( ship._shipWon === true ) {
                     word.opacity = 255;
-                    word.color = cc.color(222,0,0);
+                    word.color = {r:222, g:0, b:0};
                 } else {
                     word.opacity = Math.min(word.opacity + 51, 255);
-                    word.color = cc.color(224,208,160);
+                    word.color = {r:224, g:208, b:160};
                 }
 
                 this._collectedWords[this._paragraph].push({ 
@@ -944,7 +936,6 @@ var WordBattleLayer = cc.Layer.extend({
                                             cc.callFunc(function() {
                                                 box.removeChild(letter);
                                                 _b_release(letter);
-                                                cc.log("Getting rid of letter sprite '"+part._letter+"' ("+letter.__retainId+"): in letLettersFly.");
 	                                            part._letterSprite = null;	
                                             })
                                         )
@@ -1248,7 +1239,6 @@ var Battleship = cc.Node.extend({
             if( part._letterSprite ) {
                 this.getParent().removeChild(part._letterSprite);
                 _b_release(part._letterSprite);
-                cc.log("Getting rid of letter sprite '"+part._letter+"' ("+part._letterSprite.__retainId+"): in destroyShip.");
                 part._letterSprite = null;
             }
 			if( part._emitter ) this.stopEmitter(part);	
@@ -1605,7 +1595,6 @@ var Battleship = cc.Node.extend({
 				if( sprite ) {
 					self.removeChild(sprite);
 					_b_release(sprite);
-                    cc.log("Getting rid of letter sprite '"+part._letter+"' ("+part._letterSprite.__retainId+"): in progressDamage.");
                     part._letterSprite = null;
 				}
 				battleLayer.addChild(letter,20);
@@ -1702,7 +1691,6 @@ var Battleship = cc.Node.extend({
 
 						if( lastShip ) {
 							cc.eventManager.dispatchCustomEvent("last_big_ship_left");
-                            cc.log("Sending: last_big_ship_left! from moveBigShip.");
 							cc.audioEngine.fadeOut(2);
 							setTimeout(function() {
 								cc.audioEngine.stopAllMusic();
@@ -2284,7 +2272,6 @@ var TypeWriter = cc.PhysicsSprite.extend({
 
 						layer.initListeners();
 
-						cc.log("We have a text: "+text);
 						if( typeof self._finalCallback === "function" ) self._finalCallback(ship, text);
 					}
 				});
@@ -2335,7 +2322,6 @@ var TypeWriter = cc.PhysicsSprite.extend({
 		if( shape ) this._space.removeShape(shape);
 		if( body ) this._space.removeBody(body);
 		_b_release(this._crosshair);
-		cc.log("TypeWriter.exit: removing Object...");
 		this.getParent().removeObject(this);
 	}	
 });

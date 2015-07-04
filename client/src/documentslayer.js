@@ -266,9 +266,9 @@ var DocumentLayer = cc.Layer.extend({
 			lw = (this._paragraphStarts[p+1] || words.length) - 1,
 			ords = this.getOrds(word, p);
 
-		if( word.color ) words[ords.ord].color = word.color;
+		if( word.color ) words[ords.ord].color = cc.color( word.color.r, word.color.b, word.color.g );
 		if( word.opacity ) words[ords.ord].opacity = word.opacity;
-		words[ords.ord].label.setColor(word.color);
+		words[ords.ord].label.setColor(words[ords.ord].color);
 		words[ords.ord].label.setScale(0.0);
 		words[ords.ord].label.runAction(
 			cc.spawn(
@@ -277,7 +277,7 @@ var DocumentLayer = cc.Layer.extend({
 			)
 		);
 
-        /* This was used to mark all previous and following word till the next selected word, obolete for now
+        /* The following was used to mark all previous and following word till the next selected word, obolete for now
 		for( var i=ords.prev ; i<=ords.next ; i++ ) {
 			if( word.opacity > words[i].opacity && i != ords.ord ) {
 				words[i].opacity = word.opacity;
