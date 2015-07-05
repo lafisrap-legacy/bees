@@ -541,8 +541,6 @@ var GameSymbol = cc.Sprite.extend({
 		var frame = cc.spriteFrameCache.getSpriteFrame("startgame.png");
         this.initWithSpriteFrame(frame);
 
-		this.initListeners();
-
         this.restore(cb);
 	},
 

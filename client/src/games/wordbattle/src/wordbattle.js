@@ -1,10 +1,11 @@
 // WordBattleLayer Constants
 //
-var _B_MAX_SHIP_LENGTH = 10,	        // maximum ship length (or size of the sea)
-	_B_SQUARE_SIZE = 56,                // size of one square of the playground in pixels
-	_B_WORDS_PER_ROUND = 3,	            // max number of words per round
+var _B_MAX_SHIP_LENGTH = 10,	        // maximum ship length (or size of the sea) ((Values other than 10 not testet))
+	_B_SQUARE_SIZE = 56,                // size of one square of the playground in pixels ((Values other than 56 not tested))
+	_B_WORDS_PER_ROUND = 5,	            // max number of words per round
     _B_MAX_BOMBS = 7,                   // Number of bombs per round
-	_B_MAX_SHIP_DAMAGE = 0.85,          // When a ship is damaged by 85% it is drowned
+    _B_BOMB_TIME = 30,                  // Number of secs the bomb is ticking
+	_B_MAX_SHIP_DAMAGE = 0.85,          // When a ship is damaged by xx% it is drowned
     _B_HOURGLASS_POS = cc.p(668,80),    // Position of hoursglass
 	_B_CANON_POS = cc.p(130,280),       // Position of canon
 	_B_CANONBALL_POS = cc.p(240,340),   // Startpos of canonball
@@ -328,7 +329,14 @@ var WordBattleLayer = cc.Layer.extend({
 
 			_b_one(["countdown_finished", "hourglass_is_clicked"], function() {
 				hg.clearCountdown();
-				self.sendInitialBoard();
+                hg.hide(function() {
+                    hg.exit();
+                    self.removeChild(hg);
+                    _b_release(hg);
+                    self._hourglass = null;
+				    
+                    self.sendInitialBoard();
+                });
 			});
 		});
 	},
@@ -344,7 +352,10 @@ var WordBattleLayer = cc.Layer.extend({
 
 		_b_clear("damageProgressed");
 		$b.stopMessage("ship_destroyed");
-			
+		
+        // Other player first next time
+        self._first = !self._first;
+
 		fairy.show(1);
 		fairy.say(1, 2, _b_t.fairies.end_of_round_1);
 		fairy.say(3, 3, _b_t.fairies.end_of_round_2);
@@ -409,6 +420,7 @@ var WordBattleLayer = cc.Layer.extend({
                         
                         paper.getGameSymbol().restore(function() {
 
+                            paper.hide();
                             self.moveSeasIn(own, other);
 			                _b_one(["seas_have_moved_in"], function() {
                                 if( ++self._round < self._rounds.length ) self.startRound();
@@ -563,7 +575,6 @@ var WordBattleLayer = cc.Layer.extend({
 				}
 			}
 	
-			hg.show();
 			$b.sendMessage({ message: "initBoard", tiles: tiles });
 			$b.receiveMessage("initBoard", function(otherBoard) {
 				cc.assert(otherBoard.message === "initBoard", "Received wrong message ('"+otherBoard.message+"' instead of 'initBoard') while starting round.");
@@ -584,132 +595,154 @@ var WordBattleLayer = cc.Layer.extend({
 					cc.audioEngine.stopAllMusic();
 				}, 2000);
 				
-				self.playRound();
+				self.playRound(true);
 			});
 		});
 	},
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // playRound plays one round of seven bombs
-	playRound: function() {
+	playRound: function(first) {
 		var self = this,
 			own = this._ownSea,
-			fairy = this._fairy,
-			hg = this._hourglass;	
-
-		cc.assert(hg, "playRound assumes to have an hourglass at the beginning.")
+			fairy = this._fairy;
 
         var throwBombs = function(cb) {
-            fairy.show(2);
-            fairy.say(0, 2, _b_t.fairies.lets_go);
 
-            // start always with three bombs and one typewriter
-            fairy.bombCounter = 0;
-            for( var i=0 ; i<3 ; i++ ) {	
-                self._bombs[i] = new Bomb(fairy, cc.p(-60+90*i+(i%2)*Math.random()*50,300+(i%2)*100),self._otherSea, function(pos) {
-                    if( typewriter ) {
-                        typewriter.exit();
-                        typewriter = null;
-                    }
-                });
-                self._bombs[i].getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
-                fairy.bombCounter++;
-                fairy.addObject(self._bombs[i]);
-            }
+            var hg = self._hourglass = new Hourglass(self._fairy._space, _B_HOURGLASS_POS);
+            self.addChild(self._hourglass,10);
+            _b_retain(self._hourglass, "Hourglass");
+            hg.show();
+            fairy.show(5);
+            fairy.say(2,3, _b_t.fairies.press_it);
+            cc.log("Waiting for hourglass to be clicked ...");
 
-            var afterTyping = function(ship, word) {
-                if( word == "" ) {
-                    return;
-                }
-
-                // get rid of type writer
-                typewriter.exit();
-                typewriter = null;
-
-                // check if word is correct
-                if(ship.getWord().toLowerCase() === word.toLowerCase()) {
-                    ship.setFullDamage();
-                    cc.audioEngine.playMusic(gRes.textright_mp3,false);
-                    fairy.show(6);
-                    fairy.say(0, 4, _b_t.fairies.word_won);
-                    setTimeout(function() {
-                        fairy.hide();
-                    }, 4500)
-                        
-                } else {
-                    // word wrong: let all bombs explode
-                    cc.audioEngine.playMusic(gRes.textwrong_mp3,false);
-                    fairy.eachObject(function(i, obj) { 
-                        obj.setTimer(0);
-                    });
-                    fairy.show(6);
-                    fairy.say(0, 4, _b_t.fairies.word_lost);
-                    _b_pause(); // wait with execution of next event until _b_resume() is called
-                    setTimeout(function() {
-                        _b_resume();
-                        fairy.hide();
-                    }, 4500)
-                }
-            },
-            typewriter;
-
-            setTimeout(function() {
-                typewriter = new TypeWriter(fairy, cc.p(-50,450), self._otherSea, afterTyping);
-                fairy.addObject(typewriter);
-            }, 1000);
-
-            var canon = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("canon.png"),cc.rect(0,0,260,284)),
-                canonAction = cc.EaseSineOut.create(cc.moveTo(1.66, _B_CANON_POS));
-
-            canon.setPosition(cc.p(_B_CANON_POS.x-130,_B_CANON_POS.y));
-            fairy.addChild(canon,30);
-            _b_retain(canon,"Canon");
-            canon.runAction(canonAction);
-
-            _b_one("in_2_seconds" , function() {
-                hg.hide(function() {
-                    hg.exit();
-                    self.removeChild(hg);
-                    _b_release(hg);
-                    self._hourglass = null;
-                });
-                fairy.hide();
-
-                for( var i=0 ; i<3 ; i++ ) {	
-                    self._bombs[i].setTimer(20);
-                }
-
-                _b_one(["last_object_gone","bomb_time_is_up"], function() {
+            _b_one("hourglass_is_clicked", function() {
                 
-                    if( typewriter ) {
-                        typewriter.exit();
-                        typewriter = null;
+                hg.getBody().applyImpulse(cp.v(0,60000),cp.v(0,0));
+                $b.sendMessage({ message: "bombs_are_coming" });
+                
+                fairy.show(2);
+                fairy.say(0, 2, _b_t.fairies.lets_go);
+
+                // start always with three bombs and one typewriter
+                fairy.bombCounter = 0;
+                for( var i=0 ; i<3 ; i++ ) {	
+                    self._bombs[i] = new Bomb(fairy, cc.p(-60+90*i+(i%2)*Math.random()*50,300+(i%2)*100),self._otherSea, function(pos) {
+                        if( typewriter ) {
+                            typewriter.exit();
+                            typewriter = null;
+                        }
+                    });
+                    self._bombs[i].getBody().applyImpulse(cp.v(30,100),cp.v(i*300,0));
+                    fairy.bombCounter++;
+                    fairy.addObject(self._bombs[i]);
+                }
+
+                var afterTyping = function(ship, word) {
+                    if( word == "" ) {
+                        return;
                     }
 
-                    fairy.show(3);
-                    fairy.say(0, 99, _b_t.fairies.ceasefire);
+                    // get rid of type writer
+                    typewriter.exit();
+                    typewriter = null;
 
-                    canon.runAction(
-                        cc.sequence(
-                            cc.moveBy(1.66, cc.p(-260,0)),
-                            cc.callFunc(function() {
-                                fairy.removeChild(canon);
-                                _b_release(canon);
-                            })
-                        )
-                    );
+                    // check if word is correct
+                    if(ship.getWord().toLowerCase() === word.toLowerCase()) {
+                        ship.setFullDamage();
+                        cc.audioEngine.playMusic(gRes.textright_mp3,false);
+                        fairy.show(6);
+                        fairy.say(0, 4, _b_t.fairies.word_won);
+                        setTimeout(function() {
+                            fairy.hide();
+                        }, 4500)
+                            
+                    } else {
+                        // word wrong: let all bombs explode
+                        cc.audioEngine.playMusic(gRes.textwrong_mp3,false);
+                        fairy.eachObject(function(i, obj) { 
+                            obj.setTimer(0);
+                        });
+                        fairy.show(6);
+                        fairy.say(0, 4, _b_t.fairies.word_lost);
+                        _b_pause(); // wait with execution of next event until _b_resume() is called
+                        setTimeout(function() {
+                            _b_resume();
+                            fairy.hide();
+                        }, 4500)
+                    }
+                },
+                typewriter;
 
-                    cc.log("Sending ceasefire ...");
-                    $b.sendMessage({ message: "ceasefire" });
+                setTimeout(function() {
+                    typewriter = new TypeWriter(fairy, cc.p(-50,450), self._otherSea, afterTyping);
+                    fairy.addObject(typewriter);
+                }, 1000);
 
-                    cb();
+                var canon = cc.Sprite.create(cc.spriteFrameCache.getSpriteFrame("canon.png"),cc.rect(0,0,260,284)),
+                    canonAction = cc.EaseSineOut.create(cc.moveTo(1.66, _B_CANON_POS));
+
+                canon.setPosition(cc.p(_B_CANON_POS.x-130,_B_CANON_POS.y));
+                fairy.addChild(canon,30);
+                _b_retain(canon,"Canon");
+                canon.runAction(canonAction);
+
+                _b_one("in_2_seconds" , function() {
+                    
+                    $b.stopMessage("ship_destroyed");
+                    
+                    hg.hide(function() {
+                        hg.exit();
+                        self.removeChild(hg);
+                        _b_release(hg);
+                        self._hourglass = null;
+                    });
+                    fairy.hide();
+
+                    for( var i=0 ; i<3 ; i++ ) {	
+                        self._bombs[i].setTimer(_B_BOMB_TIME);
+                    }
+
+                    _b_one(["last_object_gone","bomb_time_is_up"], function() {
+                    
+                        if( typewriter ) {
+                            typewriter.exit();
+                            typewriter = null;
+                        }
+
+                        fairy.show(3);
+                        fairy.say(0, 99, _b_t.fairies.ceasefire);
+
+                        canon.runAction(
+                            cc.sequence(
+                                cc.moveBy(1.66, cc.p(-260,0)),
+                                cc.callFunc(function() {
+                                    fairy.removeChild(canon);
+                                    _b_release(canon);
+                                })
+                            )
+                        );
+
+                        cc.log("Sending ceasefire ...");
+                        $b.sendMessage({ message: "ceasefire" });
+
+                        cb();
+                    });
                 });
             });
+
+            if( first ) cc.eventManager.dispatchCustomEvent("hourglass_is_clicked", this);		
         };
 
         var receiveBombs = function(cb) {
-            fairy.show(2);
-            fairy.say(0, 2, _b_t.fairies.incoming_bombs);
+            $b.receiveMessage("bombs_are_coming", function(data) {
+                fairy.show(2);
+                fairy.say(0, 2, _b_t.fairies.incoming_bombs);
+                setTimeout(function() {
+                    fairy.hide();
+                }, 2500);
+            });
 
             (function receiveBomb() { 
                 $b.receiveMessage("bomb", function(data) {
@@ -739,14 +772,13 @@ var WordBattleLayer = cc.Layer.extend({
         };
 
         var processResults = function() {
-            self._first = !self._first;
 
             fairy.silent();
             fairy.show(4);
             fairy.say(0, 3, _b_t.fairies.results);
         
             cc.log("Announcing results ...");
-            _b_one("in_1.1_seconds", function() {
+            _b_one("in_3_seconds", function() {
                 var own = self._ownSea.getChildren(),
                     other = self._otherSea.getChildren();
 
@@ -795,28 +827,8 @@ var WordBattleLayer = cc.Layer.extend({
 
                         fairy.say(0, 3, _b_t.fairies.ready);
 
-                        _b_one("in_1_seconds", function() {
-                            
-                            var hg = self._hourglass = new Hourglass(self._fairy._space, _B_HOURGLASS_POS);
-                            self.addChild(self._hourglass,10);
-                            _b_retain(self._hourglass, "Hourglass");
-                            hg.show();
-                            fairy.show(5);
-                            fairy.say(2,3, _b_t.fairies.press_it);
-                            cc.log("Waiting for hourglass to be clicked ...");
-
-                            _b_one("hourglass_is_clicked", function() {
-                                cc.log("Hourglass is clicked! Sending message to start round ...");
-                                $b.sendMessage({ message: "playRound" });
-
-                                hg.getBody().applyImpulse(cp.v(0,60000),cp.v(0,0));
-                                fairy.hide();
-                                $b.receiveMessage("playRound", function() {
-                                    cc.log("Got message to play round!!");
-                                    $b.stopMessage("ship_destroyed");
-                                    self.playRound();
-                                });
-                            });
+                        _b_one("in_1_seconds", function() {    
+                            self.playRound(false);
                         });
                     });
                 });
